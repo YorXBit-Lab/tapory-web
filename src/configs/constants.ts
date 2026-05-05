@@ -1,4 +1,4 @@
-import type { ITemplate, TemplateId } from './types';
+import type { IFrame, ITemplate, TemplateId } from './types';
 
 export const TEMPLATES: Record<TemplateId, ITemplate> = {
   graduation: {
@@ -56,9 +56,40 @@ export const TEMPLATES: Record<TemplateId, ITemplate> = {
       background: '#f0fdf4',
     },
   },
+  social: {
+    id: 'social',
+    name: 'Mạng Xã Hội',
+    icon: '📲',
+    occasion: 'Kết nối & chia sẻ',
+    colors: {
+      primary: '#2563eb',
+      secondary: '#7c3aed',
+      background: '#eff6ff',
+    },
+  },
 };
 
 export const TEMPLATE_LIST = Object.values(TEMPLATES);
+
+export const BG_PRESETS = [
+  '#ffffff', '#f8f6f0', '#fdf5f8', '#f0fdf4',
+  '#eff6ff', '#faf5ff', '#fff7ed', '#f0fdfe',
+  '#1a1a2e', '#0f172a', '#1a2744', '#191414',
+];
+
+export const FRAMES: IFrame[] = [
+  { id: 'none',      name: 'Không',     icon: '⬜' },
+  { id: 'cinematic', name: 'Cinematic', icon: '🎬' },
+  { id: 'polaroid',  name: 'Polaroid',  icon: '📸' },
+  { id: 'glass',     name: 'Glass',     icon: '🧊' },
+  { id: 'neon',      name: 'Neon',      icon: '⚡' },
+  { id: 'editorial', name: 'Editorial', icon: '📰' },
+  { id: 'luxury',    name: 'Luxury',    icon: '✨' },
+  { id: 'scrapbook', name: 'Scrapbook', icon: '🎨' },
+  { id: 'gradient',  name: 'Gradient',  icon: '🌈' },
+  { id: 'minimal',   name: 'Minimal',   icon: '🍎' },
+  { id: 'floating',  name: 'Floating',  icon: '☁️' },
+];
 
 export const FIRESTORE_COLLECTIONS = {
   MEMORIALS: 'memorials',

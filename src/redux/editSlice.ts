@@ -4,6 +4,10 @@ import type { IEditDraft, TemplateId } from '@/configs/types';
 const initialState: IEditDraft = {
   orderId: '',
   templateId: 'graduation',
+  styleId: 'grad-classic',
+  frameId: 'none',
+  bgColor: '',
+  bgImageUrl: '',
   title: '',
   subtitle: '',
   description: '',
@@ -24,6 +28,14 @@ const editSlice = createSlice({
       state.templateId = action.payload;
       state.isDirty = true;
     },
+    setStyle: (state, action: PayloadAction<string>) => {
+      state.styleId = action.payload;
+      state.isDirty = true;
+    },
+    setFrame: (state, action: PayloadAction<string>) => {
+      state.frameId = action.payload;
+      state.isDirty = true;
+    },
     updateField: (state, action: PayloadAction<Partial<Omit<IEditDraft, 'isDirty'>>>) => {
       Object.assign(state, action.payload);
       state.isDirty = true;
@@ -35,5 +47,5 @@ const editSlice = createSlice({
   },
 });
 
-export const { setOrderId, setTemplate, updateField, resetDraft, markSaved } = editSlice.actions;
+export const { setOrderId, setTemplate, setStyle, setFrame, updateField, resetDraft, markSaved } = editSlice.actions;
 export default editSlice.reducer;

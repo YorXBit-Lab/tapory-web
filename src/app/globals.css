@@ -82,6 +82,24 @@
 }
 
 /* ══════════════════════════════════════════════════
+   ANIMATIONS
+   ══════════════════════════════════════════════════ */
+@keyframes blob-float {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33%       { transform: translate(22px, -26px) scale(1.07); }
+  66%       { transform: translate(-16px, 18px) scale(0.95); }
+}
+
+@layer utilities {
+  .animate-blob {
+    animation: blob-float 10s ease-in-out infinite;
+  }
+  .animation-delay-2 { animation-delay: 2s; }
+  .animation-delay-4 { animation-delay: 4s; }
+  .animation-delay-6 { animation-delay: 6s; }
+}
+
+/* ══════════════════════════════════════════════════
    ANT DESIGN FONT OVERRIDES
    ══════════════════════════════════════════════════ */
 @layer utilities {
