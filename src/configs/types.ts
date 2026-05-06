@@ -1,4 +1,21 @@
-export type TemplateId = 'graduation' | 'wedding' | 'birthday' | 'anniversary' | 'spotify';
+export type TemplateId = 'graduation' | 'wedding' | 'birthday' | 'anniversary' | 'spotify' | 'social';
+
+export interface ITemplateStyle {
+  id: string;
+  name: string;
+  layout: string;
+  colors: {
+    primary: string;
+    secondary: string;
+    accent: string;
+  };
+}
+
+export interface IFrame {
+  id: string;
+  name: string;
+  icon: string;
+}
 
 export interface ITemplate {
   id: TemplateId;
@@ -15,6 +32,10 @@ export interface ITemplate {
 export interface IMemorial {
   orderId: string;
   templateId: TemplateId;
+  styleId: string;
+  frameId: string;
+  bgColor: string;
+  bgImageUrl: string;
   title: string;
   subtitle?: string;
   description?: string;

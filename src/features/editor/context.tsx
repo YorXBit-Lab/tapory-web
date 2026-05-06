@@ -1,0 +1,43 @@
+'use client';
+import { createContext, useContext, type ReactNode } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+import type { RootState, AppDispatch } from '@/redux/store';
+import type { IEditDraft, ITemplateStyle, IFrame, ITemplate } from '@/configs/types';
+import type { FieldMeta } from '@/templates/types';
+import { TEMPLATES, FRAMES } from '@/configs/constants';
+import { getTemplateStyles, getTemplateFields } from '@/templates/registry';
+import '@/templates/init';
+
+interface EditorContextValue {
+  draft: IEditDraft;
+  tpl: ITemplate;
+  activeStyle: ITemplateStyle | undefined;
+  activeFrame: IFrame;
+  fields: FieldMeta[];
+  dispatch: AppDispatch;
+}
+
+const EditorContext = createContext<EditorContextValue | null>(null);
+
+export function EditorProvider({ children }: { children: ReactNode }) {
+  const dispatch = useDispatch<AppDispatch>();
+  const draft = useSelector((s: RootState) => s.edit);
+
+  const tpl = TEMPLATES[draft.templateId];
+  const styles = getTemplateStyles(draft.templateId);
+  const activeStyle = styles.find(s => s.id === draft.styleId) ?? styles[0];
+  const activeFrame = FRAMES.find(f => f.id === draft.frameId) ?? FRAMES[0];
+  const fields = getTemplateFields(draft.templateId);
+
+  return (
+    <EditorContext.Provider value={{ draft, tpl, activeStyle, activeFrame, fields, dispatch }}>
+      {children}
+    </EditorContext.Provider>
+  );
+}
+
+export function useEditorContext() {
+  const ctx = useContext(EditorContext);
+  if (!ctx) throw new Error('useEditorContext must be used within EditorProvider');
+  return ctx;
+}
