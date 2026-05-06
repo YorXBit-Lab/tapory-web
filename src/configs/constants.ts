@@ -78,17 +78,15 @@ export const BG_PRESETS = [
 ];
 
 export const FRAMES: IFrame[] = [
-  { id: 'none',      name: 'Không',     icon: '⬜' },
-  { id: 'cinematic', name: 'Cinematic', icon: '🎬' },
-  { id: 'polaroid',  name: 'Polaroid',  icon: '📸' },
-  { id: 'glass',     name: 'Glass',     icon: '🧊' },
-  { id: 'neon',      name: 'Neon',      icon: '⚡' },
-  { id: 'editorial', name: 'Editorial', icon: '📰' },
-  { id: 'luxury',    name: 'Luxury',    icon: '✨' },
-  { id: 'scrapbook', name: 'Scrapbook', icon: '🎨' },
-  { id: 'gradient',  name: 'Gradient',  icon: '🌈' },
-  { id: 'minimal',   name: 'Minimal',   icon: '🍎' },
-  { id: 'floating',  name: 'Floating',  icon: '☁️' },
+  { id: 'none',       name: 'Không',      icon: '⬜' },
+  { id: 'minimal',    name: 'Minimal',    icon: '▢'  },
+  { id: 'floral',     name: 'Floral',     icon: '🌸' },
+  { id: 'grad-border',name: 'Graduation', icon: '🎓' },
+  { id: 'cute',       name: 'Cute',       icon: '🎀' },
+  { id: 'luxury',     name: 'Luxury',     icon: '✨' },
+  { id: 'geometric',  name: 'Geometric',  icon: '◈'  },
+  { id: 'vintage',    name: 'Vintage',    icon: '🕰️'  },
+  { id: 'popup',      name: '3D Pop-up',  icon: '🎊' },
 ];
 
 export const FIRESTORE_COLLECTIONS = {

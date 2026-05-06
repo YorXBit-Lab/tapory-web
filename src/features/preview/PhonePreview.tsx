@@ -16,7 +16,7 @@ export function PhonePreview() {
         <p className="text-[10px] font-bold uppercase tracking-widest text-content3">Preview</p>
         <div className="h-px w-8 rounded bg-content1 opacity-20" />
       </div>
-      <PhoneShell frame={activeFrame}>
+      <PhoneShell>
         <div className="absolute inset-0 overflow-y-auto" style={screenBg}>
           {activeStyle && <TemplateRenderer data={draft} style={activeStyle} />}
         </div>

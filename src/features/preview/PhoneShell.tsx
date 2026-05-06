@@ -1,30 +1,18 @@
-import type { IFrame } from '@/configs/types';
 import type { ReactNode } from 'react';
 
 interface Props {
-  frame: IFrame;
   children: ReactNode;
 }
 
-export function PhoneShell({ frame, children }: Props) {
-  const shadow = frame.id === 'floating'
-    ? [
-        '0 0 0 0.5px rgba(255,255,255,0.10)',
-        'inset 0 1.5px 0 rgba(255,255,255,0.14)',
-        'inset 0 -1px 0 rgba(0,0,0,0.5)',
-        '0 4px 12px rgba(0,0,0,0.6)',
-        '0 20px 48px rgba(0,0,0,0.55)',
-        '0 48px 80px rgba(0,0,0,0.45)',
-        '0 72px 100px rgba(0,0,0,0.30)',
-      ].join(', ')
-    : [
-        '0 0 0 0.5px rgba(255,255,255,0.10)',
-        'inset 0 1.5px 0 rgba(255,255,255,0.14)',
-        'inset 0 -1px 0 rgba(0,0,0,0.4)',
-        '0 2px 6px rgba(0,0,0,0.38)',
-        '0 14px 32px rgba(0,0,0,0.22)',
-        '0 36px 60px rgba(0,0,0,0.13)',
-      ].join(', ');
+export function PhoneShell({ children }: Props) {
+  const shadow = [
+    '0 0 0 0.5px rgba(255,255,255,0.10)',
+    'inset 0 1.5px 0 rgba(255,255,255,0.14)',
+    'inset 0 -1px 0 rgba(0,0,0,0.4)',
+    '0 2px 6px rgba(0,0,0,0.38)',
+    '0 14px 32px rgba(0,0,0,0.22)',
+    '0 36px 60px rgba(0,0,0,0.13)',
+  ].join(', ');
 
   return (
     <div
