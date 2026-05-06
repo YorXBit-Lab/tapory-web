@@ -171,11 +171,11 @@ export function FrameOverlay({ frame }: Props) {
           'inset 0 0 0 14.5px rgba(201,169,60,0.35)',
         ].join(', '),
       }}/>
-      {/* Gold top banner */}
-      <div className="absolute inset-x-0 top-[10px] flex items-center justify-center">
-        <div style={{ height: 1.5, width: 48, background: 'rgba(201,169,60,0.72)', marginRight: 8 }}/>
+      {/* Gold top banner — below Dynamic Island (DI: top 10, h 30, safe ≥ 44px) */}
+      <div className="absolute inset-x-0 top-[44px] flex items-center justify-center">
+        <div style={{ height: 1.5, width: 40, background: 'rgba(201,169,60,0.72)', marginRight: 8 }}/>
         <span style={{ fontSize: 9, color: 'rgba(201,169,60,0.85)', letterSpacing: '0.15em', fontWeight: 600 }}>CONGRATULATIONS</span>
-        <div style={{ height: 1.5, width: 48, background: 'rgba(201,169,60,0.72)', marginLeft: 8 }}/>
+        <div style={{ height: 1.5, width: 40, background: 'rgba(201,169,60,0.72)', marginLeft: 8 }}/>
       </div>
       {/* Corner caps */}
       <div className="absolute" style={{ top: 18, left: 14 }}><GradCap/></div>

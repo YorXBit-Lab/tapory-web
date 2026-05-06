@@ -2,9 +2,9 @@
 import { createContext, useContext, type ReactNode } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import type { RootState, AppDispatch } from '@/redux/store';
-import type { IEditDraft, ITemplateStyle, IFrame, ITemplate } from '@/configs/types';
+import type { IEditDraft, ITemplateStyle, IFrame, IEffect, ITemplate } from '@/configs/types';
 import type { FieldMeta } from '@/templates/types';
-import { TEMPLATES, FRAMES } from '@/configs/constants';
+import { TEMPLATES, FRAMES, EFFECTS } from '@/configs/constants';
 import { getTemplateStyles, getTemplateFields } from '@/templates/registry';
 import '@/templates/init';
 
@@ -13,6 +13,7 @@ interface EditorContextValue {
   tpl: ITemplate;
   activeStyle: ITemplateStyle | undefined;
   activeFrame: IFrame;
+  activeEffect: IEffect;
   fields: FieldMeta[];
   dispatch: AppDispatch;
 }
@@ -27,10 +28,11 @@ export function EditorProvider({ children }: { children: ReactNode }) {
   const styles = getTemplateStyles(draft.templateId);
   const activeStyle = styles.find(s => s.id === draft.styleId) ?? styles[0];
   const activeFrame = FRAMES.find(f => f.id === draft.frameId) ?? FRAMES[0];
+  const activeEffect = EFFECTS.find(e => e.id === draft.effectId) ?? EFFECTS[0];
   const fields = getTemplateFields(draft.templateId);
 
   return (
-    <EditorContext.Provider value={{ draft, tpl, activeStyle, activeFrame, fields, dispatch }}>
+    <EditorContext.Provider value={{ draft, tpl, activeStyle, activeFrame, activeEffect, fields, dispatch }}>
       {children}
     </EditorContext.Provider>
   );

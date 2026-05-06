@@ -17,6 +17,12 @@ export interface IFrame {
   icon: string;
 }
 
+export interface IEffect {
+  id: string;
+  name: string;
+  icon: string;
+}
+
 export interface ITemplate {
   id: TemplateId;
   name: string;
@@ -34,6 +40,7 @@ export interface IMemorial {
   templateId: TemplateId;
   styleId: string;
   frameId: string;
+  effectId: string;
   bgColor: string;
   bgImageUrl: string;
   title: string;

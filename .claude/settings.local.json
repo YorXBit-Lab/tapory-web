@@ -5,7 +5,8 @@
       "Bash(node *)",
       "PowerShell(npm run *)",
       "PowerShell(npm install *)",
-      "Bash(npx tsc *)"
+      "Bash(npx tsc *)",
+      "Bash(yarn dev *)"
     ]
   }
 }

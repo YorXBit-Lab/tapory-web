@@ -11,7 +11,7 @@ export function WedRomantic({ data, c }: LayoutProps) {
               style={{ background: 'linear-gradient(135deg, #fce7f3, #fdf2f8)' }}>💍</div>}
         <div className="absolute inset-0"
           style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.08) 0%, transparent 30%, rgba(253,245,248,0.88) 78%, #fdf5f8 100%)' }} />
-        <div className="absolute top-5 left-0 right-0 flex justify-center">
+        <div className="absolute top-[48px] left-0 right-0 flex justify-center">
           <p className="text-[8px] font-light tracking-[0.5em] uppercase"
             style={{ color: 'rgba(255,255,255,0.92)', textShadow: '0 1px 10px rgba(0,0,0,0.25)' }}>WEDDING</p>
         </div>

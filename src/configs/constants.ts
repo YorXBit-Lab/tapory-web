@@ -1,4 +1,4 @@
-import type { IFrame, ITemplate, TemplateId } from './types';
+import type { IEffect, IFrame, ITemplate, TemplateId } from './types';
 
 export const TEMPLATES: Record<TemplateId, ITemplate> = {
   graduation: {
@@ -87,6 +87,21 @@ export const FRAMES: IFrame[] = [
   { id: 'geometric',  name: 'Geometric',  icon: '◈'  },
   { id: 'vintage',    name: 'Vintage',    icon: '🕰️'  },
   { id: 'popup',      name: '3D Pop-up',  icon: '🎊' },
+];
+
+export const EFFECTS: IEffect[] = [
+  { id: 'none',      name: 'Không',     icon: '⬜' },
+  { id: 'fireworks', name: 'Pháo hoa',  icon: '🎆' },
+  { id: 'confetti',  name: 'Confetti',  icon: '🎊' },
+  { id: 'snow',      name: 'Tuyết rơi', icon: '❄️'  },
+  { id: 'hearts',    name: 'Tim bay',   icon: '💕' },
+  { id: 'sparkles',  name: 'Lấp lánh', icon: '✨' },
+  { id: 'petals',    name: 'Cánh hoa',  icon: '🌸' },
+  { id: 'bubbles',   name: 'Bong bóng', icon: '🫧' },
+  { id: 'rain',      name: 'Mưa vàng',  icon: '🌧️'  },
+  { id: 'poop',      name: 'Mưa bùn',   icon: '💩' },
+  { id: 'money',     name: 'Tiền bay',  icon: '💸' },
+  { id: 'party',     name: 'Bữa tiệc',  icon: '🎉' },
 ];
 
 export const FIRESTORE_COLLECTIONS = {

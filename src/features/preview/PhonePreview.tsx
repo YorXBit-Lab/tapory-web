@@ -5,9 +5,10 @@ import { getScreenBackground } from './screenBg';
 import { PhoneShell } from './PhoneShell';
 import { TemplateRenderer } from './TemplateRenderer';
 import { FrameOverlay } from './FrameOverlay';
+import { EffectOverlay } from './EffectOverlay';
 
 export function PhonePreview() {
-  const { draft, activeStyle, activeFrame } = useEditorContext();
+  const { draft, activeStyle, activeFrame, activeEffect } = useEditorContext();
   const [open, setOpen] = useState(false);
   const screenBg = getScreenBackground(draft, activeStyle);
 
@@ -23,6 +24,7 @@ export function PhonePreview() {
       <div className="absolute inset-0 overflow-y-auto" style={screenBg}>
         {activeStyle && <TemplateRenderer data={draft} style={activeStyle} />}
       </div>
+      <EffectOverlay effect={activeEffect} />
       <FrameOverlay frame={activeFrame} />
       <div className="pointer-events-none absolute inset-0 z-10"
         style={{ boxShadow: 'inset 0 0 24px rgba(0,0,0,0.08), inset 0 0 0 0.5px rgba(255,255,255,0.04)' }} />

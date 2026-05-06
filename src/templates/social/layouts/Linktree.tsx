@@ -2,7 +2,7 @@ import type { LayoutProps } from '@/templates/types';
 
 export function SocLinktree({ data, c }: LayoutProps) {
   return (
-    <div className="relative flex h-full w-full flex-col items-center overflow-hidden px-5 pb-6 pt-8"
+    <div className="relative flex h-full w-full flex-col items-center overflow-hidden px-5 pb-6 pt-[52px]"
       style={{ background: `linear-gradient(145deg, ${c.accent} 0%, #ffffff 100%)` }}>
       <div className="pointer-events-none absolute -right-12 -top-12 h-52 w-52 rounded-full opacity-22"
         style={{ background: `radial-gradient(circle, ${c.primary}, transparent)`, filter: 'blur(22px)' }} />

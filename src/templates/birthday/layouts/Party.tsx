@@ -3,7 +3,7 @@ import type { LayoutProps } from '@/templates/types';
 
 export function BdayParty({ data, c }: LayoutProps) {
   return (
-    <div className="relative flex h-full w-full flex-col items-center overflow-hidden pb-6 pt-6"
+    <div className="relative flex h-full w-full flex-col items-center overflow-hidden pb-6 pt-[52px]"
       style={{ background: `linear-gradient(150deg, ${c.accent} 0%, ${c.accent}dd 100%)` }}>
       {[
         { pos: 'top-6 left-5',   size: 'h-2 w-2',         color: c.secondary },

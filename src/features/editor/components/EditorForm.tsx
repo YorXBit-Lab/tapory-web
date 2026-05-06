@@ -5,6 +5,7 @@ import { useImageUpload } from '../hooks/useImageUpload';
 import { useSaveDraft } from '../hooks/useSaveDraft';
 import { StylePicker } from './pickers/StylePicker';
 import { FramePicker } from './pickers/FramePicker';
+import { EffectPicker } from './pickers/EffectPicker';
 import { ImageField } from './fields/ImageField';
 import { TextField } from './fields/TextField';
 import { TextareaField } from './fields/TextareaField';
@@ -19,6 +20,7 @@ export function EditorForm() {
     <section className="flex-1 space-y-6">
       {!isSpotify && <StylePicker />}
       {!isSpotify && <FramePicker />}
+      <EffectPicker />
 
       <div className="space-y-4">
         <p className="text-xs font-semibold uppercase tracking-wider text-content3">Nội dung</p>

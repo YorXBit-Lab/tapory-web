@@ -83,7 +83,7 @@ export function PhoneShell({ children }: Props) {
             </div>
 
             {/* Screen area — z-index contract:
-                content (none) → depth vignette (z-10) → FrameOverlay (z-20) → Dynamic Island (z-30) */}
+                content (none) → depth vignette (z-10) → FrameOverlay (z-20) → EffectOverlay (z-25) → Dynamic Island (z-30) */}
             {children}
           </div>
 
