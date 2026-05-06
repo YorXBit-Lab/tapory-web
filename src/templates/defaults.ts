@@ -43,8 +43,8 @@ export const TEMPLATE_DEFAULTS: Record<TemplateId, ContentFields> = {
     spotifyUrl:  '',
   },
   spotify: {
-    title:       'Có Chắc Yêu Là Đây',
-    subtitle:    'Sơn Tùng M-TP',
+    title:       '',
+    subtitle:    '',
     description: 'Mỗi lần nghe lại bài này mình lại nhớ đến những kỷ niệm đẹp của chúng mình. Tặng bạn nhé 🎵',
     date:        '',
     imageUrl:    '',

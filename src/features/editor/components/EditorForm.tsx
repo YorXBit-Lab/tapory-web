@@ -5,7 +5,6 @@ import { useImageUpload } from '../hooks/useImageUpload';
 import { useSaveDraft } from '../hooks/useSaveDraft';
 import { StylePicker } from './pickers/StylePicker';
 import { FramePicker } from './pickers/FramePicker';
-import { BgPicker } from './pickers/BgPicker';
 import { ImageField } from './fields/ImageField';
 import { TextField } from './fields/TextField';
 import { TextareaField } from './fields/TextareaField';
@@ -14,12 +13,12 @@ export function EditorForm() {
   const { draft, fields, dispatch } = useEditorContext();
   const { uploading, handlePhoto } = useImageUpload(draft.orderId);
   const { handleSave } = useSaveDraft();
+  const isSpotify = draft.templateId === 'spotify';
 
   return (
     <section className="flex-1 space-y-6">
-      <StylePicker />
-      <FramePicker />
-      <BgPicker />
+      {!isSpotify && <StylePicker />}
+      {!isSpotify && <FramePicker />}
 
       <div className="space-y-4">
         <p className="text-xs font-semibold uppercase tracking-wider text-content3">Nội dung</p>
