@@ -9,55 +9,51 @@
 /* Class-based dark mode — next-themes adds class="dark" on <html> */
 @custom-variant dark (&:where(.dark, .dark *));
 
-/* ══════════════════════════════════════════════════
-   DESIGN TOKENS
-   Thay đổi tại đây để retheme toàn bộ app
-   ══════════════════════════════════════════════════ */
 @theme {
   /* Brand */
-  --color-primary:    #e07a9e;
-  --color-secondary:  #f4a7c3;
+  --color-primary: #e07a9e;
+  --color-secondary: #f4a7c3;
 
   /* Semantic status */
-  --color-success:    #22c55e;
-  --color-error:      #ef4444;
-  --color-warning:    #f59e0b;
-  --color-info:       #3b82f6;
+  --color-success: #22c55e;
+  --color-error: #ef4444;
+  --color-warning: #f59e0b;
+  --color-info: #3b82f6;
 
   /* Surface */
   --color-background: #ffffff;
   --color-foreground: #171717;
-  --color-elevated:   #f8f8f8;
+  --color-elevated: #f8f8f8;
 
   /* Text hierarchy */
-  --color-content1:   #111111;
-  --color-content2:   #444444;
-  --color-content3:   #888888;
-  --color-content4:   #bbbbbb;
+  --color-content1: #111111;
+  --color-content2: #444444;
+  --color-content3: #888888;
+  --color-content4: #bbbbbb;
 
   /* Structure */
-  --color-border:     #e5e7eb;
-  --color-divider:    #f3f4f6;
+  --color-border: #e5e7eb;
+  --color-divider: #f3f4f6;
 }
 
 /* ══════════════════════════════════════════════════
    DARK MODE OVERRIDES
    ══════════════════════════════════════════════════ */
 .dark {
-  --color-primary:    #f4a7c3;
-  --color-secondary:  #e07a9e;
+  --color-primary: #f4a7c3;
+  --color-secondary: #e07a9e;
 
   --color-background: #0f0f1a;
   --color-foreground: #ededed;
-  --color-elevated:   #1c1c2e;
+  --color-elevated: #1c1c2e;
 
-  --color-content1:   #f0f0f0;
-  --color-content2:   #c0c0c0;
-  --color-content3:   #888888;
-  --color-content4:   #555555;
+  --color-content1: #f0f0f0;
+  --color-content2: #c0c0c0;
+  --color-content3: #888888;
+  --color-content4: #555555;
 
-  --color-border:     #2a2a3e;
-  --color-divider:    #1e1e2e;
+  --color-border: #2a2a3e;
+  --color-divider: #1e1e2e;
 }
 
 /* ══════════════════════════════════════════════════
@@ -73,12 +69,24 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
-  h1 { @apply text-4xl font-bold; }
-  h2 { @apply text-3xl font-bold; }
-  h3 { @apply text-2xl font-bold; }
-  h4 { @apply text-xl font-semibold; }
-  h5 { @apply text-lg font-semibold; }
-  h6 { @apply text-base font-semibold; }
+  h1 {
+    @apply text-4xl font-bold;
+  }
+  h2 {
+    @apply text-3xl font-bold;
+  }
+  h3 {
+    @apply text-2xl font-bold;
+  }
+  h4 {
+    @apply text-xl font-semibold;
+  }
+  h5 {
+    @apply text-lg font-semibold;
+  }
+  h6 {
+    @apply text-base font-semibold;
+  }
 }
 
 /* ══════════════════════════════════════════════════
