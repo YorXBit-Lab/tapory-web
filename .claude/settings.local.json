@@ -6,7 +6,10 @@
       "PowerShell(npm run *)",
       "PowerShell(npm install *)",
       "Bash(npx tsc *)",
-      "Bash(yarn dev *)"
+      "Bash(yarn dev *)",
+      "Bash(Get-ChildItem -Path \"D:\\\\YORXBIT\\\\tapory-web\\\\src\\\\templates\" -Recurse -Filter \"*anniversary*\")",
+      "Bash(Select-Object FullName)",
+      "Bash(xargs cat)"
     ]
   }
 }

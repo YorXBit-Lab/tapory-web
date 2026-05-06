@@ -108,6 +108,66 @@ function GeometricCorner({ flip }: { flip?: boolean }) {
   );
 }
 
+/* ── Rose Gold corner rose ── */
+function RoseGoldCorner() {
+  return (
+    <svg width="72" height="72" viewBox="0 0 72 72" fill="none">
+      <path d="M8 62 Q16 38 28 30 Q18 48 8 62Z" fill="rgba(100,175,100,0.35)"/>
+      <path d="M30 70 Q25 48 28 30 Q36 54 30 70Z" fill="rgba(130,195,120,0.30)"/>
+      <ellipse cx="28" cy="18" rx="10" ry="13" fill="rgba(210,135,160,0.62)"/>
+      <ellipse cx="39" cy="28" rx="13" ry="10" fill="rgba(218,148,173,0.58)"/>
+      <ellipse cx="28" cy="39" rx="10" ry="13" fill="rgba(210,135,160,0.62)"/>
+      <ellipse cx="17" cy="28" rx="13" ry="10" fill="rgba(215,142,167,0.58)"/>
+      <circle cx="28" cy="28" r="10" fill="rgba(232,172,192,0.72)"/>
+      <circle cx="28" cy="28" r="6"  fill="rgba(245,204,218,0.82)"/>
+      <circle cx="28" cy="28" r="3"  fill="rgba(255,228,234,0.90)"/>
+    </svg>
+  );
+}
+
+/* ── Lace corner (pearl chain + diamond ornament) ── */
+function LaceCorner() {
+  return (
+    <svg width="54" height="54" viewBox="0 0 54 54" fill="none">
+      <path d="M 5 49 Q 15 38 24 27 Q 33 17 45 6"
+        stroke="rgba(185,172,158,0.45)" strokeWidth="1" fill="none"
+        strokeLinecap="round" strokeDasharray="1.5 4.5"/>
+      <circle cx="8"  cy="46" r="2.4" fill="rgba(225,215,205,0.78)" stroke="rgba(200,190,178,0.50)" strokeWidth="0.8"/>
+      <circle cx="18" cy="36" r="2.4" fill="rgba(225,215,205,0.78)" stroke="rgba(200,190,178,0.50)" strokeWidth="0.8"/>
+      <circle cx="28" cy="26" r="2.4" fill="rgba(225,215,205,0.78)" stroke="rgba(200,190,178,0.50)" strokeWidth="0.8"/>
+      <circle cx="38" cy="16" r="2.4" fill="rgba(225,215,205,0.78)" stroke="rgba(200,190,178,0.50)" strokeWidth="0.8"/>
+      <circle cx="47" cy="7"  r="2.4" fill="rgba(225,215,205,0.78)" stroke="rgba(200,190,178,0.50)" strokeWidth="0.8"/>
+      <path d="M11 18 L15 22 L11 26 L7 22 Z"
+        fill="rgba(218,208,195,0.60)" stroke="rgba(188,176,162,0.42)" strokeWidth="0.8"/>
+      <circle cx="11" cy="22" r="1.6" fill="rgba(232,224,214,0.72)"/>
+      <path d="M22 7 L26 11 L22 15 L18 11 Z"
+        fill="rgba(218,208,195,0.55)" stroke="rgba(188,176,162,0.38)" strokeWidth="0.8"/>
+      <circle cx="22" cy="11" r="1.6" fill="rgba(232,224,214,0.68)"/>
+    </svg>
+  );
+}
+
+/* ── Botanical corner (eucalyptus branches) ── */
+function BotanicalCorner() {
+  return (
+    <svg width="70" height="70" viewBox="0 0 70 70" fill="none">
+      <path d="M 6 64 Q 22 46 36 30 Q 50 18 63 7"
+        stroke="rgba(105,148,95,0.60)" strokeWidth="1.7" fill="none" strokeLinecap="round"/>
+      <path d="M 12 56 Q 4 46 10 38 Q 16 32 20 44 Q 18 52 12 56 Z"
+        fill="rgba(125,168,106,0.48)"/>
+      <path d="M 24 44 Q 30 34 38 34 Q 42 40 36 48 Q 28 52 24 44 Z"
+        fill="rgba(135,178,112,0.45)"/>
+      <path d="M 38 30 Q 30 20 34 14 Q 40 10 42 20 Q 44 28 38 30 Z"
+        fill="rgba(125,168,106,0.48)"/>
+      <path d="M 50 20 Q 54 10 62 9 Q 65 16 58 22 Q 52 26 50 20 Z"
+        fill="rgba(135,178,112,0.45)"/>
+      <ellipse cx="62" cy="7" rx="3.5" ry="6" fill="rgba(142,182,116,0.50)" transform="rotate(-50 62 7)"/>
+      <circle cx="18" cy="49" r="2.4" fill="rgba(188,158,132,0.58)"/>
+      <circle cx="45" cy="22" r="2"   fill="rgba(188,158,132,0.52)"/>
+    </svg>
+  );
+}
+
 /* ── Vintage flourish ── */
 function VintageCorner() {
   return (
@@ -158,7 +218,80 @@ export function FrameOverlay({ frame }: Props) {
     </div>
   );
 
-  /* ── 3. Graduation ── */
+  /* ── 3. Rose Gold ── */
+  if (frame.id === 'rose-gold') return (
+    <div className={`${base} animate-frame-shimmer`} style={{ borderRadius: 'inherit' }}>
+      <div className="absolute inset-0" style={{
+        borderRadius: 'inherit',
+        boxShadow: [
+          'inset 0 0 0 11px rgba(155,80,105,0.86)',
+          'inset 0 0 0 12.8px rgba(220,162,183,0.72)',
+          'inset 0 0 0 15px rgba(155,80,105,0.20)',
+          'inset 0 0 0 16.5px rgba(220,162,183,0.28)',
+        ].join(', '),
+      }}/>
+      <div className="absolute top-0 left-0"><RoseGoldCorner/></div>
+      <div className="absolute top-0 right-0" style={{ transform: 'scaleX(-1)' }}><RoseGoldCorner/></div>
+      <div className="absolute bottom-0 left-0" style={{ transform: 'scaleY(-1)' }}><RoseGoldCorner/></div>
+      <div className="absolute bottom-0 right-0" style={{ transform: 'scale(-1,-1)' }}><RoseGoldCorner/></div>
+      {(['top-[11px] left-[11px]', 'top-[11px] right-[11px]', 'bottom-[11px] left-[11px]', 'bottom-[11px] right-[11px]'] as const).map((pos, i) => (
+        <span key={i} className={`absolute text-[9px] leading-none ${pos}`}
+          style={{ color: 'rgba(220,162,183,0.90)', textShadow: '0 0 6px rgba(210,140,165,0.55)' }}>✦</span>
+      ))}
+    </div>
+  );
+
+  /* ── 4. Lace ── */
+  if (frame.id === 'lace') return (
+    <div className={base} style={{ borderRadius: 'inherit' }}>
+      <div className="absolute inset-0" style={{
+        borderRadius: 'inherit',
+        boxShadow: [
+          'inset 0 0 0 2px rgba(215,202,188,0.60)',
+          'inset 0 0 0 4px rgba(248,244,240,0.85)',
+          'inset 0 0 0 6.5px rgba(208,196,182,0.42)',
+          'inset 0 0 0 8px rgba(248,244,240,0.50)',
+        ].join(', '),
+      }}/>
+      <div className="absolute top-0 left-0"><LaceCorner/></div>
+      <div className="absolute top-0 right-0" style={{ transform: 'scaleX(-1)' }}><LaceCorner/></div>
+      <div className="absolute bottom-0 left-0" style={{ transform: 'scaleY(-1)' }}><LaceCorner/></div>
+      <div className="absolute bottom-0 right-0" style={{ transform: 'scale(-1,-1)' }}><LaceCorner/></div>
+      {/* Pearl dots along top & bottom edges */}
+      {[25, 37, 50, 63, 75].map(pct => (
+        <span key={pct} className="absolute" style={{
+          top: 2.5, left: `${pct}%`, transform: 'translateX(-50%)',
+          width: 4, height: 4, borderRadius: '50%',
+          background: 'rgba(222,212,200,0.72)',
+          boxShadow: '0 0 2px rgba(200,188,174,0.50)',
+        }}/>
+      ))}
+      {[25, 37, 50, 63, 75].map(pct => (
+        <span key={pct} className="absolute" style={{
+          bottom: 2.5, left: `${pct}%`, transform: 'translateX(-50%)',
+          width: 4, height: 4, borderRadius: '50%',
+          background: 'rgba(222,212,200,0.72)',
+          boxShadow: '0 0 2px rgba(200,188,174,0.50)',
+        }}/>
+      ))}
+    </div>
+  );
+
+  /* ── 5. Botanical ── */
+  if (frame.id === 'botanical') return (
+    <div className={base} style={{ borderRadius: 'inherit' }}>
+      <div className="absolute inset-0" style={{
+        borderRadius: 'inherit',
+        boxShadow: 'inset 0 0 0 1.5px rgba(110,150,95,0.28)',
+      }}/>
+      <div className="absolute top-0 left-0"><BotanicalCorner/></div>
+      <div className="absolute top-0 right-0" style={{ transform: 'scaleX(-1)' }}><BotanicalCorner/></div>
+      <div className="absolute bottom-0 left-0" style={{ transform: 'scaleY(-1)' }}><BotanicalCorner/></div>
+      <div className="absolute bottom-0 right-0" style={{ transform: 'scale(-1,-1)' }}><BotanicalCorner/></div>
+    </div>
+  );
+
+  /* ── 6. Graduation ── */
   if (frame.id === 'grad-border') return (
     <div className={base} style={{ borderRadius: 'inherit' }}>
       {/* Gold double border */}

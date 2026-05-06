@@ -26,4 +26,5 @@ export interface TemplateModule {
   styles: ITemplateStyle[];
   fields: FieldMeta[];
   layouts: Record<string, React.ComponentType<LayoutProps>>;
+  frameIds?: string[];
 }

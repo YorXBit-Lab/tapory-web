@@ -13,4 +13,5 @@ registerTemplate({
     editorial: AnniEditorial,
     film:      AnniFilm,
   },
+  frameIds: ['none', 'minimal', 'floral', 'rose-gold', 'lace', 'botanical', 'luxury', 'vintage'],
 });

@@ -1,6 +1,6 @@
 import '@ant-design/v5-patch-for-react-19';
 import type { Metadata } from 'next';
-import { Montserrat } from 'next/font/google';
+import { Montserrat, Playfair_Display, Dancing_Script } from 'next/font/google';
 import './globals.css';
 import { AntdRegistry } from '@ant-design/nextjs-registry';
 import { ThemeProvider } from '@/libs/ThemeProvider';
@@ -16,6 +16,21 @@ const montserrat = Montserrat({
   variable: '--font-montserrat',
 });
 
+const playfair = Playfair_Display({
+  subsets: ['latin', 'vietnamese'],
+  weight: ['400', '500', '600', '700'],
+  style: ['normal', 'italic'],
+  display: 'swap',
+  variable: '--font-playfair',
+});
+
+const dancing = Dancing_Script({
+  subsets: ['latin', 'vietnamese'],
+  weight: ['400', '500', '600', '700'],
+  display: 'swap',
+  variable: '--font-dancing',
+});
+
 export const metadata: Metadata = {
   title: 'Tapory – Móc Khóa Kỷ Niệm NFC',
   description: 'Tạo trang kỷ niệm cá nhân hóa được gắn vào móc khóa NFC của bạn',
@@ -24,7 +39,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="vi" className={montserrat.variable} suppressHydrationWarning>
+    <html lang="vi" className={`${montserrat.variable} ${playfair.variable} ${dancing.variable}`} suppressHydrationWarning>
       <body className="flex min-h-full flex-col transition-colors">
         <ThemeProvider>
           <ReduxProvider>

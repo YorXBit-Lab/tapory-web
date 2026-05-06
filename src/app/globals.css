@@ -98,6 +98,11 @@
   66%       { transform: translate(-16px, 18px) scale(0.95); }
 }
 
+@keyframes frame-shimmer {
+  0%, 100% { opacity: 0.88; }
+  50%       { opacity: 1; }
+}
+
 @layer utilities {
   .animate-blob {
     animation: blob-float 10s ease-in-out infinite;
@@ -105,6 +110,9 @@
   .animation-delay-2 { animation-delay: 2s; }
   .animation-delay-4 { animation-delay: 4s; }
   .animation-delay-6 { animation-delay: 6s; }
+  .animate-frame-shimmer {
+    animation: frame-shimmer 3.5s ease-in-out infinite;
+  }
 }
 
 /* ══════════════════════════════════════════════════

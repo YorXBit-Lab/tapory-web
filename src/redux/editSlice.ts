@@ -15,6 +15,10 @@ const initialState: IEditDraft = {
   imageUrl: '',
   spotifyUrl: '',
   date: '',
+  fontStyle: '',
+  titleSize: '',
+  imageMode: '',
+  imageFilter: '',
   isDirty: false,
 };
 

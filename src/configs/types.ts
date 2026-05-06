@@ -49,6 +49,10 @@ export interface IMemorial {
   imageUrl?: string;
   spotifyUrl?: string;
   date?: string;
+  fontStyle?: string;
+  titleSize?: string;
+  imageMode?: string;
+  imageFilter?: string;
 }
 
 export interface IMemorialDoc extends IMemorial {

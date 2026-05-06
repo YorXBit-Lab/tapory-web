@@ -1,5 +1,6 @@
-import type { TemplateId, ITemplateStyle } from '@/configs/types';
+import type { TemplateId, ITemplateStyle, IFrame } from '@/configs/types';
 import type { TemplateModule, LayoutProps, FieldMeta } from './types';
+import { FRAMES } from '@/configs/constants';
 import type React from 'react';
 
 const registry = new Map<TemplateId, TemplateModule>();
@@ -22,4 +23,10 @@ export function getTemplateStyles(id: TemplateId): ITemplateStyle[] {
 
 export function getTemplateFields(id: TemplateId): FieldMeta[] {
   return registry.get(id)?.fields ?? [];
+}
+
+export function getTemplateFrames(id: TemplateId): IFrame[] {
+  const frameIds = registry.get(id)?.frameIds;
+  if (!frameIds) return FRAMES;
+  return FRAMES.filter(f => frameIds.includes(f.id));
 }

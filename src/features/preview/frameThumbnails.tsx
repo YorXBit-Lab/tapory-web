@@ -33,6 +33,59 @@ export const FRAME_THUMBNAIL: Record<string, React.ReactNode> = {
     </div>
   ),
 
+  'rose-gold': (
+    <div className="relative h-full w-full rounded"
+      style={{
+        backgroundColor: '#fdf0f4',
+        boxShadow: 'inset 0 0 0 1.5px rgba(190,120,148,0.82), inset 0 0 0 3px rgba(245,210,220,0.60), inset 0 0 0 4.5px rgba(175,105,132,0.55)',
+      }}>
+      {corners.map(({ pos }, i) => (
+        <svg key={i} className="absolute" style={pos} width="12" height="12" viewBox="0 0 28 28" fill="none">
+          <ellipse cx="14" cy="8"  rx="5" ry="7" fill="rgba(210,135,160,0.72)"/>
+          <ellipse cx="20" cy="14" rx="7" ry="5" fill="rgba(218,148,173,0.68)"/>
+          <ellipse cx="14" cy="20" rx="5" ry="7" fill="rgba(210,135,160,0.72)"/>
+          <ellipse cx="8"  cy="14" rx="7" ry="5" fill="rgba(215,142,167,0.68)"/>
+          <circle cx="14" cy="14" r="5" fill="rgba(235,178,198,0.80)"/>
+          <circle cx="14" cy="14" r="2.5" fill="rgba(252,222,232,0.90)"/>
+        </svg>
+      ))}
+    </div>
+  ),
+
+  lace: (
+    <div className="relative h-full w-full rounded"
+      style={{
+        backgroundColor: '#faf8f5',
+        boxShadow: 'inset 0 0 0 1.5px rgba(210,198,185,0.62), inset 0 0 0 3px rgba(250,246,242,0.88), inset 0 0 0 4.5px rgba(202,190,175,0.42)',
+      }}>
+      {corners.map(({ pos }, i) => (
+        <svg key={i} className="absolute" style={pos} width="11" height="11" viewBox="0 0 22 22" fill="none">
+          <circle cx="4"  cy="18" r="2" fill="rgba(218,208,196,0.80)" stroke="rgba(195,183,169,0.50)" strokeWidth="0.6"/>
+          <circle cx="11" cy="11" r="2" fill="rgba(218,208,196,0.80)" stroke="rgba(195,183,169,0.50)" strokeWidth="0.6"/>
+          <circle cx="18" cy="4"  r="2" fill="rgba(218,208,196,0.80)" stroke="rgba(195,183,169,0.50)" strokeWidth="0.6"/>
+          <path d="M5 9 L8 12 L5 15 L2 12 Z" fill="rgba(215,205,192,0.65)" strokeWidth="0.5" stroke="rgba(188,176,162,0.40)"/>
+        </svg>
+      ))}
+    </div>
+  ),
+
+  botanical: (
+    <div className="relative h-full w-full overflow-hidden rounded bg-white"
+      style={{ boxShadow: 'inset 0 0 0 0.5px rgba(110,148,95,0.28)' }}>
+      {corners.map(({ pos, tf }, i) => (
+        <div key={i} className="absolute" style={{ ...pos, transform: tf }}>
+          <svg width="13" height="13" viewBox="0 0 26 26" fill="none">
+            <path d="M 2 24 Q 8 16 14 10 Q 20 5 24 2"
+              stroke="rgba(105,148,95,0.62)" strokeWidth="1.4" strokeLinecap="round" fill="none"/>
+            <path d="M5 20 Q2 14 5 10 Q8 7 9 14 Q8 18 5 20 Z" fill="rgba(125,168,106,0.50)"/>
+            <path d="M13 10 Q16 4 22 4 Q23 8 18 12 Q14 14 13 10 Z" fill="rgba(135,178,112,0.46)"/>
+            <circle cx="7" cy="18" r="1.5" fill="rgba(185,155,128,0.55)"/>
+          </svg>
+        </div>
+      ))}
+    </div>
+  ),
+
   'grad-border': (
     <div className="h-full w-full rounded"
       style={{

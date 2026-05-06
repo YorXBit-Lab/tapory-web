@@ -101,28 +101,21 @@ const CONFIGS: Record<string, ISourceOptions> = {
     background: { color: { value: 'transparent' } },
     particles: {
       number: { value: 0 },
-      color: { value: '#dce8ff' },
+      color: { value: ['#dce8ff', '#b8d4ff', '#ffffff', '#e8f4ff'] },
       shape: { type: 'circle' },
-      opacity: {
-        value: { min: 0.35, max: 0.85 },
-        animation: { enable: true, speed: 0.6, sync: false },
-      },
-      size: {
-        value: { min: 2, max: 6 },
-        animation: { enable: true, speed: 1.2, sync: false },
-      },
+      opacity: { value: { min: 0.45, max: 0.90 } },
+      size: { value: { min: 3, max: 7 } },
       move: {
         enable: true,
         direction: 'bottom',
-        speed: { min: 2, max: 5 },   // increased so flakes don't linger forever
+        speed: { min: 1.5, max: 4 },
         random: true,
-        straight: false,
         outModes: { default: 'destroy' },
       },
     },
     emitters: {
       life: { count: 0 },
-      rate: { quantity: 1, delay: 0.28 }, // ~3.6/s → ~3.6 × 8 s avg ≈ 29 flakes
+      rate: { quantity: 2, delay: 0.25 },
       size: { width: 100, height: 0 },
       position: { x: 50, y: 0 },
     },

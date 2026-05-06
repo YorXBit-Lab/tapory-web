@@ -19,6 +19,7 @@ export const TemplateRenderer = memo(
     if (prev.style.id !== next.style.id) return false;
     const keys: Array<keyof IEditDraft> = [
       'templateId', 'imageUrl', 'title', 'subtitle', 'description', 'date', 'spotifyUrl',
+      'fontStyle', 'titleSize', 'imageMode', 'imageFilter',
     ];
     return keys.every(k => prev.data[k] === next.data[k]);
   },

@@ -13,4 +13,5 @@ registerTemplate({
     elegant:  WedElegant,
     story:    WedStory,
   },
+  frameIds: ['none', 'minimal', 'floral', 'rose-gold', 'lace', 'botanical', 'luxury', 'vintage'],
 });
