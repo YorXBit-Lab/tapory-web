@@ -1,25 +1,60 @@
 import { fmt } from '@/shared/utils/fmt';
+import { getFontFamily, getImageFilter, getTitleFontSize } from '@/shared/utils/styleHelpers';
 import type { LayoutProps } from '@/templates/types';
 
 export function BdayRetro({ data, c }: LayoutProps) {
+  const font      = getFontFamily(data.fontStyle);
+  const titleSize = getTitleFontSize(data.titleSize);
+  const imgFilter = getImageFilter(data.imageFilter);
+  const mode      = data.imageMode || 'card';
+
   return (
     <div className="flex h-full w-full flex-col items-center justify-center px-5 pb-5 pt-4"
       style={{ backgroundColor: '#fff9f0', backgroundImage: 'radial-gradient(#00000009 1px, transparent 1px)', backgroundSize: '16px 16px' }}>
       <div className="flex w-full flex-col items-center rounded-2xl px-5 py-5"
         style={{ border: `3px solid ${c.primary}` }}>
+
         <p className="text-[9px] font-black tracking-[0.25em] uppercase" style={{ color: c.secondary }}>★ Happy Birthday ★</p>
 
-        <div className="mt-3 flex-shrink-0 p-2 pb-6 shadow-md"
-          style={{ backgroundColor: '#ffffff', transform: 'rotate(-1.5deg)' }}>
-          <div className="overflow-hidden" style={{ width: 92, height: 92 }}>
+        {/* ── Card mode (default): polaroid ── */}
+        {mode === 'card' && (
+          <div className="mt-3 flex-shrink-0 p-2 pb-6 shadow-md"
+            style={{ backgroundColor: '#ffffff', transform: 'rotate(-1.5deg)' }}>
+            <div className="overflow-hidden" style={{ width: 92, height: 92 }}>
+              {data.imageUrl
+                ? <img src={data.imageUrl} className="h-full w-full object-cover object-top" alt="" style={{ filter: imgFilter }} />
+                : <div className="flex h-full w-full items-center justify-center text-3xl"
+                    style={{ background: '#f3f4f6' }}>📷</div>}
+            </div>
+          </div>
+        )}
+
+        {/* ── Circle mode: dashed stamp effect ── */}
+        {mode === 'circle' && (
+          <div className="mt-3 flex-shrink-0 p-[3px]"
+            style={{ width: 104, height: 104, borderRadius: '50%', border: `3px dashed ${c.primary}` }}>
+            <div style={{ width: '100%', height: '100%', borderRadius: '50%', overflow: 'hidden' }}>
+              {data.imageUrl
+                ? <img src={data.imageUrl} className="h-full w-full object-cover object-top" alt="" style={{ filter: imgFilter }} />
+                : <div className="flex h-full w-full items-center justify-center text-3xl"
+                    style={{ background: '#f3f4f6' }}>📷</div>}
+            </div>
+          </div>
+        )}
+
+        {/* ── Full mode: wide film strip ── */}
+        {mode === 'full' && (
+          <div className="mt-3 w-full overflow-hidden shadow-md"
+            style={{ height: 110, transform: 'rotate(-0.5deg)' }}>
             {data.imageUrl
-              ? <img src={data.imageUrl} className="h-full w-full object-cover object-top" alt="" />
+              ? <img src={data.imageUrl} className="h-full w-full object-cover" alt="" style={{ filter: imgFilter }} />
               : <div className="flex h-full w-full items-center justify-center text-3xl"
                   style={{ background: '#f3f4f6' }}>📷</div>}
           </div>
-        </div>
+        )}
 
-        <p className="mt-3 text-[17px] font-black uppercase tracking-wide" style={{ color: c.primary }}>
+        <p className="mt-3 font-black uppercase tracking-wide"
+          style={{ fontFamily: font, fontSize: titleSize, color: c.primary }}>
           {data.title || 'Tên người nhận'}
         </p>
         {data.date && (

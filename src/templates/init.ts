@@ -4,3 +4,5 @@ import './birthday';
 import './anniversary';
 import './spotify';
 import './social';
+import './profile';
+import './redirect';

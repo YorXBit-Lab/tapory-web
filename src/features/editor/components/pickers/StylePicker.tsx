@@ -8,6 +8,8 @@ export function StylePicker() {
   const { draft, dispatch } = useEditorContext();
   const styles = getTemplateStyles(draft.templateId);
 
+  if (styles.length <= 1) return null;
+
   return (
     <div>
       <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-content3">Phong cách</p>

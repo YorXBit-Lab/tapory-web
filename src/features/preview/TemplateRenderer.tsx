@@ -9,18 +9,8 @@ interface Props {
   style: ITemplateStyle;
 }
 
-export const TemplateRenderer = memo(
-  function TemplateRenderer({ data, style }: Props) {
-    const Layout = getLayout(data.templateId, style.layout);
-    if (!Layout) return null;
-    return <Layout data={data} c={style.colors} />;
-  },
-  (prev, next) => {
-    if (prev.style.id !== next.style.id) return false;
-    const keys: Array<keyof IEditDraft> = [
-      'templateId', 'imageUrl', 'title', 'subtitle', 'description', 'date', 'spotifyUrl',
-      'fontStyle', 'titleSize', 'imageMode', 'imageFilter',
-    ];
-    return keys.every(k => prev.data[k] === next.data[k]);
-  },
-);
+export const TemplateRenderer = memo(function TemplateRenderer({ data, style }: Props) {
+  const Layout = getLayout(data.templateId, style.layout);
+  if (!Layout) return null;
+  return <Layout data={data} c={style.colors} />;
+});

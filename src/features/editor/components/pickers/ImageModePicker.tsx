@@ -1,8 +1,9 @@
 'use client';
 import { useEditorContext } from '@/features/editor/context';
 import { updateField } from '@/redux/editSlice';
+import { getTemplateImageModes } from '@/templates/registry';
 
-const MODES = [
+const ALL_MODES = [
   {
     id: 'full',
     name: 'Đầy đủ',
@@ -42,13 +43,18 @@ const MODES = [
 
 export function ImageModePicker() {
   const { draft, dispatch } = useEditorContext();
-  const current = draft.imageMode || 'full';
+  const available = getTemplateImageModes(draft.templateId);
+
+  if (available.length === 0) return null;
+
+  const modes   = ALL_MODES.filter(m => available.includes(m.id));
+  const current = draft.imageMode || available[0];
 
   return (
     <div>
       <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-content3">Kiểu ảnh</p>
       <div className="flex gap-2">
-        {MODES.map(m => (
+        {modes.map(m => (
           <button
             key={m.id}
             onClick={() => dispatch(updateField({ imageMode: m.id }))}

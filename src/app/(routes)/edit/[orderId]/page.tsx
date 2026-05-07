@@ -16,7 +16,7 @@ export default async function EditPage({
   const { orderId } = await params;
   const { template } = await searchParams;
 
-  const validTemplates: TemplateId[] = ['graduation', 'wedding', 'birthday', 'anniversary', 'spotify', 'social'];
+  const validTemplates: TemplateId[] = ['graduation', 'wedding', 'birthday', 'anniversary', 'spotify', 'social', 'profile', 'redirect'];
   const initialTemplate: TemplateId = validTemplates.includes(template as TemplateId)
     ? (template as TemplateId)
     : 'graduation';

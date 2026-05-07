@@ -30,3 +30,11 @@ export function getTemplateFrames(id: TemplateId): IFrame[] {
   if (!frameIds) return FRAMES;
   return FRAMES.filter(f => frameIds.includes(f.id));
 }
+
+const ALL_IMAGE_MODES = ['full', 'card', 'circle'];
+
+export function getTemplateImageModes(id: TemplateId): string[] {
+  const imageModes = registry.get(id)?.imageModes;
+  if (imageModes === undefined) return ALL_IMAGE_MODES;
+  return imageModes;
+}

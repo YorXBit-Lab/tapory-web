@@ -19,6 +19,13 @@ const initialState: IEditDraft = {
   titleSize: '',
   imageMode: '',
   imageFilter: '',
+  facebookUrl: '',
+  instagramUrl: '',
+  tiktokUrl: '',
+  youtubeUrl: '',
+  email: '',
+  phone: '',
+  website: '',
   isDirty: false,
 };
 

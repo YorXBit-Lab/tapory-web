@@ -1,4 +1,4 @@
-export type TemplateId = 'graduation' | 'wedding' | 'birthday' | 'anniversary' | 'spotify' | 'social';
+export type TemplateId = 'graduation' | 'wedding' | 'birthday' | 'anniversary' | 'spotify' | 'social' | 'profile' | 'redirect';
 
 export interface ITemplateStyle {
   id: string;
@@ -53,6 +53,13 @@ export interface IMemorial {
   titleSize?: string;
   imageMode?: string;
   imageFilter?: string;
+  facebookUrl?: string;
+  instagramUrl?: string;
+  tiktokUrl?: string;
+  youtubeUrl?: string;
+  email?: string;
+  phone?: string;
+  website?: string;
 }
 
 export interface IMemorialDoc extends IMemorial {

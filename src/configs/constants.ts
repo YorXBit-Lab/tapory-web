@@ -67,6 +67,28 @@ export const TEMPLATES: Record<TemplateId, ITemplate> = {
       background: '#eff6ff',
     },
   },
+  profile: {
+    id: 'profile',
+    name: 'Thông Tin Cá Nhân',
+    icon: '🪪',
+    occasion: 'Giới thiệu bản thân',
+    colors: {
+      primary: '#1a1a1a',
+      secondary: '#2563eb',
+      background: '#ffffff',
+    },
+  },
+  redirect: {
+    id: 'redirect',
+    name: 'Chuyển Hướng',
+    icon: '🔗',
+    occasion: 'Redirect đến link',
+    colors: {
+      primary: '#0f172a',
+      secondary: '#6366f1',
+      background: '#f8fafc',
+    },
+  },
 };
 
 export const TEMPLATE_LIST = Object.values(TEMPLATES);

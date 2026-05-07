@@ -18,13 +18,18 @@ export function EditorForm() {
   const { draft, fields, dispatch } = useEditorContext();
   const { uploading, handlePhoto } = useImageUpload(draft.orderId);
   const { handleSave } = useSaveDraft();
-  const isSpotify = draft.templateId === 'spotify';
+  const isSpotify   = draft.templateId === 'spotify';
+  const isRedirect  = draft.templateId === 'redirect';
 
   return (
     <section className="flex-1 space-y-5">
-      {!isSpotify && <StylePicker />}
+      {!isSpotify && !isRedirect && <StylePicker />}
 
-      {!isSpotify ? (
+      {isRedirect ? (
+        <div className="rounded-xl border border-dashed border-indigo-200 bg-indigo-50/60 px-4 py-3 text-[11px] leading-relaxed text-indigo-700">
+          Khi ai đó mở link này, họ sẽ được chuyển ngay đến URL bên dưới — không cần bấm gì thêm.
+        </div>
+      ) : !isSpotify ? (
         <Tabs
           size="small"
           items={[

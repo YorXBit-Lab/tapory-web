@@ -58,4 +58,20 @@ export const TEMPLATE_DEFAULTS: Record<TemplateId, ContentFields> = {
     imageUrl:    '',
     spotifyUrl:  '',
   },
+  profile: {
+    title:       'Nguyễn Văn A',
+    subtitle:    'Designer · Freelancer',
+    description: 'Mình là designer với 3 năm kinh nghiệm, đam mê tạo ra những sản phẩm đẹp và có ý nghĩa. Rất vui được kết nối! 👋',
+    date:        '',
+    imageUrl:    '',
+    spotifyUrl:  '',
+  },
+  redirect: {
+    title:       '',
+    subtitle:    '',
+    description: '',
+    date:        '',
+    imageUrl:    '',
+    spotifyUrl:  '',
+  },
 };

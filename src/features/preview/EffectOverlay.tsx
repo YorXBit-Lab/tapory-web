@@ -2,7 +2,6 @@
 import { useEffect, useRef } from 'react';
 import { tsParticles } from '@tsparticles/engine';
 import { loadSlim } from '@tsparticles/slim';
-import { loadEmojiShape } from '@tsparticles/shape-emoji';
 import { loadEmittersPlugin } from '@tsparticles/plugin-emitters';
 import type { ISourceOptions } from '@tsparticles/engine';
 import type { IEffect } from '@/configs/types';
@@ -13,8 +12,7 @@ let enginePromise: Promise<void> | null = null;
 function ensureEngine(): Promise<void> {
   if (!enginePromise) {
     enginePromise = (async () => {
-      await loadSlim(tsParticles);
-      await loadEmojiShape(tsParticles);
+      await loadSlim(tsParticles);   // already includes emoji shape
       await loadEmittersPlugin(tsParticles);
     })();
   }
@@ -132,30 +130,31 @@ const CONFIGS: Record<string, ISourceOptions> = {
         type: 'emoji',
         options: { emoji: { value: ['❤️', '💕', '💗', '💖', '🩷'] } },
       },
-      size: { value: { min: 10, max: 20 } },
+      size: { value: { min: 8, max: 16 } },
       opacity: {
-        value: { min: 0.6, max: 1 },
-        animation: { enable: true, speed: 0.8, sync: false },
+        value: { min: 0.7, max: 1 },
+        animation: { enable: true, speed: 0.6, sync: false },
       },
       move: {
         enable: true,
         direction: 'top',
-        speed: { min: 2, max: 4 },
+        speed: { min: 1.5, max: 3.5 },
         random: true,
         straight: false,
-        outModes: { default: 'destroy' },
+        // bottom: 'none' allows particles emitted below the canvas to enter
+        outModes: { default: 'none', top: 'destroy' },
       },
       rotate: {
-        value: { min: -20, max: 20 },
+        value: { min: -25, max: 25 },
         direction: 'random',
-        animation: { enable: true, speed: 4, sync: false },
+        animation: { enable: true, speed: 5, sync: false },
       },
     },
     emitters: {
       direction: 'top',
       life: { count: 0 },
-      rate: { quantity: 1, delay: 0.6 }, // ~1.7/s → ~1.7 × 6 s avg ≈ 10 hearts
-      size: { width: 100, height: 0 },
+      rate: { quantity: 1, delay: 0.55 },
+      size: { width: 80, height: 0 },
       position: { x: 50, y: 108 },
     },
   },
@@ -200,7 +199,7 @@ const CONFIGS: Record<string, ISourceOptions> = {
         type: 'emoji',
         options: { emoji: { value: ['🌸', '🌺', '🌷', '💮'] } },
       },
-      size: { value: { min: 10, max: 18 } },
+      size: { value: { min: 7, max: 13 } },
       opacity: {
         value: { min: 0.55, max: 0.95 },
         animation: { enable: true, speed: 0.6, sync: false },
@@ -238,28 +237,28 @@ const CONFIGS: Record<string, ISourceOptions> = {
       color: { value: ['#90e0ef', '#caf0f8', '#a8dadc', '#48cae4'] },
       shape: { type: 'circle' },
       opacity: {
-        value: { min: 0.1, max: 0.4 },
+        value: { min: 0.25, max: 0.55 },
         animation: { enable: true, speed: 0.5, sync: false },
       },
       size: {
-        value: { min: 10, max: 28 },
+        value: { min: 12, max: 30 },
         animation: { enable: true, speed: 1.5, sync: false },
       },
-      stroke: { width: 1.5, color: { value: '#90e0ef' } },
+      stroke: { width: 2, color: { value: '#90e0ef' } },
       move: {
         enable: true,
         direction: 'top',
-        speed: { min: 2.5, max: 5 },
+        speed: { min: 2, max: 4.5 },
         random: true,
         straight: false,
-        outModes: { default: 'destroy' },
+        outModes: { default: 'none', top: 'destroy' },
       },
     },
     emitters: {
       direction: 'top',
       life: { count: 0 },
-      rate: { quantity: 1, delay: 0.75 }, // ~1.3/s → ~1.3 × 6 s avg ≈ 8 bubbles
-      size: { width: 100, height: 0 },
+      rate: { quantity: 1, delay: 0.7 },
+      size: { width: 80, height: 0 },
       position: { x: 50, y: 108 },
     },
   },
@@ -275,7 +274,7 @@ const CONFIGS: Record<string, ISourceOptions> = {
         type: 'emoji',
         options: { emoji: { value: ['💩', '💩', '💩', '🚽'] } },
       },
-      size: { value: { min: 14, max: 24 } },
+      size: { value: { min: 10, max: 17 } },
       opacity: { value: { min: 0.85, max: 1 } },
       rotate: {
         value: { min: -20, max: 20 },
@@ -311,30 +310,31 @@ const CONFIGS: Record<string, ISourceOptions> = {
         type: 'emoji',
         options: { emoji: { value: ['💸', '💵', '💰', '🪙', '💎'] } },
       },
-      size: { value: { min: 10, max: 20 } },
+      size: { value: { min: 8, max: 16 } },
       opacity: {
-        value: { min: 0.7, max: 1 },
-        animation: { enable: true, speed: 0.7, sync: false },
+        value: { min: 0.8, max: 1 },
+        animation: { enable: true, speed: 0.5, sync: false },
       },
       rotate: {
-        value: { min: -15, max: 15 },
+        value: { min: -20, max: 20 },
         direction: 'random',
-        animation: { enable: true, speed: 6, sync: false },
+        animation: { enable: true, speed: 7, sync: false },
       },
       move: {
         enable: true,
         direction: 'top',
-        speed: { min: 2.5, max: 5 },
+        speed: { min: 2, max: 4.5 },
         random: true,
         straight: false,
-        outModes: { default: 'destroy' },
+        // bottom: 'none' allows particles emitted below the canvas to enter
+        outModes: { default: 'none', top: 'destroy' },
       },
     },
     emitters: {
       direction: 'top',
       life: { count: 0 },
-      rate: { quantity: 1, delay: 0.6 }, // ~1.7/s → ~1.7 × 6 s avg ≈ 10 emojis
-      size: { width: 100, height: 0 },
+      rate: { quantity: 1, delay: 0.55 },
+      size: { width: 80, height: 0 },
       position: { x: 50, y: 108 },
     },
   },
@@ -350,7 +350,7 @@ const CONFIGS: Record<string, ISourceOptions> = {
         type: 'emoji',
         options: { emoji: { value: ['🎉', '🎊', '🥳', '🎈', '🎁', '✨'] } },
       },
-      size: { value: { min: 12, max: 20 } },
+      size: { value: { min: 8, max: 16 } },
       opacity: { value: { min: 0.8, max: 1 } },
       rotate: {
         value: { min: 0, max: 360 },
@@ -381,27 +381,31 @@ const CONFIGS: Record<string, ISourceOptions> = {
     background: { color: { value: 'transparent' } },
     particles: {
       number: { value: 0 },
-      color: { value: ['#ffd700', '#ffc300', '#ffb700', '#ffe066', '#ffd93d'] },
+      color: { value: ['#ffd700', '#ffc300', '#ffb700', '#ffe566', '#ffd93d', '#ffec6a'] },
       shape: { type: 'circle' },
       opacity: {
-        value: { min: 0.4, max: 0.85 },
-        animation: { enable: true, speed: 1.5, sync: false },
+        value: { min: 0.55, max: 1 },
+        animation: { enable: true, speed: 1.2, sync: false },
       },
-      size: { value: { min: 1.5, max: 3 } },
+      size: { value: { min: 2, max: 4.5 } },
       move: {
         enable: true,
         direction: 'bottom-right',
-        speed: { min: 10, max: 18 }, // fast → off-screen in ~2–3 s
+        speed: { min: 9, max: 16 },
         straight: true,
         outModes: { default: 'destroy' },
       },
     },
-    emitters: {
-      life: { count: 0 },
-      rate: { quantity: 3, delay: 0.07 }, // ~43/s → ~43 × 2 s ≈ 86 tiny drops
-      size: { width: 110, height: 0 },
-      position: { x: 20, y: 0 },
-    },
+    // Dùng nhiều emitter rải đều theo chiều ngang để tránh "1 đường rơi"
+    emitters: [
+      { life: { count: 0 }, rate: { quantity: 2, delay: 0.08 }, size: { width: 1, height: 1 }, position: { x: 5,  y: 0 } },
+      { life: { count: 0 }, rate: { quantity: 2, delay: 0.08 }, size: { width: 1, height: 1 }, position: { x: 20, y: 0 } },
+      { life: { count: 0 }, rate: { quantity: 2, delay: 0.08 }, size: { width: 1, height: 1 }, position: { x: 35, y: 0 } },
+      { life: { count: 0 }, rate: { quantity: 2, delay: 0.08 }, size: { width: 1, height: 1 }, position: { x: 50, y: 0 } },
+      { life: { count: 0 }, rate: { quantity: 2, delay: 0.08 }, size: { width: 1, height: 1 }, position: { x: 65, y: 0 } },
+      { life: { count: 0 }, rate: { quantity: 2, delay: 0.08 }, size: { width: 1, height: 1 }, position: { x: 80, y: 0 } },
+      { life: { count: 0 }, rate: { quantity: 2, delay: 0.08 }, size: { width: 1, height: 1 }, position: { x: 95, y: 0 } },
+    ],
   },
 };
 
