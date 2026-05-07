@@ -9,7 +9,7 @@ export function BdayParty({ data, c }: LayoutProps) {
   const mode      = data.imageMode || 'circle';
 
   return (
-    <div className="relative flex h-full w-full flex-col items-center overflow-hidden"
+    <div className="relative flex min-h-full w-full flex-col items-center overflow-hidden"
       style={{ background: `linear-gradient(150deg, ${c.accent} 0%, ${c.accent}dd 100%)` }}>
 
       {[

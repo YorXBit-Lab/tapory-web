@@ -21,16 +21,22 @@ function EditorInner({ orderId, initialTemplate }: Props) {
   const tpl = TEMPLATES[templateId] ?? TEMPLATES[initialTemplate];
 
   return (
-    <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8">
-      <div className="mb-6 flex items-center gap-2 text-sm">
+    <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-5 lg:py-8">
+      <div className="mb-4 flex items-center gap-2 text-sm lg:mb-6">
         <Link href="/templates" className="text-content3 transition-colors hover:text-primary">← Đổi loại</Link>
         <span className="text-content4">/</span>
         <span className="font-medium text-content1">{tpl?.icon} {tpl?.name}</span>
         <span className="text-xs text-content4">#{orderId}</span>
       </div>
-      <div className="flex flex-col gap-8 lg:flex-row">
-        <EditorForm />
-        <PhonePreview />
+
+      {/* Mobile: preview first (top), form below. Desktop: form left, preview sticky right */}
+      <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:gap-8">
+        <div className="order-last min-w-0 flex-1 lg:order-none">
+          <EditorForm />
+        </div>
+        <div className="order-first lg:order-none">
+          <PhonePreview />
+        </div>
       </div>
     </main>
   );

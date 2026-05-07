@@ -9,7 +9,7 @@ export function WedRomantic({ data, c }: LayoutProps) {
   const mode      = data.imageMode || 'full';
 
   return (
-    <div className="relative flex h-full w-full flex-col" style={{ backgroundColor: c.accent }}>
+    <div className="relative flex min-h-full w-full flex-col" style={{ backgroundColor: c.accent }}>
 
       {/* ── Full mode: ảnh full-width phía trên ── */}
       {mode === 'full' && (

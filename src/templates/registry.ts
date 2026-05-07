@@ -6,7 +6,6 @@ import type React from 'react';
 const registry = new Map<TemplateId, TemplateModule>();
 
 export function registerTemplate(module: TemplateModule): void {
-  if (registry.has(module.id)) return;
   registry.set(module.id, module);
 }
 

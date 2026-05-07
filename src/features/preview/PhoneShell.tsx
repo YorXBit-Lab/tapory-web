@@ -16,7 +16,7 @@ export function PhoneShell({ children }: Props) {
 
   return (
     <div
-      className="relative flex w-full items-center justify-center overflow-hidden rounded-3xl px-4 py-10"
+      className="relative flex w-full items-center justify-center overflow-hidden rounded-3xl px-4 py-6 lg:py-10"
       style={{ background: 'linear-gradient(160deg, #f4f4f6 0%, #eaeaec 100%)' }}
     >
       {/* Spotlight */}

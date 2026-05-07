@@ -9,7 +9,7 @@ export function WedStory({ data, c }: LayoutProps) {
   const mode      = data.imageMode || 'full';
 
   return (
-    <div className="relative flex h-full w-full flex-col overflow-hidden" style={{ backgroundColor: '#0d0d0d' }}>
+    <div className="relative flex min-h-full w-full flex-col overflow-hidden" style={{ backgroundColor: '#0d0d0d' }}>
 
       {/* ── Full mode: ảnh nền toàn màn hình ── */}
       {mode === 'full' && (

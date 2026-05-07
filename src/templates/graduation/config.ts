@@ -16,6 +16,16 @@ export const GRADUATION_STYLES: ITemplateStyle[] = [
     colors: { primary: '#f5f0e8', secondary: '#c9a93c', accent: '#0f0f0f' } },
   { id: 'grad-pastel',    layout: 'pastel',    name: 'Pastel',
     colors: { primary: '#6b4c8a', secondary: '#f4a5b8', accent: '#fdf0f8' } },
+  { id: 'grad-floral',    layout: 'floral',    name: 'Floral',
+    colors: { primary: '#4a3570', secondary: '#9b7ec8', accent: '#ede0f8' } },
+  { id: 'grad-watercolor', layout: 'watercolor', name: 'Watercolor',
+    colors: { primary: '#1a5f8a', secondary: '#4fa8d5', accent: '#e8f4fc' } },
+  { id: 'grad-bold',      layout: 'bold',      name: 'Bold',
+    colors: { primary: '#ffffff', secondary: '#e8f8ff', accent: '#00a8e8' } },
+  { id: 'grad-boho',      layout: 'boho',      name: 'Boho',
+    colors: { primary: '#3d2b1f', secondary: '#8b5e3c', accent: '#f5efe8' } },
+  { id: 'grad-golddark',  layout: 'golddark',  name: 'Gold Dark',
+    colors: { primary: '#f5e6c8', secondary: '#c9a93c', accent: '#1a1a1a' } },
 ];
 
 export const GRADUATION_FIELDS: FieldMeta[] = [

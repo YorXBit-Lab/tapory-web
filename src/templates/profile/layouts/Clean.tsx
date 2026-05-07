@@ -12,7 +12,7 @@ export function ProfileClean({ data, c }: LayoutProps) {
   const hasContact = !!(data.email || data.phone);
 
   return (
-    <div className="relative flex h-full w-full flex-col" style={{ backgroundColor: '#ffffff' }}>
+    <div className="relative flex min-h-full w-full flex-col" style={{ backgroundColor: '#ffffff' }}>
 
       {/* Top accent stripe — absolute so camera island overlays it, not content */}
       <div className="absolute inset-x-0 top-0 h-[3px]" style={{ backgroundColor: c.secondary }} />

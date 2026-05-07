@@ -1,12 +1,18 @@
 import { fmt } from '@/shared/utils/fmt';
+import { getFontFamily, getImageFilter, getTitleFontSize } from '@/shared/utils/styleHelpers';
 import type { LayoutProps } from '@/templates/types';
 
 export function GradAcademic({ data, c }: LayoutProps) {
+  const font      = getFontFamily(data.fontStyle);
+  const titleSize = getTitleFontSize(data.titleSize);
+  const imgFilter = getImageFilter(data.imageFilter);
+  const mode      = data.imageMode || 'card';
+
   return (
-    <div className="relative flex h-full w-full flex-col items-center overflow-hidden"
+    <div className="relative flex min-h-full w-full flex-col items-center overflow-hidden"
       style={{ backgroundColor: c.accent }}>
 
-      {/* Edge vignette — linen paper feel */}
+      {/* Edge vignette */}
       <div className="pointer-events-none absolute inset-0"
         style={{ background: 'radial-gradient(ellipse at 50% 42%, transparent 42%, rgba(0,0,0,0.07) 100%)' }} />
 
@@ -27,10 +33,25 @@ export function GradAcademic({ data, c }: LayoutProps) {
       <div className="pointer-events-none absolute -top-20 left-1/2 h-56 w-56 -translate-x-1/2 rounded-full"
         style={{ background: `radial-gradient(circle, ${c.secondary}48, transparent 68%)`, filter: 'blur(30px)' }} />
 
-      <div className="flex-shrink-0" style={{ height: 52 }} />
+      {/* ── FULL MODE: photo fills top ── */}
+      {mode === 'full' && (
+        <div className="relative w-full flex-shrink-0" style={{ height: '48%' }}>
+          {data.imageUrl
+            ? <img src={data.imageUrl} className="h-full w-full object-cover object-top" alt=""
+                style={{ filter: imgFilter, transform: 'scale(1.04)', transformOrigin: 'top center' }} />
+            : <div className="flex h-full w-full items-center justify-center"
+                style={{ background: `${c.secondary}12` }}>
+                <span className="text-6xl" style={{ opacity: 0.08 }}>📷</span>
+              </div>}
+          <div className="pointer-events-none absolute inset-x-0 bottom-0"
+            style={{ height: 64, background: `linear-gradient(to top, ${c.accent}, transparent)` }} />
+        </div>
+      )}
+
+      {mode !== 'full' && <div className="flex-shrink-0" style={{ height: 52 }} />}
 
       {/* Medallion seal */}
-      <div className="relative z-10 flex-shrink-0">
+      <div className="relative z-10 flex-shrink-0" style={{ marginTop: mode === 'full' ? -24 : 0 }}>
         <div className="absolute -inset-4 rounded-full opacity-45"
           style={{ background: `radial-gradient(circle, ${c.secondary}55, transparent 65%)`, filter: 'blur(10px)' }} />
         <div className="relative flex h-[52px] w-[52px] items-center justify-center rounded-full"
@@ -54,28 +75,40 @@ export function GradAcademic({ data, c }: LayoutProps) {
         <div className="h-px w-9" style={{ background: `linear-gradient(to left, transparent, ${c.secondary}68)` }} />
       </div>
 
-      {/* Portrait — gold shimmer border */}
-      <div className="relative z-10 mt-3.5 flex-shrink-0">
-        <div className="absolute -inset-[3px] rounded-[11px]"
-          style={{
-            background: `linear-gradient(145deg, ${c.secondary}ff, ${c.secondary}55, ${c.secondary}ee, ${c.secondary}33, ${c.secondary}cc)`,
-            filter: 'blur(1px)',
-          }} />
-        <div className="relative overflow-hidden"
-          style={{
-            width: 92,
-            height: 110,
-            borderRadius: 9,
-            border: `1.5px solid ${c.secondary}aa`,
-            boxShadow: `0 6px 22px rgba(0,0,0,0.16), inset 0 0 0 1px rgba(255,255,255,0.18)`,
-          }}>
-          {data.imageUrl
-            ? <img src={data.imageUrl} className="h-full w-full object-cover object-top" alt=""
-                style={{ transform: 'scale(1.04)' }} />
-            : <div className="flex h-full w-full items-center justify-center text-3xl"
-                style={{ background: `${c.primary}14` }}>📷</div>}
+      {/* ── CARD MODE: gold shimmer portrait ── */}
+      {mode === 'card' && (
+        <div className="relative z-10 mt-3.5 flex-shrink-0">
+          <div className="absolute -inset-[3px] rounded-[11px]"
+            style={{
+              background: `linear-gradient(145deg, ${c.secondary}ff, ${c.secondary}55, ${c.secondary}ee, ${c.secondary}33, ${c.secondary}cc)`,
+              filter: 'blur(1px)',
+            }} />
+          <div className="relative overflow-hidden"
+            style={{ width: 92, height: 110, borderRadius: 9, border: `1.5px solid ${c.secondary}aa`, boxShadow: `0 6px 22px rgba(0,0,0,0.16)` }}>
+            {data.imageUrl
+              ? <img src={data.imageUrl} className="h-full w-full object-cover object-top" alt=""
+                  style={{ transform: 'scale(1.04)', filter: imgFilter }} />
+              : <div className="flex h-full w-full items-center justify-center text-3xl"
+                  style={{ background: `${c.primary}14` }}>📷</div>}
+          </div>
         </div>
-      </div>
+      )}
+
+      {/* ── CIRCLE MODE ── */}
+      {mode === 'circle' && (
+        <div className="relative z-10 mt-3.5 flex-shrink-0">
+          <div className="absolute -inset-[3px] rounded-full"
+            style={{ background: `conic-gradient(from 0deg, ${c.secondary}ff, ${c.secondary}55, ${c.secondary}ff)`, filter: 'blur(1px)' }} />
+          <div className="relative overflow-hidden rounded-full"
+            style={{ width: 96, height: 96, border: `1.5px solid ${c.secondary}aa`, boxShadow: `0 6px 22px rgba(0,0,0,0.16)` }}>
+            {data.imageUrl
+              ? <img src={data.imageUrl} className="h-full w-full object-cover object-top" alt=""
+                  style={{ transform: 'scale(1.04)', filter: imgFilter }} />
+              : <div className="flex h-full w-full items-center justify-center text-3xl"
+                  style={{ background: `${c.primary}14` }}>📷</div>}
+          </div>
+        </div>
+      )}
 
       {/* Divider — diamond */}
       <div className="relative z-10 mt-4 flex w-[66%] items-center gap-2.5">
@@ -85,8 +118,8 @@ export function GradAcademic({ data, c }: LayoutProps) {
       </div>
 
       {/* Name */}
-      <p className="relative z-10 mt-3 px-5 text-center text-[21px] font-bold leading-snug"
-        style={{ fontFamily: 'Georgia, serif', color: c.primary, letterSpacing: '0.01em' }}>
+      <p className="relative z-10 mt-3 px-5 text-center font-bold leading-snug"
+        style={{ fontFamily: font, fontSize: titleSize, color: c.primary, letterSpacing: '0.01em' }}>
         {data.title || 'Tên người nhận'}
       </p>
 

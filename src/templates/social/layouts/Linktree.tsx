@@ -17,7 +17,7 @@ export function SocLinktree({ data, c }: LayoutProps) {
   const rows    = socials.length > 0 ? socials : PLATFORMS;
 
   return (
-    <div className="relative flex h-full w-full flex-col items-center overflow-hidden px-5 pb-6 pt-[48px]"
+    <div className="relative flex min-h-full w-full flex-col items-center overflow-hidden px-5 pb-6 pt-[48px]"
       style={{ background: `linear-gradient(145deg, ${c.accent} 0%, #ffffff 100%)` }}>
 
       <div className="pointer-events-none absolute -right-12 -top-12 h-52 w-52 rounded-full opacity-22"

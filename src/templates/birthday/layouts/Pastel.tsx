@@ -9,7 +9,7 @@ export function BdayPastel({ data, c }: LayoutProps) {
   const mode      = data.imageMode || 'circle';
 
   return (
-    <div className="relative flex h-full w-full flex-col items-center overflow-hidden px-6 pb-7 pt-8"
+    <div className="relative flex min-h-full w-full flex-col items-center overflow-hidden px-6 pb-7 pt-8"
       style={{ background: `linear-gradient(160deg, ${c.accent} 0%, #ffffff 55%, ${c.accent}88 100%)` }}>
 
       {/* ── Label ── */}

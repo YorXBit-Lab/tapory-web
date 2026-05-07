@@ -17,7 +17,7 @@ export function SocNeon({ data, c }: LayoutProps) {
   const rows    = socials.length > 0 ? socials : PLATFORMS;
 
   return (
-    <div className="relative flex h-full w-full flex-col items-center justify-center gap-4 overflow-hidden px-5 pb-6"
+    <div className="relative flex min-h-full w-full flex-col items-center justify-center gap-4 overflow-hidden px-5 pb-6"
       style={{ backgroundColor: '#06060f' }}>
 
       <div className="pointer-events-none absolute inset-0 opacity-[0.03]"

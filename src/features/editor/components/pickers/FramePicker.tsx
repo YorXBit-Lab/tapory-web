@@ -11,7 +11,7 @@ export function FramePicker() {
   return (
     <div>
       <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-content3">Khung viền</p>
-      <div className="flex gap-2 overflow-x-auto pb-1">
+      <div className="flex gap-2 overflow-x-auto pb-2">
         {frames.map(f => (
           <FrameCard
             key={f.id}

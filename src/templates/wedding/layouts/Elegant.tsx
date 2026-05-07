@@ -9,7 +9,7 @@ export function WedElegant({ data, c }: LayoutProps) {
   const mode      = data.imageMode || 'card';
 
   return (
-    <div className="relative flex h-full w-full flex-col items-center justify-center gap-0 overflow-hidden px-6 pb-6 pt-6"
+    <div className="relative flex min-h-full w-full flex-col items-center justify-center gap-0 overflow-hidden px-6 pb-6 pt-6"
       style={{ backgroundColor: '#fafaf8' }}>
 
       <div className="mb-4 flex w-full flex-col items-center gap-1.5">

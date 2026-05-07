@@ -8,6 +8,8 @@ export const ANNIVERSARY_STYLES: ITemplateStyle[] = [
     colors: { primary: '#1a1a1a', secondary: '#e8c5b0', accent: '#fdf9f6' } },
   { id: 'anni-film',      layout: 'film',      name: 'Film',
     colors: { primary: '#ffffff', secondary: '#c9a93c', accent: '#1a1a1a' } },
+  { id: 'anni-love',      layout: 'love',      name: 'Love',
+    colors: { primary: '#fff0f3', secondary: '#ff8fab', accent: '#1e0a12' } },
 ];
 
 export const ANNIVERSARY_FIELDS: FieldMeta[] = [

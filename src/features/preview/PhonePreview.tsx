@@ -21,7 +21,8 @@ export function PhonePreview() {
 
   const content = (
     <>
-      <div className="absolute inset-0 overflow-y-auto" style={screenBg}>
+      <div className="absolute inset-0 overflow-y-auto [&::-webkit-scrollbar]:hidden"
+        style={{ ...screenBg, scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' } as never}>
         {activeStyle && <TemplateRenderer data={draft} style={activeStyle} />}
       </div>
       <EffectOverlay effect={activeEffect} />
@@ -68,10 +69,10 @@ export function PhonePreview() {
             ✕
           </button>
 
-          {/* Enlarged phone — stop propagation so clicking phone doesn't close modal */}
+          {/* Enlarged phone — responsive scale: no zoom on mobile, scale up on larger screens */}
           <div
-            className="flex-shrink-0"
-            style={{ width: 280, transform: 'scale(1.44)', transformOrigin: 'center' }}
+            className="flex-shrink-0 origin-center [transform:scale(1)] sm:[transform:scale(1.2)] lg:[transform:scale(1.4)]"
+            style={{ width: 280 }}
             onClick={e => e.stopPropagation()}
           >
             <PhoneShell>{content}</PhoneShell>

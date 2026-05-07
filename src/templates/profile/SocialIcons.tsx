@@ -1,3 +1,5 @@
+import React from 'react';
+
 const FbIcon = () => (
   <svg width="14" height="14" viewBox="0 0 24 24" fill="white">
     <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>
@@ -21,7 +23,7 @@ const TkIcon = () => (
 export const SOCIAL_PLATFORMS: {
   key: 'facebookUrl' | 'instagramUrl' | 'tiktokUrl';
   bg: string;
-  Icon: () => JSX.Element;
+  Icon: () => React.ReactElement;
 }[] = [
   { key: 'facebookUrl',  bg: '#1877F2', Icon: FbIcon },
   { key: 'instagramUrl', bg: 'linear-gradient(45deg,#f09433 0%,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888 100%)', Icon: IgIcon },

@@ -51,7 +51,7 @@ export function FontPicker() {
             <button
               key={s.id}
               onClick={() => dispatch(updateField({ titleSize: s.id }))}
-              className={`h-8 w-10 rounded-lg border text-[11px] font-semibold transition-all ${
+              className={`h-11 w-12 rounded-lg border text-[11px] font-semibold transition-all ${
                 currentSize === s.id
                   ? 'border-primary bg-primary/8 text-primary'
                   : 'border-border text-content2 hover:border-primary/40'

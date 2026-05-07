@@ -13,7 +13,12 @@ export function StylePicker() {
   return (
     <div>
       <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-content3">Phong cách</p>
-      <div className="flex gap-2 overflow-x-auto pb-1">
+      {/* ≤ 6 styles → horizontal scroll; > 6 styles → grid on mobile, scroll on sm+ */}
+      <div className={
+        styles.length > 6
+          ? 'grid grid-cols-3 gap-2 sm:flex sm:flex-nowrap sm:gap-2 sm:overflow-x-auto sm:pb-1'
+          : 'flex gap-2 overflow-x-auto pb-1'
+      }>
         {styles.map(s => (
           <StyleCard
             key={s.id}

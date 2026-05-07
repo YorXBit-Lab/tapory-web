@@ -10,7 +10,7 @@ export function EffectPicker() {
   return (
     <div>
       <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-content3">Hiệu ứng</p>
-      <div className="flex gap-2 overflow-x-auto pb-1">
+      <div className="flex gap-2 overflow-x-auto pb-2">
         {EFFECTS.map(e => (
           <EffectCard
             key={e.id}

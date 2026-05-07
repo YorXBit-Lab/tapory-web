@@ -374,38 +374,40 @@ const CONFIGS: Record<string, ISourceOptions> = {
     },
   },
 
-  /* 🌧️ Mưa vàng — fast diagonal drops, ~60 visible */
+  /* 🌧️ Mưa vàng — gold emoji rain */
   rain: {
     fullScreen: { enable: false },
     fpsLimit: 60,
     background: { color: { value: 'transparent' } },
     particles: {
       number: { value: 0 },
-      color: { value: ['#ffd700', '#ffc300', '#ffb700', '#ffe566', '#ffd93d', '#ffec6a'] },
-      shape: { type: 'circle' },
-      opacity: {
-        value: { min: 0.55, max: 1 },
-        animation: { enable: true, speed: 1.2, sync: false },
+      shape: {
+        type: 'emoji',
+        options: { emoji: { value: ['⭐', '🌟', '✨', '💫', '🪙'] } },
       },
-      size: { value: { min: 2, max: 4.5 } },
+      size: { value: { min: 10, max: 18 } },
+      opacity: { value: { min: 0.75, max: 1 } },
+      rotate: {
+        value: { min: -20, max: 20 },
+        direction: 'random',
+        animation: { enable: true, speed: 10, sync: false },
+      },
       move: {
         enable: true,
-        direction: 'bottom-right',
-        speed: { min: 9, max: 16 },
-        straight: true,
+        direction: 'bottom',
+        speed: { min: 4, max: 9 },
+        random: true,
+        straight: false,
+        gravity: { enable: true, acceleration: 2 },
         outModes: { default: 'destroy' },
       },
     },
-    // Dùng nhiều emitter rải đều theo chiều ngang để tránh "1 đường rơi"
-    emitters: [
-      { life: { count: 0 }, rate: { quantity: 2, delay: 0.08 }, size: { width: 1, height: 1 }, position: { x: 5,  y: 0 } },
-      { life: { count: 0 }, rate: { quantity: 2, delay: 0.08 }, size: { width: 1, height: 1 }, position: { x: 20, y: 0 } },
-      { life: { count: 0 }, rate: { quantity: 2, delay: 0.08 }, size: { width: 1, height: 1 }, position: { x: 35, y: 0 } },
-      { life: { count: 0 }, rate: { quantity: 2, delay: 0.08 }, size: { width: 1, height: 1 }, position: { x: 50, y: 0 } },
-      { life: { count: 0 }, rate: { quantity: 2, delay: 0.08 }, size: { width: 1, height: 1 }, position: { x: 65, y: 0 } },
-      { life: { count: 0 }, rate: { quantity: 2, delay: 0.08 }, size: { width: 1, height: 1 }, position: { x: 80, y: 0 } },
-      { life: { count: 0 }, rate: { quantity: 2, delay: 0.08 }, size: { width: 1, height: 1 }, position: { x: 95, y: 0 } },
-    ],
+    emitters: {
+      life: { count: 0 },
+      rate: { quantity: 2, delay: 0.4 },
+      size: { width: 100, height: 0 },
+      position: { x: 50, y: 0 },
+    },
   },
 };
 

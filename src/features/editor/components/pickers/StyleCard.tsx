@@ -123,7 +123,7 @@ export function StyleCard({ s, active, onClick }: Props) {
   return (
     <button
       onClick={onClick}
-      className={`flex w-[78px] flex-shrink-0 flex-col items-center gap-1.5 rounded-xl border-2 p-2 transition-all ${
+      className={`flex w-full flex-col items-center gap-1.5 rounded-xl border-2 p-2 transition-all sm:w-[78px] sm:flex-shrink-0 ${
         active ? 'border-primary scale-105 shadow-md' : 'border-border hover:border-primary/40'
       }`}
     >
