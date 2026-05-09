@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import { MemorialAPI } from '@/services/MemorialAPI';
+import { CardAPI } from '@/services/CardAPI';
 import { TemplateRenderer } from '@/features/preview/TemplateRenderer';
 import { FrameOverlay } from '@/features/preview/FrameOverlay';
 import { EffectOverlay } from '@/features/preview/EffectOverlay';
@@ -13,34 +14,9 @@ import '@/templates/init';
 import { FRAMES, EFFECTS } from '@/configs/constants';
 import type { IEditDraft, IMemorial } from '@/configs/types';
 
-// ─── MOCK: remove once Firebase is wired up ────────────────
-const USE_MOCK = true;
-
-const MOCK_DATA: IMemorial = {
-  orderId:     'mock-001',
-  templateId:  'graduation',
-  styleId:     'grad-luxury',
-  frameId:     'floral',
-  effectId:    'sparkles',
-  bgColor:     '',
-  bgImageUrl:  '',
-  title:       'Nguyễn Minh Sang',
-  subtitle:    'ĐH Bách Khoa TP.HCM – Công nghệ Thông tin',
-  description: 'Chúc mừng tốt nghiệp! Bốn năm nỗ lực đã đến ngày hái quả. Hành trình mới rực rỡ hơn đang chờ phía trước — hãy tiếp tục bay cao nhé.',
-  imageUrl:    '',
-  date:        '2025-11-15',
-  fontStyle:   '',
-  titleSize:   '',
-  imageMode:   'circle',
-  imageFilter: '',
-};
-// ────────────────────────────────────────────────────────────
-
-// Phone screen content area — matches PhoneShell inner screen (248−16 × 516−16)
 const NATIVE_W = 232;
 const NATIVE_H = 500;
 
-/* ── Shared spinner keyframes ── */
 const spinStyle = `@keyframes _tapory_spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}`;
 
 function Spinner({ size = 36, color = 'rgba(0,0,0,0.35)' }: { size?: number; color?: string }) {
@@ -118,9 +94,6 @@ const fullscreenCenter: React.CSSProperties = {
   backgroundColor: '#fff',
 };
 
-/* ═══════════════════════════════════════════════
-   MAIN COMPONENT
-   ═══════════════════════════════════════════════ */
 export function ViewClient({ orderId }: { orderId: string }) {
   const [scale, setScale] = useState<number | null>(null);
 
@@ -128,13 +101,8 @@ export function ViewClient({ orderId }: { orderId: string }) {
     const update = () => {
       const vw = window.visualViewport?.width  ?? window.innerWidth;
       const vh = window.visualViewport?.height ?? window.innerHeight;
-      // Contain-fit: scale so both width AND height fit the viewport.
-      // On mobile portrait (≈ 390×844) the ratio 232:500 ≈ phone ratio,
-      // so scale ≈ vw/NATIVE_W and the template fills ~100% of the screen.
-      // On desktop/landscape it becomes height-constrained and is centred.
       setScale(Math.min(vw / NATIVE_W, vh / NATIVE_H));
     };
-
     update();
     window.addEventListener('resize', update);
     window.visualViewport?.addEventListener('resize', update);
@@ -144,25 +112,27 @@ export function ViewClient({ orderId }: { orderId: string }) {
     };
   }, []);
 
+  // Track view once on mount
+  useEffect(() => {
+    CardAPI.trackView(orderId).catch(() => {});
+  }, [orderId]);
+
   const { data: result, isLoading, isError } = useQuery({
     queryKey: ['memorial', orderId],
     queryFn: () => MemorialAPI.getOne(orderId),
     retry: 1,
     staleTime: 5 * 60 * 1000,
-    enabled: !USE_MOCK,
   });
 
-  const memorial: IMemorial | null | undefined = USE_MOCK
-    ? MOCK_DATA
-    : (result?.data as IMemorial | null | undefined);
+  const memorial = result?.data as IMemorial | null | undefined;
 
   const styles      = memorial ? getTemplateStyles(memorial.templateId) : [];
   const activeStyle = styles.find(s => s.id === memorial?.styleId) ?? styles[0];
   const activeFrame = FRAMES.find(f => f.id === (memorial?.frameId  ?? 'none')) ?? FRAMES[0];
   const activeEffect = EFFECTS.find(e => e.id === (memorial?.effectId ?? 'none')) ?? EFFECTS[0];
 
-  if (!scale || (!USE_MOCK && isLoading)) return <LoadingScreen />;
-  if (!memorial || (!USE_MOCK && (isError || !memorial))) return <NotFoundScreen orderId={orderId} />;
+  if (!scale || isLoading) return <LoadingScreen />;
+  if (!memorial || isError) return <NotFoundScreen orderId={orderId} />;
   if (memorial.templateId === 'redirect') return <RedirectingScreen url={memorial.website} />;
 
   const draft: IEditDraft = { ...memorial, orderId: memorial.orderId ?? orderId, isDirty: false };
@@ -172,12 +142,6 @@ export function ViewClient({ orderId }: { orderId: string }) {
     <>
       <style>{`#tapory-screen::-webkit-scrollbar{display:none}`}</style>
 
-      {/*
-        Fixed full-screen shell — completely out of document flow (no body
-        scroll ever). Flex-centres the template so on desktop/landscape it
-        sits as a card in the middle; on mobile portrait it fills edge-to-edge.
-        screenBg fills any gap around the template on wider viewports.
-      */}
       <div
         style={{
           position: 'fixed',
@@ -189,16 +153,7 @@ export function ViewClient({ orderId }: { orderId: string }) {
           ...screenBg,
         }}
       >
-        {/*
-          Contain-fit zoom: scale = min(vw/NATIVE_W, vh/NATIVE_H).
-          The template's native 232×500 box always fits inside the viewport —
-          no matter the screen size — so height:NATIVE_H never causes overflow.
-        */}
         <div style={{ zoom: scale } as React.CSSProperties}>
-          {/*
-            Screen: fixed native size. overflowY:auto only kicks in for
-            content that is genuinely longer than NATIVE_H (500 px native).
-          */}
           <div
             id="tapory-screen"
             style={{
@@ -217,7 +172,6 @@ export function ViewClient({ orderId }: { orderId: string }) {
         </div>
       </div>
 
-      {/* Frame + effect pinned to viewport */}
       <div
         style={{
           position: 'fixed',
@@ -231,7 +185,6 @@ export function ViewClient({ orderId }: { orderId: string }) {
         <FrameOverlay frame={activeFrame} />
       </div>
 
-      {/* Edit button — above everything, always accessible */}
       <Link
         href={`/edit/${orderId}`}
         style={{
@@ -256,7 +209,6 @@ export function ViewClient({ orderId }: { orderId: string }) {
         }}
         title="Chỉnh sửa"
       >
-        {/* Pencil icon */}
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
           <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>

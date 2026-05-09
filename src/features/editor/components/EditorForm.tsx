@@ -10,6 +10,7 @@ import { ImageModePicker } from './pickers/ImageModePicker';
 import { ImageFilterPicker } from './pickers/ImageFilterPicker';
 import { FramePicker } from './pickers/FramePicker';
 import { EffectPicker } from './pickers/EffectPicker';
+import { TemplatePicker } from './pickers/TemplatePicker';
 import { ImageField } from './fields/ImageField';
 import { TextField } from './fields/TextField';
 import { TextareaField } from './fields/TextareaField';
@@ -23,64 +24,72 @@ export function EditorForm() {
 
   return (
     <section className="flex-1 space-y-5">
-      {!isRedirect && <StylePicker />}
+      <TemplatePicker />
+      <StylePicker />
 
-      {isRedirect ? (
-        <div className="rounded-xl border border-dashed border-indigo-200 bg-indigo-50/60 px-4 py-3 text-[11px] leading-relaxed text-indigo-700">
-          Khi ai đó mở link này, họ sẽ được chuyển ngay đến URL bên dưới — không cần bấm gì thêm.
-        </div>
-      ) : isSpotify ? (
-        <Tabs
-          size="small"
-          items={[
-            {
-              key: 'deco',
-              label: 'Trang trí',
-              children: (
-                <div className="space-y-5 pt-1">
-                  <FramePicker />
-                  <EffectPicker />
-                </div>
-              ),
-            },
-          ]}
-        />
-      ) : (
-        <Tabs
-          size="small"
-          items={[
-            {
-              key: 'text',
-              label: 'Chữ',
-              children: (
-                <div className="pt-1">
-                  <FontPicker />
-                </div>
-              ),
-            },
-            {
-              key: 'image',
-              label: 'Ảnh',
-              children: (
-                <div className="space-y-5 pt-1">
-                  <ImageModePicker />
-                  <ImageFilterPicker />
-                </div>
-              ),
-            },
-            {
-              key: 'deco',
-              label: 'Trang trí',
-              children: (
-                <div className="space-y-5 pt-1">
-                  <FramePicker />
-                  <EffectPicker />
-                </div>
-              ),
-            },
-          ]}
-        />
-      )}
+      <Tabs
+        size="small"
+        items={
+          isRedirect
+            ? [
+                {
+                  key: 'info',
+                  label: 'Chuyển hướng',
+                  children: (
+                    <div className="pt-1">
+                      <div className="rounded-xl border border-dashed border-indigo-200 bg-indigo-50/60 px-4 py-3 text-[11px] leading-relaxed text-indigo-700">
+                        Khi ai đó mở link này, họ sẽ được chuyển ngay đến URL bên dưới — không cần bấm gì thêm.
+                      </div>
+                    </div>
+                  ),
+                },
+              ]
+            : isSpotify
+              ? [
+                  {
+                    key: 'deco',
+                    label: 'Trang trí',
+                    children: (
+                      <div className="space-y-5 pt-1">
+                        <FramePicker />
+                        <EffectPicker />
+                      </div>
+                    ),
+                  },
+                ]
+              : [
+                  {
+                    key: 'text',
+                    label: 'Chữ',
+                    children: (
+                      <div className="pt-1">
+                        <FontPicker />
+                      </div>
+                    ),
+                  },
+                  {
+                    key: 'image',
+                    label: 'Ảnh',
+                    children: (
+                      <div className="space-y-5 pt-1">
+                        <ImageModePicker />
+                        <ImageFilterPicker />
+                      </div>
+                    ),
+                  },
+                  {
+                    key: 'deco',
+                    label: 'Trang trí',
+                    children: (
+                      <div className="space-y-5 pt-1">
+                        <FramePicker />
+                        <EffectPicker />
+                      </div>
+                    ),
+                  },
+                ]
+        }
+      />
 
       <div className="space-y-4">
         <p className="text-xs font-semibold uppercase tracking-wider text-content3">Nội dung</p>

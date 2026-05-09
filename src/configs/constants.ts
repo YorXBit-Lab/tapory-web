@@ -131,4 +131,9 @@ export const EFFECTS: IEffect[] = [
 
 export const FIRESTORE_COLLECTIONS = {
   MEMORIALS: 'memorials',
+  CARDS: 'cards',
+  CARD_AUTH: 'cardAuth',
+  CARD_VIEWS: 'cardViews',
+  ORDERS: 'orders',
+  ADMINS: 'admins',
 } as const;

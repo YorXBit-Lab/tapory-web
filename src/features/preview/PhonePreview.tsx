@@ -35,7 +35,7 @@ export function PhonePreview() {
       <div
         ref={screenRef}
         className="absolute inset-0 overflow-y-auto [&::-webkit-scrollbar]:hidden"
-        style={{ ...screenBg, scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' } as never}
+        style={{ ...screenBg, scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch', height: '100%' } as never}
       >
         {activeStyle && <TemplateRenderer data={draft} style={activeStyle} />}
         <InlineEditLayer containerRef={screenRef} draft={draft} fields={fields} dispatch={dispatch} />
@@ -47,7 +47,7 @@ export function PhonePreview() {
   const modalContent = (
     <>
       <div className="absolute inset-0 overflow-y-auto [&::-webkit-scrollbar]:hidden"
-        style={{ ...screenBg, scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' } as never}>
+        style={{ ...screenBg, scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch', height: '100%' } as never}>
         {activeStyle && <TemplateRenderer data={draft} style={activeStyle} />}
       </div>
       {overlays}

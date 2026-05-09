@@ -1,20 +1,20 @@
 # Tapory — Firebase Database Design
 
-## Tổng quan luồng hệ thống
+## Luồng hệ thống
 
 ```
 Khách mua thẻ NFC
        ↓
-Admin tạo Order + sinh Card ID → lập trình NFC chip với URL: tapory.vn/c/[cardId]
+Admin tạo Order → gắn Card ID → lập trình NFC chip với URL: tapory.vn/c/[cardId]
        ↓
 Khách quét thẻ → /c/[cardId]
-  ├── Chưa có memorial → /edit/[cardId]  (yêu cầu nhập SĐT để xác thực)
-  └── Đã có memorial   → /view/[cardId]  (xem trang kết quả)
+  ├── Chưa có content → /edit/[cardId]  (nhập SĐT + mật khẩu để xác thực)
+  └── Đã có content   → /view/[cardId]  (xem trang kết quả — không cần login)
 ```
 
 ---
 
-## Firestore Collections
+## Collections
 
 ### 1. `orders` — Đơn hàng
 
@@ -22,28 +22,23 @@ Khách quét thẻ → /c/[cardId]
 
 ```ts
 {
-  // Identity
   id: string;                    // Auto ID hoặc "ORD-20260508-001"
   orderCode: string;             // Mã hiển thị: "TP-001234"
 
-  // Thông tin khách hàng
   customerName: string;
-  customerPhone: string;         // SĐT gốc — dùng để auth vào edit card
+  customerPhone: string;         // SĐT chuẩn hoá: "0912345678" — chỉ admin đọc
   customerEmail?: string;
   customerNote?: string;
 
-  // Đơn hàng
-  cardIds: string[];             // ["card_abc", "card_xyz"] — 1 order có thể nhiều thẻ
+  cardIds: string[];             // ["card_abc"] — 1 order có thể nhiều thẻ
   quantity: number;
-  packageType: 'basic' | 'premium' | 'bundle';  // Loại gói
+  packageType: 'basic' | 'premium' | 'bundle';
 
-  // Thanh toán
   totalAmount: number;           // VNĐ
   paymentMethod: 'cod' | 'bank_transfer' | 'momo' | 'vnpay' | 'zalopay';
   paymentStatus: 'unpaid' | 'paid' | 'refunded';
   paidAt?: Timestamp;
 
-  // Vận chuyển
   shippingAddress: {
     recipientName: string;
     phone: string;
@@ -52,18 +47,16 @@ Khách quét thẻ → /c/[cardId]
     district: string;
     province: string;
   };
-  shippingProvider?: string;     // "GHTK", "GHN", v.v.
+  shippingProvider?: string;     // "GHTK", "GHN"
   trackingCode?: string;
   shippedAt?: Timestamp;
   deliveredAt?: Timestamp;
 
-  // Trạng thái đơn
   status: 'pending_payment' | 'paid' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
 
-  // Thời gian
   createdAt: Timestamp;
   updatedAt: Timestamp;
-  createdBy: string;             // UID admin tạo đơn
+  createdBy: string;             // UID admin
 }
 ```
 
@@ -73,76 +66,88 @@ Khách quét thẻ → /c/[cardId]
 
 **Path:** `cards/{cardId}`
 
-> `cardId` chính là giá trị được lập trình vào chip NFC, ví dụ: `"tp_x7k2m9"`.  
-> URL trên thẻ: `https://tapory.vn/c/{cardId}`
+> `cardId` được lập trình vào chip NFC. URL thẻ: `https://tapory.vn/c/{cardId}`  
+> Doc này **world-readable** — không chứa thông tin nhạy cảm.
 
 ```ts
 {
-  // Identity
-  id: string;                    // Trùng với doc ID
-
-  // Liên kết đơn hàng
+  id: string;
   orderId: string;               // Ref → orders/{orderId}
-  customerPhone: string;         // Copy từ order để auth nhanh (plain text — chỉ admin đọc được)
-  phoneHash: string;             // SHA-256 của SĐT chuẩn hoá — dùng để xác thực client-side
 
-  // Trạng thái thẻ
-  status: 'blank'                // Thẻ mới, chưa assign vào order
-         | 'assigned'            // Đã assign vào order, chưa có memorial
-         | 'published'           // Khách đã lưu memorial
-         | 'locked'              // Admin khoá, không cho edit thêm
-         | 'expired';            // Hết hạn (nếu dùng subscription)
+  status: 'blank'                // Thẻ mới, chưa gắn order
+         | 'assigned'            // Đã gắn order, chưa có content
+         | 'published'           // Khách đã lưu content
+         | 'locked'              // Admin khoá
+         | 'expired';
 
-  // Memorial
-  hasContent: boolean;           // true khi đã có doc trong `memorials/{cardId}`
-  templateId?: TemplateId;       // Copy nhanh để dashboard khỏi join
+  hasContent: boolean;           // true khi đã có doc trong memorials/{cardId}
+  templateId?: TemplateId;       // Cache để dashboard khỏi join
 
-  // Thời hạn chỉnh sửa
-  editDeadline?: Timestamp;      // Sau mốc này tự động locked
+  editDeadline?: Timestamp;      // Sau mốc này tự khoá
   publishedAt?: Timestamp;
   lockedAt?: Timestamp;
   lockedBy?: string;             // UID admin khoá
 
-  // Analytics (cập nhật bằng Cloud Function hoặc client)
   stats: {
     totalViews: number;
     lastViewedAt?: Timestamp;
   };
 
-  // Thời gian
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }
 ```
 
-**Lý do tách `cards` và `memorials`:**
-- `cards` = metadata vật lý, admin quản lý, có security rules chặt.
-- `memorials` = content do khách tự edit, rules riêng.
-
 ---
 
-### 3. `memorials` — Nội dung thẻ (giữ nguyên collection hiện tại)
+### 3. `cardAuth` — Xác thực thẻ *(tách riêng để bảo mật)*
 
-**Path:** `memorials/{cardId}`
+**Path:** `cardAuth/{cardId}`
 
-> Doc ID = `cardId` (thay vì `orderId` như hiện tại — cần migration nhỏ).
+> Collection này **chỉ Cloud Function đọc/ghi** — client không bao giờ truy cập trực tiếp.  
+> Tách khỏi `cards` để Firestore Rules có thể deny client hoàn toàn.
 
 ```ts
 {
-  // Identity (giữ field orderId để backward compat, value = cardId)
-  orderId: string;               // = cardId
+  cardId: string;
+  orderId: string;
 
-  // Template
-  templateId: TemplateId;
+  phoneHash: string;             // SHA-256(normalisePhone(phone))
+  passwordHash: string;          // bcrypt hash của mật khẩu (cost factor 10)
+                                 // Mật khẩu khởi tạo do admin set khi tạo order
+
+  passwordChangedAt?: Timestamp; // Lần cuối đổi mật khẩu
+  failedAttempts: number;        // Đếm thử sai liên tiếp (reset khi thành công)
+  lockedUntil?: Timestamp;       // Khoá tạm 15 phút sau 5 lần sai
+
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+```
+
+**Lý do dùng bcrypt cho password (không phải SHA-256):**  
+SHA-256 không có salt — dễ bị rainbow table attack. bcrypt tự thêm salt và có work factor điều chỉnh được.
+
+---
+
+### 4. `memorials` — Nội dung thẻ
+
+**Path:** `memorials/{cardId}`
+
+> Doc ID = `cardId`. Hiện tại codebase dùng `orderId` làm doc ID, nhưng vì 1 order = 1 thẻ nên `cardId == orderId` — **không cần migrate data**.
+
+```ts
+{
+  orderId: string;               // = cardId (giữ field để backward compat)
+
+  templateId: TemplateId;        // 'graduation' | 'wedding' | 'birthday' | ...
   styleId: string;
   frameId: string;
   effectId: string;
 
-  // Background
   bgColor: string;
   bgImageUrl?: string;
 
-  // Nội dung
   title: string;
   subtitle?: string;
   description?: string;
@@ -150,13 +155,11 @@ Khách quét thẻ → /c/[cardId]
   imageUrl?: string;
   spotifyUrl?: string;
 
-  // Tuỳ chỉnh giao diện
   fontStyle?: string;
   titleSize?: string;
   imageMode?: string;
   imageFilter?: string;
 
-  // Mạng xã hội / liên hệ
   facebookUrl?: string;
   instagramUrl?: string;
   tiktokUrl?: string;
@@ -165,7 +168,6 @@ Khách quét thẻ → /c/[cardId]
   phone?: string;
   website?: string;
 
-  // Thời gian
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }
@@ -173,11 +175,11 @@ Khách quét thẻ → /c/[cardId]
 
 ---
 
-### 4. `cardViews` — Analytics lượt xem
+### 5. `cardViews` — Analytics lượt xem
 
 **Path:** `cardViews/{autoId}`
 
-> Collection phẳng (không dùng subcollection) để dễ aggregate trên dashboard.
+> Collection phẳng (không dùng subcollection) để aggregate dễ trên dashboard.
 
 ```ts
 {
@@ -185,27 +187,25 @@ Khách quét thẻ → /c/[cardId]
   orderId: string;
   timestamp: Timestamp;
 
-  // Thiết bị
-  userAgent?: string;
   deviceType?: 'mobile' | 'tablet' | 'desktop';
+  userAgent?: string;
 
-  // Geo (nếu dùng IP lookup)
   city?: string;
   country?: string;
 
-  isOwnerView: boolean;          // true nếu người xem là chủ thẻ (đã auth)
+  isOwnerView: boolean;          // true nếu người xem vừa auth thành công
 }
 ```
 
-**Index cần tạo:**
+**Indexes cần tạo (Firestore Console):**
 ```
-cardId ASC + timestamp DESC    (để query views theo card)
-timestamp DESC                 (để dashboard xem views toàn hệ thống)
+cardId ASC + timestamp DESC    → query views theo từng thẻ
+timestamp DESC                 → dashboard tổng hệ thống
 ```
 
 ---
 
-### 5. `admins` — Tài khoản quản trị
+### 6. `admins` — Tài khoản quản trị
 
 **Path:** `admins/{uid}`
 
@@ -214,7 +214,7 @@ timestamp DESC                 (để dashboard xem views toàn hệ thống)
   uid: string;                   // Firebase Auth UID
   email: string;
   displayName: string;
-  role: 'super_admin' | 'staff'; // super_admin: full quyền, staff: chỉ xem + tạo order
+  role: 'super_admin' | 'staff'; // super_admin: full quyền; staff: xem + tạo order
   createdAt: Timestamp;
 }
 ```
@@ -228,35 +228,47 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Helper
     function isAdmin() {
       return request.auth != null &&
         exists(/databases/$(database)/documents/admins/$(request.auth.uid));
     }
+
     function isSuperAdmin() {
       return isAdmin() &&
         get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.role == 'super_admin';
     }
 
-    // Orders: chỉ admin đọc/ghi
+    function isCardOwner(cardId) {
+      // Custom token do Cloud Function cấp sẽ có claim: { cardId, role: "card_owner" }
+      return request.auth != null &&
+        request.auth.token.role == 'card_owner' &&
+        request.auth.token.cardId == cardId;
+    }
+
+    // Orders: chỉ admin
     match /orders/{orderId} {
       allow read, write: if isAdmin();
     }
 
-    // Cards: admin full quyền, client chỉ đọc status + phoneHash
+    // Cards: world-readable (cần kiểm tra status khi quét NFC), chỉ admin ghi
     match /cards/{cardId} {
-      allow read: if true;                          // Cần đọc để check status khi quét NFC
+      allow read: if true;
       allow write: if isAdmin();
     }
 
-    // Memorials: đọc public, ghi cần xác thực qua Cloud Function hoặc custom token
+    // CardAuth: KHÔNG cho client đọc/ghi — chỉ Cloud Functions (qua Admin SDK)
+    match /cardAuth/{cardId} {
+      allow read, write: if false;
+    }
+
+    // Memorials: đọc public, ghi cần custom token từ Cloud Function
     match /memorials/{cardId} {
       allow read: if true;
-      allow create, update: if request.auth != null; // Xác thực bằng custom token (xem Auth Flow)
+      allow create, update: if isCardOwner(cardId);
       allow delete: if isSuperAdmin();
     }
 
-    // Analytics: ghi public (anonymous), đọc chỉ admin
+    // Analytics: ghi public (anonymous tracking), đọc chỉ admin
     match /cardViews/{viewId} {
       allow create: if true;
       allow read: if isAdmin();
@@ -273,96 +285,95 @@ service cloud.firestore {
 
 ---
 
-## Auth Flow — Xác thực khách bằng SĐT
+## Auth Flow — Khách xác thực để edit
 
-Không dùng Firebase Auth cho khách (tránh phức tạp). Dùng **Custom Token** từ Cloud Function:
+### Đăng nhập (SĐT + Mật khẩu)
 
 ```
-Client nhập SĐT trên trang /edit/[cardId]
-  ↓
-Gọi Cloud Function: verifyCardPhone({ cardId, phone })
-  ↓
-Function: hash(normalise(phone)) == cards[cardId].phoneHash ?
-  ├── Đúng → issue Firebase Custom Token với claims: { cardId, role: "card_owner" }
-  └── Sai  → trả 401
-  ↓
-Client signInWithCustomToken(token)
-  ↓
+Client gửi: POST /api/auth/card  { cardId, phone, password }
+       ↓
+Cloud Function verifyCardAuth:
+  1. Đọc cardAuth/{cardId} (Admin SDK — không qua Firestore Rules)
+  2. hash(normalise(phone)) == phoneHash ?  → Nếu sai: 401
+  3. bcrypt.compare(password, passwordHash) → Nếu sai: tăng failedAttempts
+     - failedAttempts >= 5 → set lockedUntil = now + 15 phút → 429
+  4. Nếu đúng:
+     - Reset failedAttempts = 0
+     - Issue Firebase Custom Token với claims: { cardId, role: "card_owner" }
+       ↓
+Client: signInWithCustomToken(token)
+       ↓
 Được phép write vào memorials/{cardId}
 ```
 
-**Chuẩn hoá SĐT trước khi hash:**
+### Đổi mật khẩu
+
+```
+Client gửi: POST /api/auth/change-password  { cardId, phone, currentPassword, newPassword }
+       ↓
+Cloud Function changeCardPassword:
+  1. Xác thực phone + currentPassword (giống luồng đăng nhập)
+  2. Validate newPassword: tối thiểu 6 ký tự
+  3. bcrypt.hash(newPassword, 10)
+  4. Cập nhật cardAuth/{cardId}.passwordHash + passwordChangedAt
+       ↓
+Trả về: { success: true }
+```
+
+### Chuẩn hoá SĐT trước khi hash
+
 ```ts
-// "0912 345 678" | "+84912345678" | "84912345678" → "0912345678"
 function normalisePhone(raw: string): string {
   const digits = raw.replace(/\D/g, '');
   if (digits.startsWith('84')) return '0' + digits.slice(2);
   return digits;
 }
-const phoneHash = sha256(normalisePhone(phone));
+// "0912 345 678" | "+84912345678" | "84912345678" → "0912345678"
 ```
 
+### Mật khẩu khởi tạo
+
+Admin khi tạo order sẽ set mật khẩu mặc định cho khách (ví dụ: 4 số cuối SĐT).  
+Khách được khuyến khích đổi mật khẩu ngay lần đầu đăng nhập.
+
 ---
 
-## Dashboard — Dữ liệu cần thiết
+## Dashboard — Queries tối ưu
 
-| Widget | Query Firestore |
+| Widget | Query |
 |---|---|
-| Tổng đơn hàng | `orders` — `countDocuments()` |
+| Tổng đơn hàng | `orders` — `getCountFromServer()` |
 | Đơn chờ xử lý | `orders` where `status == 'paid'` |
-| Thẻ đã publish | `cards` where `status == 'published'` |
+| Thẻ đã publish | `cards` where `status == 'published'` — `getCountFromServer()` |
 | Thẻ chưa dùng | `cards` where `status == 'assigned'` |
-| Lượt xem hôm nay | `cardViews` where `timestamp >= today` |
-| Template phổ biến | `memorials` — group by `templateId` |
+| Lượt xem hôm nay | `cardViews` where `timestamp >= startOfDay` — `getCountFromServer()` |
+| Template phổ biến | `memorials` orderBy `templateId` — group client-side (hoặc Cloud Function aggregate) |
 | Đơn gần nhất | `orders` orderBy `createdAt DESC` limit 20 |
-| Card sắp hết hạn edit | `cards` where `editDeadline` in next 3 days |
+| Thẻ sắp hết hạn edit | `cards` where `editDeadline <= now + 3 ngày` |
+
+> Dùng `getCountFromServer()` thay vì fetch toàn bộ docs để tránh đọc document không cần thiết — tiết kiệm chi phí Firestore đáng kể khi scale.
 
 ---
 
-## Ý tưởng mở rộng hay
+## Mở rộng trong tương lai
 
-### 🔒 Bảo mật nâng cao
-- **OTP qua Zalo / SMS** thay vì chỉ nhập SĐT — dùng Zalo OA API hoặc ESMS, tăng độ tin cậy cho khách.
-- **PIN 6 số** riêng biệt (khách tự đặt lần đầu) thay vì SĐT.
+### Analytics cho khách
+- Trang `/stats/[cardId]` — auth bằng SĐT + mật khẩu giống flow edit.
+- Hiển thị tổng lượt quét, thiết bị, thời gian.
 
-### 📊 Analytics cho khách hàng
-- Khách xem được **bao nhiêu người đã quét thẻ của mình**, khi nào, ở đâu.
-- Trang `/stats/[cardId]` riêng — auth bằng SĐT giống flow edit.
-- Push notification (qua email) khi có người quét thẻ.
+### Tái sử dụng thẻ (Re-skin)
+- Admin mở khoá `cards/{cardId}.status = 'assigned'` → khách edit lại.
+- Bán thêm gói "Re-skin" qua một order mới liên kết cùng `cardId`.
 
-### ♻️ Tái sử dụng thẻ
-- Cho phép khách **đổi template** sau sự kiện (ví dụ: sau đám cưới đổi thành Business Card).
-- Admin bán thêm gói "Re-skin" — thu phí update.
-- Field `reactivationCount: number` trên card để track.
+### Hẹn giờ publish
+- Field `publishAt: Timestamp` trên `memorials`.
+- `/view/[cardId]` kiểm tra: nếu `publishAt > now` → render trang đếm ngược.
 
-### ⏰ Hẹn giờ publish
-- Khách cài trước, thẻ **tự động live đúng ngày sự kiện** (đám cưới ngày 15/6 thì set publishAt = 15/6).
-- Trước thời điểm đó, người quét thẻ thấy trang "Coming Soon" đếm ngược.
+### Bulk Order doanh nghiệp
+- 1 order → nhiều `cardId` trong `cardIds[]`.
+- Mỗi `cardAuth` có password riêng, cùng phone (phone công ty).
+- Template đồng nhất, chỉ cho đổi thông tin cá nhân từng nhân viên.
 
-### 📦 Bulk Order cho doanh nghiệp
-- Công ty đặt 50 thẻ business card → 50 card ID riêng, mỗi nhân viên nhập SĐT để setup.
-- Template đồng nhất (logo công ty cố định), chỉ cho thay đổi thông tin cá nhân.
-- Field `orderId` liên kết về một order duy nhất.
-
-### 🎁 Mẫu giới hạn theo mùa
-- Template Tết, Noel, Valentine — chỉ available trong thời gian nhất định.
-- Field `availableFrom / availableTo` trên template config.
-
-### 📱 Mini CMS cho khách
-- Sau khi publish, khách vẫn có thể **cập nhật thông tin** (SĐT, website) mà không cần reset toàn bộ.
-- Phân biệt "layout & design" (chỉ edit 1 lần) vs "contact info" (edit mãi mãi).
-
-### 🔗 Deep link thông minh
-- Nếu điện thoại chưa cài app (tương lai) → web. Nếu cài rồi → mở app.
-- Dùng Firebase Dynamic Links hoặc custom redirect logic.
-
----
-
-## Migration từ codebase hiện tại
-
-Hiện tại `memorials` dùng `orderId` làm doc ID và URL param.  
-Khi chuyển sang model mới, `cardId` = `orderId` (1 order 1 thẻ) — **không cần migrate data**.  
-Chỉ cần:
-1. Thêm collection `orders` và `cards` mới.
-2. Khi tạo order mới → sinh `cardId` → tạo doc trong `cards` → lập trình NFC với URL `/c/[cardId]`.
-3. Route `/c/[cardId]` kiểm tra `cards/{cardId}.hasContent` → redirect `/edit` hoặc `/view`.
+### Giới hạn template theo mùa
+- Thêm `availableFrom / availableTo` vào template config.
+- Dashboard hiện badge "Sắp hết hạn" cho template Tết, Valentine, v.v.

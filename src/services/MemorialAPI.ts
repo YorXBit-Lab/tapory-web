@@ -20,21 +20,19 @@ export const MemorialAPI = {
     };
   },
 
-  createOne: async (data: IMemorial) => {
+  upsert: async (data: IMemorial) => {
     const ref = doc(db, COL, data.orderId);
-    await setDoc(ref, {
-      ...data,
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-    });
+    const snap = await getDoc(ref);
+    if (snap.exists()) {
+      await updateDoc(ref, { ...data, updatedAt: serverTimestamp() });
+    } else {
+      await setDoc(ref, { ...data, createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
+    }
     return { data: { orderId: data.orderId } };
   },
 
-  updateOne: async (orderId: string, data: Partial<IMemorial>) => {
-    await updateDoc(doc(db, COL, orderId), {
-      ...data,
-      updatedAt: serverTimestamp(),
-    });
-    return { data: { orderId } };
-  },
+  // kept for backward compat
+  createOne: async (data: IMemorial) => MemorialAPI.upsert(data),
+  updateOne: async (orderId: string, data: Partial<IMemorial>) =>
+    MemorialAPI.upsert({ ...data, orderId } as IMemorial),
 };

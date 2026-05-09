@@ -1,10 +1,12 @@
 'use client';
 
+import { useEffect } from 'react';
 import { Avatar, Button, Input, Layout, Menu, Typography, theme } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { AdminAuthProvider, useAdminAuth } from '@/contexts/AdminAuthContext';
 
 const { Sider, Header, Content } = Layout;
 const { Text } = Typography;
@@ -52,11 +54,33 @@ const PAGE_TITLES: Record<string, string> = {
   '/dashboard/settings': 'Cài đặt',
 };
 
-export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+function DashboardInner({ children }: { children: React.ReactNode }) {
+  const { isAdmin, isLoading, adminData, logout } = useAdminAuth();
   const pathname = usePathname();
   const router = useRouter();
   const [collapsed, setCollapsed] = useState(false);
   const { token } = theme.useToken();
+
+  const isLoginPage = pathname === '/dashboard/login';
+
+  useEffect(() => {
+    if (!isLoginPage && !isLoading && !isAdmin) {
+      router.replace('/dashboard/login');
+    }
+  }, [isAdmin, isLoading, router, isLoginPage]);
+
+  // Login page renders its own layout — skip the sidebar shell entirely
+  if (isLoginPage) return <>{children}</>;
+
+  if (isLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-100 border-t-indigo-500" />
+      </div>
+    );
+  }
+
+  if (!isAdmin) return null;
 
   const activeKey =
     Object.keys(PAGE_TITLES)
@@ -148,17 +172,30 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               flexShrink: 0,
             }}
           >
-            TA
+            {adminData?.displayName?.slice(0, 2).toUpperCase() ?? 'AD'}
           </Avatar>
           {!collapsed && (
-            <div className="min-w-0">
+            <div className="min-w-0 flex-1">
               <Text strong className="block truncate text-xs">
-                Tapory Admin
+                {adminData?.displayName ?? 'Admin'}
               </Text>
               <Text type="secondary" className="block text-xs">
-                Quản trị viên
+                {adminData?.role === 'super_admin' ? 'Super Admin' : 'Nhân viên'}
               </Text>
             </div>
+          )}
+          {!collapsed && (
+            <button
+              onClick={() => logout().then(() => router.replace('/dashboard/login'))}
+              title="Đăng xuất"
+              className="text-gray-400 hover:text-gray-600"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                <polyline points="16 17 21 12 16 7" />
+                <line x1="21" y1="12" x2="9" y2="12" />
+              </svg>
+            </button>
           )}
         </div>
       </Sider>
@@ -197,6 +234,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <Content className="overflow-y-auto p-5">{children}</Content>
       </Layout>
     </Layout>
+  );
+}
+
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <AdminAuthProvider>
+      <DashboardInner>{children}</DashboardInner>
+    </AdminAuthProvider>
   );
 }
 

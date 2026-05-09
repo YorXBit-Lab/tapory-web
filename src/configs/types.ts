@@ -1,5 +1,22 @@
 export type TemplateId = 'graduation' | 'wedding' | 'birthday' | 'anniversary' | 'spotify' | 'social' | 'profile' | 'redirect';
 
+export type CardStatus = 'blank' | 'assigned' | 'published' | 'locked' | 'expired';
+
+export interface ICard {
+  id: string;
+  orderId: string;
+  status: CardStatus;
+  hasContent: boolean;
+  templateId?: TemplateId;
+  editDeadline?: string;
+  publishedAt?: string;
+  lockedAt?: string;
+  lockedBy?: string;
+  stats: { totalViews: number; lastViewedAt?: string };
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export interface ITemplateStyle {
   id: string;
   name: string;

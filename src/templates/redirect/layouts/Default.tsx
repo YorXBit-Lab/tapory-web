@@ -51,7 +51,7 @@ export function RedirectDefault({ data, c }: LayoutProps) {
   const proxyUrl   = `/api/proxy?url=${encodeURIComponent(url)}`;
 
   return (
-    <div className="relative flex min-h-full w-full flex-col overflow-hidden bg-white">
+    <div className="relative flex h-full w-full flex-col bg-white">
 
       {/* Thanh địa chỉ mini */}
       <div className="flex flex-shrink-0 items-center gap-1.5 px-2 py-1.5"

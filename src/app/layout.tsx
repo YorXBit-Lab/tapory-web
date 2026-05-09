@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import { Montserrat, Playfair_Display, Dancing_Script } from 'next/font/google';
 import './globals.css';
 import { AntdRegistry } from '@ant-design/nextjs-registry';
+import { Toaster } from 'sonner';
 import { ThemeProvider } from '@/libs/ThemeProvider';
 import { AntdProvider } from '@/libs/AntdProvider';
 import { ReduxProvider } from '@/libs/ReduxProvider';
@@ -45,7 +46,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <ReduxProvider>
             <TanstackProvider>
               <AntdRegistry>
-                <AntdProvider>{children}</AntdProvider>
+                <AntdProvider>
+                  {children}
+                  <Toaster richColors position="top-right" />
+                </AntdProvider>
               </AntdRegistry>
             </TanstackProvider>
           </ReduxProvider>
