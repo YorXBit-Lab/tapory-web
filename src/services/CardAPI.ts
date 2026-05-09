@@ -8,7 +8,6 @@ import {
   addDoc,
   query,
   where,
-  orderBy,
 } from 'firebase/firestore';
 import { db } from '@/libs/firebase';
 import { FIRESTORE_COLLECTIONS } from '@/configs/constants';
@@ -33,14 +32,9 @@ export const CardAPI = {
     } as ICard;
   },
 
-  listByOrder: async (orderId: string): Promise<ICard[]> => {
-    const q = query(
-      collection(db, CARDS),
-      where('orderId', '==', orderId),
-      orderBy('createdAt', 'asc'),
-    );
-    const snaps = await getDocs(q);
-    return snaps.docs.map(s => {
+  listAll: async (): Promise<ICard[]> => {
+    const snaps = await getDocs(collection(db, CARDS));
+    const cards = snaps.docs.map(s => {
       const d = s.data();
       return {
         ...d,
@@ -50,6 +44,37 @@ export const CardAPI = {
         updatedAt: d.updatedAt?.toDate?.()?.toISOString(),
         publishedAt: d.publishedAt?.toDate?.()?.toISOString(),
       } as ICard;
+    });
+    return cards.sort((a, b) => (b.createdAt ?? '').localeCompare(a.createdAt ?? ''));
+  },
+
+  listByOrder: async (orderId: string): Promise<ICard[]> => {
+    const q = query(
+      collection(db, CARDS),
+      where('orderId', '==', orderId),
+    );
+    const snaps = await getDocs(q);
+    const cards = snaps.docs.map(s => {
+      const d = s.data();
+      return {
+        ...d,
+        id: s.id,
+        stats: d.stats ?? { totalViews: 0 },
+        createdAt:    d.createdAt?.toDate?.()?.toISOString(),
+        updatedAt:    d.updatedAt?.toDate?.()?.toISOString(),
+        publishedAt:  d.publishedAt?.toDate?.()?.toISOString(),
+        nfcWrittenAt: d.nfcWrittenAt?.toDate?.()?.toISOString(),
+      } as ICard;
+    });
+    // Sort by id (chip suffix C1, C2...) client-side to avoid composite index requirement
+    return cards.sort((a, b) => a.id.localeCompare(b.id, undefined, { numeric: true }));
+  },
+
+  markNfcWritten: async (cardId: string) => {
+    await updateDoc(doc(db, CARDS, cardId), {
+      nfcWritten: true,
+      nfcWrittenAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
     });
   },
 

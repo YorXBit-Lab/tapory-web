@@ -1,4 +1,4 @@
-import { doc, getDoc, setDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, getDocs, collection, setDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/libs/firebase';
 import { FIRESTORE_COLLECTIONS } from '@/configs/constants';
 import type { IMemorial } from '@/configs/types';
@@ -6,6 +6,22 @@ import type { IMemorial } from '@/configs/types';
 const COL = FIRESTORE_COLLECTIONS.MEMORIALS;
 
 export const MemorialAPI = {
+  list: async (): Promise<Array<{ orderId: string; templateId: string; title?: string; updatedAt?: string; createdAt?: string }>> => {
+    const snaps = await getDocs(collection(db, COL));
+    return snaps.docs
+      .map(s => {
+        const d = s.data();
+        return {
+          orderId: s.id,
+          templateId: (d.templateId as string) ?? 'birthday',
+          title: d.title as string | undefined,
+          updatedAt: d.updatedAt?.toDate?.()?.toISOString(),
+          createdAt: d.createdAt?.toDate?.()?.toISOString(),
+        };
+      })
+      .sort((a, b) => (b.updatedAt ?? '').localeCompare(a.updatedAt ?? ''));
+  },
+
   getOne: async (orderId: string) => {
     const snap = await getDoc(doc(db, COL, orderId));
     if (!snap.exists()) return { data: null };

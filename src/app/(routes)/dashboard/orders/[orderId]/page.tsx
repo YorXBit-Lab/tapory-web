@@ -35,34 +35,33 @@ interface NDEFRecord { recordType: string; data: string }
 interface NDEFWriter { write(msg: { records: NDEFRecord[] }): Promise<void> }
 declare const NDEFReader: new () => NDEFWriter;
 
-type NfcStatus = 'idle' | 'waiting' | 'success' | 'error';
+type NfcStatus = 'idle' | 'waiting' | 'error';
 
-function NfcWriteButton({ cardId }: { cardId: string }) {
+function NfcWriteButton({ card, onWritten }: { card: ICard; onWritten: () => void }) {
   const [status, setStatus] = useState<NfcStatus>('idle');
   const [errMsg, setErrMsg] = useState('');
 
-  const nfcUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/c/${cardId}`;
+  const nfcUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/c/${card.id}`;
 
   const handleWrite = async () => {
     if (typeof NDEFReader === 'undefined') {
       notification.error({
         message: 'Trình duyệt không hỗ trợ',
-        description: 'Dùng Chrome trên máy tính có thiết bị NFC và bật cờ chrome://flags/#enable-experimental-web-platform-features',
+        description: 'Dùng Chrome + bật chrome://flags/#enable-experimental-web-platform-features',
       });
       return;
     }
     setStatus('waiting');
     setErrMsg('');
     try {
-      const ndef = new NDEFReader();
-      await ndef.write({ records: [{ recordType: 'url', data: nfcUrl }] });
-      setStatus('success');
-      notification.success({ message: `Đã ghi NFC: ${cardId}` });
-      setTimeout(() => setStatus('idle'), 3000);
+      await new NDEFReader().write({ records: [{ recordType: 'url', data: nfcUrl }] });
+      await CardAPI.markNfcWritten(card.id);
+      notification.success({ message: `Đã ghi NFC: ${card.id}` });
+      onWritten();
+      setStatus('idle');
     } catch (e) {
-      const msg = e instanceof Error ? e.message : 'Lỗi không xác định';
       setStatus('error');
-      setErrMsg(msg);
+      setErrMsg(e instanceof Error ? e.message : 'Lỗi không xác định');
     }
   };
 
@@ -74,23 +73,18 @@ function NfcWriteButton({ cardId }: { cardId: string }) {
       </div>
     );
   }
-  if (status === 'success') {
-    return <span className="text-xs font-medium text-green-500">✓ Đã ghi</span>;
-  }
   if (status === 'error') {
     return (
       <Tooltip title={errMsg}>
-        <button onClick={handleWrite} className="text-xs text-red-500 hover:underline">
-          ✗ Lỗi — thử lại
-        </button>
+        <button onClick={handleWrite} className="text-xs text-red-500 hover:underline">✗ Lỗi — thử lại</button>
       </Tooltip>
     );
   }
 
   return (
     <Tooltip title={nfcUrl}>
-      <Button size="small" icon={<WifiOutlined />} onClick={handleWrite}>
-        Ghi NFC
+      <Button size="small" icon={<WifiOutlined />} onClick={handleWrite} type={card.nfcWritten ? 'default' : 'primary'}>
+        {card.nfcWritten ? 'Ghi lại' : 'Ghi NFC'}
       </Button>
     </Tooltip>
   );
@@ -180,6 +174,14 @@ export default function OrderDetailPage() {
     return <Tag color="default">Chưa có nội dung</Tag>;
   }
 
+  function nfcStatusTag(card: ICard) {
+    if (card.nfcWritten) {
+      const at = card.nfcWrittenAt ? new Date(card.nfcWrittenAt).toLocaleDateString('vi-VN') : '';
+      return <Tag color="green">✓ Đã ghi{at ? ` ${at}` : ''}</Tag>;
+    }
+    return <Tag color="red">✗ Chưa ghi</Tag>;
+  }
+
   const columns: ColumnsType<ICard> = [
     {
       title: '#',
@@ -192,32 +194,32 @@ export default function OrderDetailPage() {
       render: (id: string) => <span className="font-mono text-xs">{id}</span>,
     },
     {
-      title: 'Trạng thái',
+      title: 'Nội dung',
       render: (_: unknown, record: ICard) => chipStatus(record),
     },
     {
-      title: 'Lượt xem',
-      render: (_: unknown, record: ICard) => (
-        <Text type="secondary">{record.stats?.totalViews ?? 0}</Text>
-      ),
-      width: 80,
+      title: 'Đã ghi NFC',
+      render: (_: unknown, record: ICard) => nfcStatusTag(record),
+      filters: [
+        { text: '✓ Đã ghi', value: 'true' },
+        { text: '✗ Chưa ghi', value: 'false' },
+      ],
+      onFilter: (value, record) => String(!!record.nfcWritten) === value,
     },
     {
       title: 'Link',
       render: (_: unknown, record: ICard) => (
         <span className="flex gap-3 text-xs">
-          <Link href={`/view/${record.id}`} target="_blank" className="text-primary hover:opacity-70">
-            Xem
-          </Link>
-          <Link href={`/edit/${record.id}`} target="_blank" className="text-primary hover:opacity-70">
-            Sửa
-          </Link>
+          <Link href={`/view/${record.id}`} target="_blank" className="text-primary hover:opacity-70">Xem</Link>
+          <Link href={`/edit/${record.id}`} target="_blank" className="text-primary hover:opacity-70">Sửa</Link>
         </span>
       ),
     },
     {
       title: 'Ghi NFC',
-      render: (_: unknown, record: ICard) => <NfcWriteButton cardId={record.id} />,
+      render: (_: unknown, record: ICard) => (
+        <NfcWriteButton card={record} onWritten={refetchAll} />
+      ),
     },
   ];
 

@@ -112,10 +112,6 @@ export function ViewClient({ orderId }: { orderId: string }) {
     };
   }, []);
 
-  // Track view once on mount
-  useEffect(() => {
-    CardAPI.trackView(orderId).catch(() => {});
-  }, [orderId]);
 
   const { data: result, isLoading, isError } = useQuery({
     queryKey: ['memorial', orderId],

@@ -12,6 +12,8 @@ export interface ICard {
   publishedAt?: string;
   lockedAt?: string;
   lockedBy?: string;
+  nfcWritten?: boolean;
+  nfcWrittenAt?: string;
   stats: { totalViews: number; lastViewedAt?: string };
   createdAt?: string;
   updatedAt?: string;
