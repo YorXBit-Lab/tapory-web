@@ -41,7 +41,7 @@ function NfcWriteButton({ card, onWritten }: { card: ICard; onWritten: () => voi
   const [status, setStatus] = useState<NfcStatus>('idle');
   const [errMsg, setErrMsg] = useState('');
 
-  const nfcUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/c/${card.id}`;
+  const nfcUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/view/${card.id}`;
 
   const handleWrite = async () => {
     if (typeof NDEFReader === 'undefined') {
@@ -207,7 +207,21 @@ export default function OrderDetailPage() {
       onFilter: (value, record) => String(!!record.nfcWritten) === value,
     },
     {
-      title: 'Link',
+      title: 'Link sẽ ghi vào chip',
+      render: (_: unknown, record: ICard) => {
+        const url = `${typeof window !== 'undefined' ? window.location.origin : ''}/view/${record.id}`;
+        return (
+          <Text
+            copyable={{ text: url, tooltips: ['Copy', 'Đã copy!'] }}
+            className="font-mono text-xs text-content3"
+          >
+            /view/{record.id}
+          </Text>
+        );
+      },
+    },
+    {
+      title: 'Xem / Sửa',
       render: (_: unknown, record: ICard) => (
         <span className="flex gap-3 text-xs">
           <Link href={`/view/${record.id}`} target="_blank" className="text-primary hover:opacity-70">Xem</Link>

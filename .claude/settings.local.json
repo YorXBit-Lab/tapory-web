@@ -9,7 +9,8 @@
       "Bash(yarn dev *)",
       "Bash(Get-ChildItem -Path \"D:\\\\YORXBIT\\\\tapory-web\\\\src\\\\templates\" -Recurse -Filter \"*anniversary*\")",
       "Bash(Select-Object FullName)",
-      "Bash(xargs cat)"
+      "Bash(xargs cat)",
+      "PowerShell(cd D:\\\\YORXBIT\\\\tapory-web; npx tsc --noEmit --skipLibCheck 2>&1 | Where-Object { $_ -notmatch 'node_modules|\\\\.next' } | Select-Object -First 10)"
     ]
   }
 }
