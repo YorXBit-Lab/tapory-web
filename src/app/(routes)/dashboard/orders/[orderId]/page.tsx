@@ -21,7 +21,8 @@ import {
 import { ArrowLeftOutlined, PlusOutlined, WifiOutlined } from '@ant-design/icons';
 import Link from 'next/link';
 import type { ColumnsType } from 'antd/es/table';
-import { OrderAPI } from '@/services/OrderAPI';
+import { OrderAPI, type OrderSource, type IOrderItem } from '@/services/OrderAPI';
+import { EditOrderModal } from '../EditOrderModal';
 import { CardAPI } from '@/services/CardAPI';
 import { STATUS_TAG } from '@/components/dashboard';
 import { TEMPLATES } from '@/configs/constants';
@@ -255,7 +256,48 @@ export default function OrderDetailPage() {
   }
 
   const statusTag = STATUS_TAG[order.status];
-  const template = TEMPLATES[order.templateId as keyof typeof TEMPLATES];
+  const isLocal = (order.source as OrderSource | undefined ?? 'local') === 'local';
+  const hasNfcItems = order.items.some(i => i.isNfc);
+
+  const SOURCE_LABEL: Record<OrderSource, { label: string; color: string }> = {
+    local:  { label: 'Local',  color: 'blue'   },
+    tiktok: { label: 'TikTok', color: 'purple' },
+    shopee: { label: 'Shopee', color: 'orange' },
+  };
+  const srcInfo = SOURCE_LABEL[order.source as OrderSource] ?? SOURCE_LABEL.local;
+
+  const itemColumns: ColumnsType<IOrderItem> = [
+    {
+      title: 'Sản phẩm',
+      dataIndex: 'productName',
+    },
+    {
+      title: 'SL',
+      dataIndex: 'quantity',
+      width: 50,
+      align: 'center',
+    },
+    {
+      title: 'Đơn giá',
+      dataIndex: 'unitPrice',
+      width: 120,
+      render: (v: number) => v.toLocaleString('vi-VN') + 'đ',
+    },
+    {
+      title: 'Thành tiền',
+      width: 120,
+      render: (_: unknown, r: IOrderItem) => (r.unitPrice * r.quantity).toLocaleString('vi-VN') + 'đ',
+    },
+    {
+      title: 'Loại',
+      width: 110,
+      render: (_: unknown, r: IOrderItem) => {
+        if (!r.isNfc) return <Tag>Thường</Tag>;
+        const tpl = TEMPLATES[r.templateId as keyof typeof TEMPLATES];
+        return <Tag color="purple">{tpl ? `${tpl.icon} NFC` : 'NFC'}</Tag>;
+      },
+    },
+  ];
 
   return (
     <div className="space-y-4">
@@ -264,43 +306,80 @@ export default function OrderDetailPage() {
         <Button icon={<ArrowLeftOutlined />} onClick={() => router.push('/dashboard/orders')} />
         <h2 className="text-base font-semibold">Đơn hàng {order.id}</h2>
         <Tag color={statusTag?.color}>{statusTag?.label}</Tag>
+        <Tag color={srcInfo.color}>{srcInfo.label}</Tag>
+        {isLocal && (
+          <EditOrderModal
+            order={order}
+            asButton
+            onUpdated={() => queryClient.invalidateQueries({ queryKey: ['order', orderId] })}
+          />
+        )}
       </div>
 
       {/* Order info */}
       <Card size="small">
         <Descriptions size="small" column={{ xs: 1, sm: 2, md: 3 }}>
           <Descriptions.Item label="Khách hàng">{order.customerName}</Descriptions.Item>
-          <Descriptions.Item label="SĐT">{order.phone}</Descriptions.Item>
-          <Descriptions.Item label="Template">{template ? `${template.icon} ${template.name}` : order.templateId}</Descriptions.Item>
+          <Descriptions.Item label="SĐT">{order.phone || '—'}</Descriptions.Item>
           <Descriptions.Item label="Địa chỉ">{order.address || '—'}</Descriptions.Item>
-          <Descriptions.Item label="Giá trị">{order.price.toLocaleString('vi-VN')}đ</Descriptions.Item>
-          <Descriptions.Item label="Số chip">{order.quantity ?? chips.length}</Descriptions.Item>
+          <Descriptions.Item label="Tổng giá trị">
+            <Text strong>{order.price.toLocaleString('vi-VN')}đ</Text>
+          </Descriptions.Item>
+          {isLocal && hasNfcItems && (
+            <Descriptions.Item label="Chip NFC">{chips.length} chip</Descriptions.Item>
+          )}
           {order.notes && <Descriptions.Item label="Ghi chú" span={3}>{order.notes}</Descriptions.Item>}
         </Descriptions>
       </Card>
 
-      {/* Chips table */}
-      <Card
-        size="small"
-        title={
-          <span className="flex items-center gap-2">
-            <WifiOutlined />
-            <span>Chip NFC</span>
-            <Badge count={chips.length} style={{ backgroundColor: '#6366f1' }} />
-          </span>
-        }
-        extra={<AddChipModal orderId={orderId} onAdded={refetchAll} />}
-      >
-        <Table
-          columns={columns}
-          dataSource={chips}
-          rowKey="id"
+      {/* Danh sách sản phẩm */}
+      {order.items.length > 0 && (
+        <Card size="small" title="Sản phẩm đặt">
+          <Table
+            columns={itemColumns}
+            dataSource={order.items}
+            rowKey={(_, i) => String(i)}
+            size="small"
+            pagination={false}
+            summary={() => (
+              <Table.Summary.Row>
+                <Table.Summary.Cell index={0} colSpan={3} align="right">
+                  <Text type="secondary" className="text-xs">Tổng cộng</Text>
+                </Table.Summary.Cell>
+                <Table.Summary.Cell index={1}>
+                  <Text strong>{order.price.toLocaleString('vi-VN')}đ</Text>
+                </Table.Summary.Cell>
+                <Table.Summary.Cell index={2} />
+              </Table.Summary.Row>
+            )}
+          />
+        </Card>
+      )}
+
+      {/* Chips table — chỉ hiện nếu đơn có sản phẩm NFC */}
+      {isLocal && hasNfcItems && (
+        <Card
           size="small"
-          loading={chipsLoading}
-          pagination={false}
-          locale={{ emptyText: 'Chưa có chip nào' }}
-        />
-      </Card>
+          title={
+            <span className="flex items-center gap-2">
+              <WifiOutlined />
+              <span>Chip NFC</span>
+              <Badge count={chips.length} style={{ backgroundColor: '#6366f1' }} />
+            </span>
+          }
+          extra={<AddChipModal orderId={orderId} onAdded={refetchAll} />}
+        >
+          <Table
+            columns={columns}
+            dataSource={chips}
+            rowKey="id"
+            size="small"
+            loading={chipsLoading}
+            pagination={false}
+            locale={{ emptyText: 'Chưa có chip nào' }}
+          />
+        </Card>
+      )}
     </div>
   );
 }
