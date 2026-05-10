@@ -2,15 +2,14 @@
 
 import { Card, Descriptions, Input, Segmented, Table, Tag, Typography } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import type { ColumnsType } from 'antd/es/table';
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { STATUS_TAG, type StatusKey } from '@/components/dashboard';
-import { OrderAPI, type IOrder } from '@/services/OrderAPI';
-import { TEMPLATES } from '@/configs/constants';
+import { OrderAPI, type IOrder, type OrderSource } from '@/services/OrderAPI';
 import { CreateOrderModal } from './CreateOrderModal';
+import { EditOrderModal } from './EditOrderModal';
 
 const { Text } = Typography;
 
@@ -24,10 +23,11 @@ function formatPrice(n: number) {
   return n.toLocaleString('vi-VN') + 'đ';
 }
 
-function templateLabel(id: string) {
-  const t = TEMPLATES[id as keyof typeof TEMPLATES];
-  return t ? `${t.icon} ${t.name}` : id;
-}
+const SOURCE_TAG: Record<OrderSource, { label: string; color: string }> = {
+  local:   { label: 'Local',   color: 'blue'   },
+  tiktok:  { label: 'TikTok',  color: 'purple' },
+  shopee:  { label: 'Shopee',  color: 'orange' },
+};
 
 export default function OrdersPage() {
   const router = useRouter();
@@ -65,7 +65,7 @@ export default function OrdersPage() {
     const matchSearch = !q ||
       o.customerName.toLowerCase().includes(q) ||
       o.id.toLowerCase().includes(q) ||
-      templateLabel(o.templateId).toLowerCase().includes(q);
+      (o.items ?? []).some(i => i.productName.toLowerCase().includes(q));
     return matchStatus && matchSearch;
   });
 
@@ -88,11 +88,17 @@ export default function OrdersPage() {
       sorter: (a, b) => a.customerName.localeCompare(b.customerName, 'vi'),
     },
     {
-      title: 'Template',
-      dataIndex: 'templateId',
-      render: (id: string) => templateLabel(id),
-      filters: Object.values(TEMPLATES).map(t => ({ text: `${t.icon} ${t.name}`, value: t.id })),
-      onFilter: (value, record) => record.templateId === value,
+      title: 'Sản phẩm',
+      render: (_: unknown, record: IOrder) => {
+        const names = record.items.map(i => i.productName).filter(Boolean);
+        if (names.length === 0) return <Text type="secondary" className="text-xs">—</Text>;
+        const preview = names.slice(0, 2).join(', ');
+        return (
+          <Text className="text-xs">
+            {preview}{names.length > 2 ? ` +${names.length - 2}` : ''}
+          </Text>
+        );
+      },
     },
     {
       title: 'Địa chỉ',
@@ -122,16 +128,36 @@ export default function OrdersPage() {
       },
     },
     {
+      title: 'Nguồn',
+      dataIndex: 'source',
+      width: 90,
+      render: (s: OrderSource) => {
+        const src = SOURCE_TAG[s] ?? SOURCE_TAG.local;
+        return <Tag color={src.color}>{src.label}</Tag>;
+      },
+      filters: [
+        { text: 'Local',  value: 'local'  },
+        { text: 'TikTok', value: 'tiktok' },
+        { text: 'Shopee', value: 'shopee' },
+      ],
+      onFilter: (value, record) => record.source === value,
+    },
+    {
       title: 'Hành động',
       render: (_: unknown, record: IOrder) => (
         <span className="flex gap-2 text-xs">
-          <Link href={`/view/${record.cardId}`} target="_blank" className="text-primary hover:opacity-70">
+          <button
+            className="text-primary hover:underline"
+            onClick={e => { e.stopPropagation(); router.push(`/dashboard/orders/${record.id}`); }}
+          >
             Xem
-          </Link>
-          <span className="text-gray-300">·</span>
-          <Link href={`/edit/${record.cardId}`} target="_blank" className="text-primary hover:opacity-70">
-            Sửa
-          </Link>
+          </button>
+          {record.source === 'local' && (
+            <>
+              <span className="text-gray-300">·</span>
+              <EditOrderModal order={record} onUpdated={refetch} />
+            </>
+          )}
         </span>
       ),
     },
@@ -187,20 +213,28 @@ export default function OrdersPage() {
 
       {selected && (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          {detailColumns(`Chi tiết đơn ${selected.id}`, [
-            { label: 'Mã đơn',       value: selected.id,                                                                                                        mono: true },
-            { label: 'Số chip NFC',  value: selected.quantity ?? '—'                                                                                                      },
-            { label: 'Đã tùy chỉnh', value: selected.customized ? '✓ Có' : '✗ Chưa'                                                                                     },
-            { label: 'Template',     value: templateLabel(selected.templateId)                                                                                             },
-            { label: 'Chi tiết',     value: <button className="text-xs text-primary hover:underline" onClick={() => router.push(`/dashboard/orders/${selected.id}`)}>Quản lý chip NFC →</button> },
-          ])}
+          {selected.source === 'local'
+            ? detailColumns(`Chi tiết đơn ${selected.id}`, [
+                { label: 'Mã đơn',       value: selected.id, mono: true },
+                { label: 'Sản phẩm',     value: `${selected.items.length} loại` },
+                { label: 'Có NFC',       value: selected.items.some(i => i.isNfc) ? '✓ Có' : '✗ Không' },
+                { label: 'Quản lý NFC',  value: <button className="text-xs text-primary hover:underline" onClick={() => router.push(`/dashboard/orders/${selected.id}`)}>Xem chip NFC →</button> },
+                { label: 'Chỉnh sửa',   value: <EditOrderModal order={selected} onUpdated={() => { refetch(); setSelected(null); }} /> },
+              ])
+            : detailColumns(`Chi tiết đơn ${selected.id}`, [
+                { label: 'Mã đơn',   value: selected.id, mono: true },
+                { label: 'Nguồn',    value: <Tag color={SOURCE_TAG[selected.source]?.color}>{SOURCE_TAG[selected.source]?.label}</Tag> },
+                { label: 'Ghi chú', value: selected.notes || '—' },
+                { label: 'Chi tiết', value: <button className="text-xs text-primary hover:underline" onClick={() => router.push(`/dashboard/orders/${selected.id}`)}>Xem chi tiết →</button> },
+              ])
+          }
 
           {detailColumns('Thông tin giao hàng', [
-            { label: 'Người nhận',   value: selected.customerName                                                                    },
-            { label: 'Địa chỉ',     value: selected.address || '—'                                                                  },
-            { label: 'Ngày đặt',    value: formatDate(selected.createdAt)                                                           },
-            { label: 'Giá trị',     value: formatPrice(selected.price)                                                              },
-            { label: 'Trạng thái',  value: <Tag color={STATUS_TAG[selected.status]?.color}>{STATUS_TAG[selected.status]?.label}</Tag> },
+            { label: 'Người nhận',  value: selected.customerName },
+            { label: 'Địa chỉ',    value: selected.address || '—' },
+            { label: 'Ngày đặt',   value: formatDate(selected.createdAt) },
+            { label: 'Giá trị',    value: formatPrice(selected.price) },
+            { label: 'Trạng thái', value: <Tag color={STATUS_TAG[selected.status]?.color}>{STATUS_TAG[selected.status]?.label}</Tag> },
           ])}
         </div>
       )}

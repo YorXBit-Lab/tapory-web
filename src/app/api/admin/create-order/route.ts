@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAdminAuth, getAdminDb } from '@/libs/firebase-admin';
+import type { IOrderItem } from '@/services/OrderAPI';
 
 function generateOrderId(): string {
   const now = new Date();
@@ -32,66 +33,83 @@ export async function POST(req: NextRequest) {
     const body = (await req.json()) as {
       customerName?: string;
       phone?: string;
-      templateId?: string;
       address?: string;
-      price?: number;
-      quantity?: number;
       notes?: string;
+      items?: IOrderItem[];
     };
 
-    const { customerName, phone, templateId, address, price, notes } = body;
-    const quantity = Math.min(Math.max(Number(body.quantity ?? 1), 1), 20);
+    const { customerName, phone, address, notes, items = [] } = body;
 
-    if (!customerName?.trim() || !phone?.trim()) {
-      return NextResponse.json({ error: 'Thiếu tên khách hàng hoặc số điện thoại' }, { status: 400 });
+    if (!customerName?.trim()) {
+      return NextResponse.json({ error: 'Thiếu tên khách hàng' }, { status: 400 });
+    }
+    if (items.length === 0) {
+      return NextResponse.json({ error: 'Đơn hàng phải có ít nhất 1 sản phẩm' }, { status: 400 });
     }
 
+    const hasNfc = items.some(i => i.isNfc);
+    if (hasNfc && !phone?.trim()) {
+      return NextResponse.json({ error: 'Cần số điện thoại cho đơn có móc khóa NFC' }, { status: 400 });
+    }
+
+    const totalPrice = items.reduce((s, item) => s + item.unitPrice * item.quantity, 0);
     const orderId = generateOrderId();
-    const phoneHash = await hashPhone(phone.trim());
     const now = new Date();
 
-    // Chip IDs: ORD260509XXXXC1, C2, ...
-    const chipIds = Array.from({ length: quantity }, (_, i) => `${orderId}C${i + 1}`);
+    // Build chip list from NFC items
+    let chipCounter = 0;
+    const chipList: { id: string; templateId: string }[] = [];
+    for (const item of items) {
+      if (item.isNfc) {
+        for (let i = 0; i < item.quantity; i++) {
+          chipCounter++;
+          chipList.push({ id: `${orderId}C${chipCounter}`, templateId: item.templateId ?? 'birthday' });
+        }
+      }
+    }
 
+    const phoneHash = hasNfc && phone ? await hashPhone(phone.trim()) : null;
     const batch = adminDb.batch();
 
     batch.set(adminDb.collection('orders').doc(orderId), {
       customerName: customerName.trim(),
-      phone: phone.trim(),
-      templateId: templateId ?? 'birthday',
+      phone: (phone ?? '').trim(),
       address: (address ?? '').trim(),
-      price: price ?? 189000,
-      quantity,
+      price: totalPrice,
       status: 'new',
+      source: 'local',
+      items,
       notes: (notes ?? '').trim(),
       customized: false,
       createdAt: now,
       updatedAt: now,
     });
 
-    for (const chipId of chipIds) {
-      batch.set(adminDb.collection('cards').doc(chipId), {
+    for (const chip of chipList) {
+      batch.set(adminDb.collection('cards').doc(chip.id), {
         orderId,
         status: 'assigned',
         hasContent: false,
-        templateId: templateId ?? 'birthday',
+        templateId: chip.templateId,
         stats: { totalViews: 0 },
         createdAt: now,
         updatedAt: now,
       });
 
-      batch.set(adminDb.collection('cardAuth').doc(chipId), {
-        phoneHash,
-        failCount: 0,
-        lockedUntil: null,
-        createdAt: now,
-        updatedAt: now,
-      });
+      if (phoneHash) {
+        batch.set(adminDb.collection('cardAuth').doc(chip.id), {
+          phoneHash,
+          failCount: 0,
+          lockedUntil: null,
+          createdAt: now,
+          updatedAt: now,
+        });
+      }
     }
 
     await batch.commit();
 
-    return NextResponse.json({ orderId, chipIds });
+    return NextResponse.json({ orderId, chipIds: chipList.map(c => c.id) });
   } catch (err) {
     console.error('[create-order]', err);
     return NextResponse.json({ error: 'Lỗi hệ thống' }, { status: 500 });

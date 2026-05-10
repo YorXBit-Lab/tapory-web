@@ -6,7 +6,9 @@ import { SearchOutlined } from '@ant-design/icons';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { AdminAuthProvider, useAdminAuth } from '@/contexts/AdminAuthContext';
+import { OrderAPI } from '@/services/OrderAPI';
 
 const { Sider, Header, Content } = Layout;
 const { Text } = Typography;
@@ -22,7 +24,7 @@ const NAV_ITEMS = [
     type: 'group' as const,
     label: 'Kinh doanh',
     children: [
-      { key: '/dashboard/orders', icon: <OrderIcon />, label: 'Đơn hàng', badge: 12 },
+      { key: '/dashboard/orders', icon: <OrderIcon />, label: 'Đơn hàng' },
       { key: '/dashboard/users', icon: <UserIcon />, label: 'Khách hàng' },
     ],
   },
@@ -42,8 +44,6 @@ const NAV_ITEMS = [
   },
 ];
 
-const BADGE: Record<string, number> = { '/dashboard/orders': 12 };
-
 const PAGE_TITLES: Record<string, string> = {
   '/dashboard': 'Tổng quan',
   '/dashboard/orders': 'Đơn hàng',
@@ -60,6 +60,14 @@ function DashboardInner({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const [collapsed, setCollapsed] = useState(false);
   const { token } = theme.useToken();
+
+  const { data: orders = [] } = useQuery({
+    queryKey: ['orders'],
+    queryFn: () => OrderAPI.list(),
+    staleTime: 60_000,
+    enabled: isAdmin,
+  });
+  const newOrderCount = orders.filter(o => o.status === 'new').length;
 
   const isLoginPage = pathname === '/dashboard/login';
 
@@ -86,6 +94,10 @@ function DashboardInner({ children }: { children: React.ReactNode }) {
     Object.keys(PAGE_TITLES)
       .filter((k) => (k === '/dashboard' ? pathname === k : pathname.startsWith(k)))
       .sort((a, b) => b.length - a.length)[0] ?? '/dashboard';
+  const dynamicBadge: Record<string, number> = newOrderCount > 0
+    ? { '/dashboard/orders': newOrderCount }
+    : {};
+
   const menuItems = NAV_ITEMS.map((group) => ({
     type: 'group' as const,
     label: group.label,
@@ -98,12 +110,12 @@ function DashboardInner({ children }: { children: React.ReactNode }) {
             {icon}
             <span>{label}</span>
           </span>
-          {BADGE[key] && (
+          {dynamicBadge[key] && (
             <span
               className="ml-1 rounded-full px-1.5 py-0.5 text-[10px] leading-none font-semibold"
               style={{ backgroundColor: token.colorPrimary, color: token.colorBgContainer }}
             >
-              {BADGE[key]}
+              {dynamicBadge[key]}
             </span>
           )}
         </span>
