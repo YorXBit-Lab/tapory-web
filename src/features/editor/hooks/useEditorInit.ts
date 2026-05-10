@@ -6,6 +6,7 @@ import { setOrderId, setTemplate, setStyle, updateField, markSaved } from '@/red
 import { getTemplateStyles } from '@/templates/registry';
 import { TEMPLATE_DEFAULTS } from '@/templates/defaults';
 import { MemorialAPI } from '@/services/MemorialAPI';
+import { CardAPI } from '@/services/CardAPI';
 
 export function useEditorInit(orderId: string, initialTemplate: TemplateId) {
   const dispatch = useDispatch<AppDispatch>();
@@ -17,7 +18,7 @@ export function useEditorInit(orderId: string, initialTemplate: TemplateId) {
 
     dispatch(setOrderId(orderId));
 
-    MemorialAPI.getOne(orderId).then(({ data }) => {
+    MemorialAPI.getOne(orderId).then(async ({ data }) => {
       if (data) {
         const memorial = data as Record<string, unknown>;
         const tpl = (memorial.templateId as TemplateId) ?? initialTemplate;
@@ -27,15 +28,20 @@ export function useEditorInit(orderId: string, initialTemplate: TemplateId) {
         if (styles[0]) dispatch(setStyle((memorial.styleId as string) ?? styles[0].id));
         dispatch(markSaved());
       } else {
-        dispatch(setTemplate(initialTemplate));
-        dispatch(updateField(TEMPLATE_DEFAULTS[initialTemplate]));
-        const styles = getTemplateStyles(initialTemplate);
+        // No memorial yet — use card's stored templateId as fallback, then URL param
+        const card = await CardAPI.getOne(orderId).catch(() => null);
+        const tpl: TemplateId = card?.templateId ?? initialTemplate;
+        dispatch(setTemplate(tpl));
+        dispatch(updateField(TEMPLATE_DEFAULTS[tpl]));
+        const styles = getTemplateStyles(tpl);
         if (styles[0]) dispatch(setStyle(styles[0].id));
       }
-    }).catch(() => {
-      dispatch(setTemplate(initialTemplate));
-      dispatch(updateField(TEMPLATE_DEFAULTS[initialTemplate]));
-      const styles = getTemplateStyles(initialTemplate);
+    }).catch(async () => {
+      const card = await CardAPI.getOne(orderId).catch(() => null);
+      const tpl: TemplateId = card?.templateId ?? initialTemplate;
+      dispatch(setTemplate(tpl));
+      dispatch(updateField(TEMPLATE_DEFAULTS[tpl]));
+      const styles = getTemplateStyles(tpl);
       if (styles[0]) dispatch(setStyle(styles[0].id));
     });
   }, [orderId, initialTemplate, dispatch]);

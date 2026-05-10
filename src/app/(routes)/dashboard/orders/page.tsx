@@ -1,17 +1,19 @@
 'use client';
 
-import { Card, Descriptions, Input, Segmented, Table, Tag, Typography } from 'antd';
-import { SearchOutlined } from '@ant-design/icons';
+import { Button, DatePicker, Drawer, Input, InputNumber, notification, Select, Segmented, Table, Tag, Typography } from 'antd';
+import { DownloadOutlined, SearchOutlined } from '@ant-design/icons';
 import { useRouter } from 'next/navigation';
 import type { ColumnsType } from 'antd/es/table';
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import dayjs, { type Dayjs } from 'dayjs';
 import { STATUS_TAG, type StatusKey } from '@/components/dashboard';
 import { OrderAPI, type IOrder, type OrderSource } from '@/services/OrderAPI';
 import { CreateOrderModal } from './CreateOrderModal';
 import { EditOrderModal } from './EditOrderModal';
 
 const { Text } = Typography;
+const { RangePicker } = DatePicker;
 
 function formatDate(iso?: string) {
   if (!iso) return '—';
@@ -23,17 +25,47 @@ function formatPrice(n: number) {
   return n.toLocaleString('vi-VN') + 'đ';
 }
 
+function exportCsv(rows: IOrder[]) {
+  const headers = ['Mã đơn', 'Khách hàng', 'SĐT', 'Địa chỉ', 'Sản phẩm', 'Giá trị', 'Trạng thái', 'Nguồn', 'Ngày đặt', 'Ghi chú'];
+  const escape = (v: unknown) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+  const lines = [
+    headers.join(','),
+    ...rows.map(o => [
+      escape(o.id),
+      escape(o.customerName),
+      escape(o.phone),
+      escape(o.address),
+      escape(o.items.map(i => `${i.productName} x${i.quantity}`).join(' | ')),
+      escape(o.price),
+      escape(o.status),
+      escape(o.source ?? 'local'),
+      escape(o.createdAt ? formatDate(o.createdAt) : ''),
+      escape(o.notes),
+    ].join(',')),
+  ];
+  const blob = new Blob(['﻿' + lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `don-hang-${new Date().toISOString().slice(0, 10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 const SOURCE_TAG: Record<OrderSource, { label: string; color: string }> = {
-  local:   { label: 'Local',   color: 'blue'   },
-  tiktok:  { label: 'TikTok',  color: 'purple' },
-  shopee:  { label: 'Shopee',  color: 'orange' },
+  local:  { label: 'Local',  color: 'blue'   },
+  tiktok: { label: 'TikTok', color: 'purple' },
+  shopee: { label: 'Shopee', color: 'orange' },
 };
 
 export default function OrdersPage() {
-  const router = useRouter();
-  const [filter, setFilter] = useState('all');
-  const [search, setSearch]   = useState('');
-  const [selected, setSelected] = useState<IOrder | null>(null);
+  const router       = useRouter();
+  const queryClient  = useQueryClient();
+  const [filter, setFilter]       = useState('all');
+  const [search, setSearch]       = useState('');
+  const [dateRange, setDateRange] = useState<[Dayjs, Dayjs] | null>(null);
+  const [selected, setSelected]   = useState<IOrder | null>(null);
+  const [pageSize, setPageSize]   = useState(10);
 
   const { data: orders = [], refetch } = useQuery({
     queryKey: ['orders'],
@@ -51,12 +83,12 @@ export default function OrdersPage() {
   };
 
   const filterOptions = [
-    { label: `Tất cả (${counts.all})`,        value: 'all'     },
-    { label: `Mới (${counts.new})`,            value: 'new'     },
-    { label: `Chờ xử lý (${counts.pending})`,  value: 'pending' },
-    { label: `Đang giao (${counts.active})`,   value: 'active'  },
-    { label: `Hoàn thành (${counts.done})`,    value: 'done'    },
-    { label: `Đã hủy (${counts.cancel})`,      value: 'cancel'  },
+    { label: `Tất cả (${counts.all})`,       value: 'all'     },
+    { label: `Mới (${counts.new})`,           value: 'new'     },
+    { label: `Chờ xử lý (${counts.pending})`, value: 'pending' },
+    { label: `Đang giao (${counts.active})`,  value: 'active'  },
+    { label: `Hoàn thành (${counts.done})`,   value: 'done'    },
+    { label: `Đã hủy (${counts.cancel})`,     value: 'cancel'  },
   ];
 
   const visible = orders.filter(o => {
@@ -65,22 +97,30 @@ export default function OrdersPage() {
     const matchSearch = !q ||
       o.customerName.toLowerCase().includes(q) ||
       o.id.toLowerCase().includes(q) ||
+      (o.phone ?? '').includes(q) ||
       (o.items ?? []).some(i => i.productName.toLowerCase().includes(q));
-    return matchStatus && matchSearch;
+    const matchDate = !dateRange || (() => {
+      if (!o.createdAt) return false;
+      const d = dayjs(o.createdAt);
+      return !d.isBefore(dateRange[0].startOf('day')) && !d.isAfter(dateRange[1].endOf('day'));
+    })();
+    return matchStatus && matchSearch && matchDate;
   });
+
+  const handleStatusChange = async (orderId: string, newStatus: StatusKey) => {
+    try {
+      await OrderAPI.update(orderId, { status: newStatus });
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+    } catch {
+      notification.error({ message: 'Cập nhật trạng thái thất bại' });
+    }
+  };
 
   const columns: ColumnsType<IOrder> = [
     {
       title: 'Mã đơn',
       dataIndex: 'id',
-      render: (id: string) => (
-        <button
-          className="font-mono text-xs text-primary hover:underline"
-          onClick={e => { e.stopPropagation(); router.push(`/dashboard/orders/${id}`); }}
-        >
-          {id}
-        </button>
-      ),
+      render: (id: string) => <span className="font-mono text-xs text-primary">{id}</span>,
     },
     {
       title: 'Khách hàng',
@@ -89,21 +129,15 @@ export default function OrdersPage() {
     },
     {
       title: 'Sản phẩm',
-      render: (_: unknown, record: IOrder) => {
-        const names = record.items.map(i => i.productName).filter(Boolean);
-        if (names.length === 0) return <Text type="secondary" className="text-xs">—</Text>;
-        const preview = names.slice(0, 2).join(', ');
+      render: (_: unknown, r: IOrder) => {
+        const names = r.items.map(i => i.productName).filter(Boolean);
+        if (!names.length) return <Text type="secondary" className="text-xs">—</Text>;
         return (
           <Text className="text-xs">
-            {preview}{names.length > 2 ? ` +${names.length - 2}` : ''}
+            {names.slice(0, 2).join(', ')}{names.length > 2 ? ` +${names.length - 2}` : ''}
           </Text>
         );
       },
-    },
-    {
-      title: 'Địa chỉ',
-      dataIndex: 'address',
-      render: (v: string) => <Text type="secondary" className="text-xs">{v || '—'}</Text>,
     },
     {
       title: 'Ngày đặt',
@@ -115,129 +149,201 @@ export default function OrdersPage() {
     {
       title: 'Giá trị',
       dataIndex: 'price',
+      sorter: (a, b) => a.price - b.price,
       render: (v: number) => <Text strong>{formatPrice(v)}</Text>,
     },
     {
       title: 'Trạng thái',
       dataIndex: 'status',
-      filters: Object.entries(STATUS_TAG).map(([value, { label }]) => ({ text: label, value })),
-      onFilter: (value, record) => record.status === value,
-      render: (status: StatusKey) => {
-        const s = STATUS_TAG[status];
-        return s ? <Tag color={s.color}>{s.label}</Tag> : <Tag>{status}</Tag>;
-      },
+      render: (s: StatusKey, record: IOrder) => (
+        <Select
+          value={s}
+          size="small"
+          bordered={false}
+          popupMatchSelectWidth={false}
+          style={{ marginLeft: -7 }}
+          onClick={e => e.stopPropagation()}
+          onChange={v => handleStatusChange(record.id, v)}
+          labelRender={({ value }) => {
+            const t = STATUS_TAG[value as StatusKey];
+            return t ? <Tag color={t.color} style={{ margin: 0 }}>{t.label}</Tag> : String(value);
+          }}
+          options={Object.entries(STATUS_TAG).map(([value, { label }]) => ({ value, label }))}
+        />
+      ),
     },
     {
       title: 'Nguồn',
       dataIndex: 'source',
-      width: 90,
-      render: (s: OrderSource) => {
-        const src = SOURCE_TAG[s] ?? SOURCE_TAG.local;
-        return <Tag color={src.color}>{src.label}</Tag>;
-      },
+      width: 80,
       filters: [
         { text: 'Local',  value: 'local'  },
         { text: 'TikTok', value: 'tiktok' },
         { text: 'Shopee', value: 'shopee' },
       ],
       onFilter: (value, record) => record.source === value,
-    },
-    {
-      title: 'Hành động',
-      render: (_: unknown, record: IOrder) => (
-        <span className="flex gap-2 text-xs">
-          <button
-            className="text-primary hover:underline"
-            onClick={e => { e.stopPropagation(); router.push(`/dashboard/orders/${record.id}`); }}
-          >
-            Xem
-          </button>
-          {record.source === 'local' && (
-            <>
-              <span className="text-gray-300">·</span>
-              <EditOrderModal order={record} onUpdated={refetch} />
-            </>
-          )}
-        </span>
-      ),
+      render: (s: OrderSource) => {
+        const src = SOURCE_TAG[s] ?? SOURCE_TAG.local;
+        return <Tag color={src.color}>{src.label}</Tag>;
+      },
     },
   ];
 
-  const detailColumns = (title: string, items: { label: string; value: React.ReactNode; mono?: boolean }[]) => (
-    <Descriptions title={title} bordered size="small" column={1}>
-      {items.map(({ label, value, mono }) => (
-        <Descriptions.Item key={label} label={label}>
-          {mono ? <span className="font-mono text-xs">{value}</span> : value}
-        </Descriptions.Item>
-      ))}
-    </Descriptions>
-  );
+  const openDetail = (record: IOrder) => setSelected(record);
+  const closeDetail = () => setSelected(null);
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <Segmented
-          options={filterOptions}
-          value={filter}
-          onChange={(v) => setFilter(v as string)}
-        />
-        <div className="flex items-center gap-2">
+    <div className="space-y-3">
+      {/* Row 1: status filter */}
+      <Segmented options={filterOptions} value={filter} onChange={v => setFilter(v as string)} />
+
+      {/* Row 2: search + date + actions */}
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Input
-            prefix={<SearchOutlined />}
-            placeholder="Tìm mã đơn, khách hàng..."
+            prefix={<SearchOutlined className="text-gray-400" />}
+            placeholder="Tìm mã đơn, khách hàng, SĐT..."
             allowClear
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={e => setSearch(e.target.value)}
             size="small"
+            style={{ width: 240 }}
+          />
+          <RangePicker
+            size="small"
+            allowClear
+            placeholder={['Từ ngày', 'Đến ngày']}
+            onChange={v => setDateRange(v && v[0] && v[1] ? [v[0], v[1]] : null)}
+            format="DD/MM/YYYY"
             style={{ width: 220 }}
           />
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-gray-400">Hiển thị</span>
+          <input
+            type="number"
+            min={1}
+            max={500}
+            value={pageSize}
+            onChange={e => setPageSize(Number(e.target.value) || 10)}
+            className="w-14 rounded border border-gray-200 px-2 py-0.5 text-center text-xs"
+          />
+          <span className="text-xs text-gray-400">dòng</span>
+          <Button size="small" icon={<DownloadOutlined />} onClick={() => exportCsv(visible)}>
+            Xuất CSV
+          </Button>
           <CreateOrderModal onCreated={(id) => { refetch(); if (id) router.push(`/dashboard/orders/${id}`); }} />
         </div>
       </div>
 
-      <Card>
-        <Table
-          columns={columns}
-          dataSource={visible}
-          rowKey="id"
-          size="small"
-          pagination={{
-            pageSize: 10,
-            showSizeChanger: true,
-            pageSizeOptions: ['10', '20', '50'],
-            showTotal: (total, range) => `${range[0]}-${range[1]} / ${total}`,
-            size: 'small',
-          }}
-          onRow={(record) => ({ onClick: () => setSelected(record), style: { cursor: 'pointer' } })}
-        />
-      </Card>
-
-      {selected && (
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          {selected.source === 'local'
-            ? detailColumns(`Chi tiết đơn ${selected.id}`, [
-                { label: 'Mã đơn',       value: selected.id, mono: true },
-                { label: 'Sản phẩm',     value: `${selected.items.length} loại` },
-                { label: 'Có NFC',       value: selected.items.some(i => i.isNfc) ? '✓ Có' : '✗ Không' },
-                { label: 'Quản lý NFC',  value: <button className="text-xs text-primary hover:underline" onClick={() => router.push(`/dashboard/orders/${selected.id}`)}>Xem chip NFC →</button> },
-                { label: 'Chỉnh sửa',   value: <EditOrderModal order={selected} onUpdated={() => { refetch(); setSelected(null); }} /> },
-              ])
-            : detailColumns(`Chi tiết đơn ${selected.id}`, [
-                { label: 'Mã đơn',   value: selected.id, mono: true },
-                { label: 'Nguồn',    value: <Tag color={SOURCE_TAG[selected.source]?.color}>{SOURCE_TAG[selected.source]?.label}</Tag> },
-                { label: 'Ghi chú', value: selected.notes || '—' },
-                { label: 'Chi tiết', value: <button className="text-xs text-primary hover:underline" onClick={() => router.push(`/dashboard/orders/${selected.id}`)}>Xem chi tiết →</button> },
-              ])
-          }
-
-          {detailColumns('Thông tin giao hàng', [
-            { label: 'Người nhận',  value: selected.customerName },
-            { label: 'Địa chỉ',    value: selected.address || '—' },
-            { label: 'Ngày đặt',   value: formatDate(selected.createdAt) },
-            { label: 'Giá trị',    value: formatPrice(selected.price) },
-            { label: 'Trạng thái', value: <Tag color={STATUS_TAG[selected.status]?.color}>{STATUS_TAG[selected.status]?.label}</Tag> },
-          ])}
-        </div>
+      {/* Kết quả filter */}
+      {(dateRange || search || filter !== 'all') && (
+        <Text type="secondary" className="text-xs">
+          Đang hiển thị <Text strong>{visible.length}</Text> / {orders.length} đơn hàng
+        </Text>
       )}
+
+      {/* Table */}
+      <Table
+        columns={columns}
+        dataSource={visible}
+        rowKey="id"
+        size="small"
+        rowClassName={r => r.id === selected?.id ? 'bg-blue-50' : ''}
+        pagination={{
+          pageSize,
+          showSizeChanger: false,
+          showQuickJumper: true,
+          showTotal: (total, range) => `${range[0]}–${range[1]} / ${total} đơn`,
+          size: 'small',
+        }}
+        onRow={record => ({
+          onClick: () => openDetail(record),
+          style: { cursor: 'pointer' },
+        })}
+      />
+
+      {/* Detail drawer */}
+      <Drawer
+        open={!!selected}
+        onClose={closeDetail}
+        width={400}
+        title={
+          selected && (
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="font-mono text-sm">{selected.id}</span>
+              <Tag color={STATUS_TAG[selected.status]?.color}>{STATUS_TAG[selected.status]?.label}</Tag>
+              <Tag color={SOURCE_TAG[selected.source as OrderSource]?.color ?? 'blue'}>
+                {SOURCE_TAG[selected.source as OrderSource]?.label ?? 'Local'}
+              </Tag>
+            </div>
+          )
+        }
+        footer={
+          selected && (
+            <div className="flex gap-2">
+              <Button type="primary" onClick={() => router.push(`/dashboard/orders/${selected.id}`)}>
+                Xem chi tiết
+              </Button>
+              {selected.source === 'local' && (
+                <EditOrderModal order={selected} onUpdated={() => { refetch(); closeDetail(); }} />
+              )}
+            </div>
+          )
+        }
+      >
+        {selected && (
+          <div className="space-y-5 text-sm">
+            <section>
+              <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-gray-400">Khách hàng</p>
+              <div className="space-y-2">
+                {[
+                  { label: 'Tên',      value: selected.customerName },
+                  { label: 'SĐT',      value: selected.phone || '—' },
+                  { label: 'Địa chỉ',  value: selected.address || '—' },
+                  { label: 'Ngày đặt', value: formatDate(selected.createdAt) },
+                ].map(({ label, value }) => (
+                  <div key={label} className="flex justify-between gap-4">
+                    <span className="text-gray-400">{label}</span>
+                    <span className="text-right font-medium">{value}</span>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            <hr className="border-gray-100" />
+
+            <section>
+              <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-gray-400">Sản phẩm</p>
+              <div className="space-y-2">
+                {selected.items.map((item, i) => (
+                  <div key={i} className="flex items-center justify-between gap-2">
+                    <span className="text-gray-700">
+                      {item.productName}
+                      <span className="ml-1 text-gray-400">×{item.quantity}</span>
+                      {item.isNfc && <Tag color="purple" className="ml-1 text-[10px]">NFC</Tag>}
+                    </span>
+                    <span className="font-medium">{formatPrice(item.unitPrice * item.quantity)}</span>
+                  </div>
+                ))}
+                <div className="flex justify-between border-t border-gray-100 pt-2 font-semibold">
+                  <span>Tổng cộng</span>
+                  <span>{formatPrice(selected.price)}</span>
+                </div>
+              </div>
+            </section>
+
+            {selected.notes && (
+              <>
+                <hr className="border-gray-100" />
+                <section>
+                  <p className="mb-1 text-[11px] font-semibold uppercase tracking-wider text-gray-400">Ghi chú</p>
+                  <p className="text-gray-700">{selected.notes}</p>
+                </section>
+              </>
+            )}
+          </div>
+        )}
+      </Drawer>
     </div>
   );
 }

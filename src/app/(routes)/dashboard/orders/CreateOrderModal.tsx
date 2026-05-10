@@ -2,13 +2,15 @@
 
 import { useState } from 'react';
 import {
-  Button, Checkbox, Form, Input, InputNumber,
-  Modal, Select, Space, Typography, notification,
+  App, Button, Checkbox, Form, Input, InputNumber,
+  Modal, Select, Tag, Typography,
 } from 'antd';
 import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
 import { useAdminAuth } from '@/contexts/AdminAuthContext';
 import { TEMPLATE_LIST } from '@/configs/constants';
+import { useProducts } from '@/hooks/product';
 import type { IOrderItem } from '@/services/OrderAPI';
+import type { IProduct } from '@/configs/types';
 
 const { Text } = Typography;
 
@@ -33,15 +35,20 @@ function priceParser(v: string | undefined) {
 
 export function CreateOrderModal({ onCreated }: Props) {
   const { user } = useAdminAuth();
+  const { notification } = App.useApp();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [form] = Form.useForm<FormValues>();
   const items: IOrderItem[] = Form.useWatch('items', form) ?? [];
 
+  const { data: products = [] } = useProducts();
+  const productList = products as IProduct[];
+
+  // Track item index → product ID (để biết item nào đã chọn từ catalog)
+  const [itemProductMap, setItemProductMap] = useState<Record<number, string>>({});
+
   const totalPrice = items.reduce((s, item) => {
-    const qty = Number(item?.quantity ?? 0);
-    const price = Number(item?.unitPrice ?? 0);
-    return s + qty * price;
+    return s + Number(item?.quantity ?? 0) * Number(item?.unitPrice ?? 0);
   }, 0);
 
   const hasNfc = items.some(i => i?.isNfc);
@@ -60,11 +67,9 @@ export function CreateOrderModal({ onCreated }: Props) {
       const json = (await res.json()) as { orderId?: string; error?: string };
       if (!res.ok) throw new Error(json.error ?? 'Tạo đơn thất bại');
 
-      notification.success({
-        message: 'Tạo đơn thành công',
-        description: `Mã đơn: ${json.orderId}`,
-      });
+      notification.success({ message: 'Tạo đơn thành công', description: `Mã đơn: ${json.orderId}` });
       form.resetFields();
+      setItemProductMap({});
       setOpen(false);
       onCreated(json.orderId ?? '');
     } catch (err) {
@@ -79,6 +84,28 @@ export function CreateOrderModal({ onCreated }: Props) {
 
   const initialItem: IOrderItem = { productName: '', quantity: 1, unitPrice: 0, isNfc: false };
 
+  /* Chọn sản phẩm từ catalog → set từng field riêng (không set cả array) */
+  const applyProduct = (fieldName: number, productId: string) => {
+    const product = productList.find(p => p.id === productId);
+    if (!product) return;
+    form.setFieldValue(['items', fieldName, 'productName'], product.name);
+    form.setFieldValue(['items', fieldName, 'unitPrice'], product.price);
+    form.setFieldValue(['items', fieldName, 'isNfc'], product.isNfc);
+    form.setFieldValue(['items', fieldName, 'templateId'], product.templateId ?? null);
+    setItemProductMap(prev => ({ ...prev, [fieldName]: productId }));
+  };
+
+  /* Xóa chọn catalog → về manual mode */
+  const clearProduct = (fieldName: number) => {
+    form.setFieldValue(['items', fieldName, 'productName'], '');
+    form.setFieldValue(['items', fieldName, 'unitPrice'], 0);
+    form.setFieldValue(['items', fieldName, 'isNfc'], false);
+    form.setFieldValue(['items', fieldName, 'templateId'], null);
+    setItemProductMap(prev => { const n = { ...prev }; delete n[fieldName]; return n; });
+  };
+
+  const handleClose = () => { setOpen(false); form.resetFields(); setItemProductMap({}); };
+
   return (
     <>
       <Button type="primary" icon={<PlusOutlined />} onClick={() => setOpen(true)}>
@@ -88,10 +115,10 @@ export function CreateOrderModal({ onCreated }: Props) {
       <Modal
         title="Tạo đơn hàng mới"
         open={open}
-        onCancel={() => { setOpen(false); form.resetFields(); }}
+        onCancel={handleClose}
         footer={null}
-        destroyOnClose
-        width={640}
+        destroyOnHidden
+        width={680}
       >
         <Form
           form={form}
@@ -129,100 +156,162 @@ export function CreateOrderModal({ onCreated }: Props) {
           </div>
 
           {/* Danh sách sản phẩm */}
-          <div className="mb-2 flex items-center justify-between">
-            <Text strong className="text-sm">Sản phẩm</Text>
-          </div>
+          <Text strong className="mb-2 block text-sm">Sản phẩm</Text>
 
           <Form.List
             name="items"
-            rules={[{
-              validator: async (_, list) => {
-                if (!list || list.length === 0) return Promise.reject('Cần ít nhất 1 sản phẩm');
-              },
-            }]}
+            rules={[{ validator: async (_, list) => { if (!list?.length) return Promise.reject('Cần ít nhất 1 sản phẩm'); } }]}
           >
             {(fields, { add, remove }, { errors }) => (
               <div className="space-y-2">
-                {fields.map(({ key, name }) => (
-                  <div key={key} className="rounded-lg border border-divider bg-gray-50 p-3">
-                    <div className="grid grid-cols-12 gap-2">
-                      {/* Tên sản phẩm */}
-                      <Form.Item
-                        name={[name, 'productName']}
-                        rules={[{ required: true, message: 'Nhập tên' }]}
-                        className="col-span-5 mb-0"
-                      >
-                        <Input placeholder="Tên sản phẩm" size="small" />
-                      </Form.Item>
+                {fields.map(({ key, name }) => {
+                  const fromCatalog = !!itemProductMap[name];
+                  const catalogProduct = fromCatalog ? productList.find(p => p.id === itemProductMap[name]) : null;
 
-                      {/* Số lượng */}
-                      <Form.Item name={[name, 'quantity']} className="col-span-2 mb-0">
-                        <InputNumber min={1} max={100} size="small" style={{ width: '100%' }} placeholder="SL" />
-                      </Form.Item>
+                  return (
+                    <div key={key} className="rounded-lg border border-divider bg-gray-50 p-3">
 
-                      {/* Đơn giá */}
-                      <Form.Item name={[name, 'unitPrice']} className="col-span-3 mb-0">
-                        <InputNumber
-                          min={0}
-                          size="small"
-                          style={{ width: '100%' }}
-                          placeholder="Đơn giá"
-                          formatter={priceFormatter}
-                          parser={priceParser}
-                        />
-                      </Form.Item>
-
-                      {/* Xóa */}
-                      <div className="col-span-2 flex items-center justify-end gap-1">
-                        <Form.Item name={[name, 'isNfc']} valuePropName="checked" className="mb-0">
-                          <Checkbox>NFC</Checkbox>
-                        </Form.Item>
-                        {fields.length > 1 && (
-                          <Button
-                            type="text"
-                            danger
+                      {/* Dropdown chọn từ catalog */}
+                      {productList.length > 0 && (
+                        <div className="mb-2">
+                          <Select
+                            placeholder="⚡ Chọn nhanh từ danh sách sản phẩm..."
+                            allowClear
+                            showSearch
                             size="small"
-                            icon={<DeleteOutlined />}
-                            onClick={() => remove(name)}
-                          />
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Template — chỉ hiện nếu isNfc */}
-                    <Form.Item noStyle shouldUpdate>
-                      {() => {
-                        const isNfc = form.getFieldValue(['items', name, 'isNfc']);
-                        return isNfc ? (
-                          <Form.Item
-                            name={[name, 'templateId']}
-                            label="Template NFC"
-                            rules={[{ required: true, message: 'Chọn template' }]}
-                            className="mb-0 mt-2"
+                            style={{ width: '100%' }}
+                            value={itemProductMap[name] ?? null}
+                            onChange={(productId) => productId ? applyProduct(name, productId) : clearProduct(name)}
+                            filterOption={(input, option) =>
+                              String(option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+                            }
                           >
-                            <Select size="small" placeholder="Chọn template">
-                              {TEMPLATE_LIST.map(tpl => (
-                                <Select.Option key={tpl.id} value={tpl.id}>
-                                  {tpl.icon} {tpl.name}
-                                </Select.Option>
-                              ))}
-                            </Select>
+                            {productList.map(p => (
+                              <Select.Option
+                                key={p.id}
+                                value={p.id}
+                                label={`${p.name} ${p.price.toLocaleString('vi-VN')}`}
+                              >
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                  {p.imageUrl ? (
+                                    <img
+                                      src={p.imageUrl}
+                                      alt={p.name}
+                                      style={{ width: 28, height: 28, borderRadius: 4, objectFit: 'cover', flexShrink: 0 }}
+                                    />
+                                  ) : (
+                                    <span style={{ fontSize: 18, lineHeight: 1 }}>📦</span>
+                                  )}
+                                  <span style={{ flex: 1, minWidth: 0 }}>
+                                    {p.isNfc ? '📡 ' : ''}{p.name}
+                                    <span style={{ color: '#888', marginLeft: 6, fontSize: 12 }}>
+                                      {p.price.toLocaleString('vi-VN')}đ
+                                    </span>
+                                  </span>
+                                </div>
+                              </Select.Option>
+                            ))}
+                          </Select>
+                        </div>
+                      )}
+
+                      <div className="grid grid-cols-12 gap-2">
+                        {/* Thumbnail nếu có ảnh */}
+                        {catalogProduct?.imageUrl && (
+                          <div className="col-span-1 flex items-center">
+                            <img
+                              src={catalogProduct.imageUrl}
+                              alt={catalogProduct.name}
+                              style={{ width: 32, height: 32, borderRadius: 6, objectFit: 'cover' }}
+                            />
+                          </div>
+                        )}
+
+                        {/* Tên sản phẩm */}
+                        <Form.Item
+                          name={[name, 'productName']}
+                          rules={[{ required: true, message: 'Nhập tên' }]}
+                          className={`mb-0 ${catalogProduct?.imageUrl ? 'col-span-4' : 'col-span-5'}`}
+                        >
+                          <Input placeholder="Tên sản phẩm" size="small" />
+                        </Form.Item>
+
+                        {/* Số lượng */}
+                        <Form.Item name={[name, 'quantity']} className="col-span-2 mb-0">
+                          <InputNumber min={1} max={100} size="small" style={{ width: '100%' }} placeholder="SL" />
+                        </Form.Item>
+
+                        {/* Đơn giá */}
+                        <Form.Item name={[name, 'unitPrice']} className="col-span-3 mb-0">
+                          <InputNumber
+                            min={0}
+                            size="small"
+                            style={{ width: '100%' }}
+                            placeholder="Đơn giá"
+                            formatter={priceFormatter}
+                            parser={priceParser}
+                          />
+                        </Form.Item>
+
+                        {/* NFC badge (catalog) hoặc Checkbox (manual) + Xóa */}
+                        <div className="col-span-2 flex items-center justify-end gap-1">
+                          {/* Always keep isNfc registered so onFinish includes it */}
+                          <Form.Item name={[name, 'isNfc']} valuePropName="checked" className="mb-0" hidden={fromCatalog}>
+                            <Checkbox>NFC</Checkbox>
                           </Form.Item>
-                        ) : null;
-                      }}
-                    </Form.Item>
-                  </div>
-                ))}
+                          {fromCatalog && (
+                            catalogProduct?.isNfc
+                              ? <Tag color="blue" className="text-[10px]">📡 NFC</Tag>
+                              : <Tag className="text-[10px]">Thường</Tag>
+                          )}
+                          {fields.length > 1 && (
+                            <Button
+                              type="text"
+                              danger
+                              size="small"
+                              icon={<DeleteOutlined />}
+                              onClick={() => {
+                                remove(name);
+                                setItemProductMap(prev => { const n = { ...prev }; delete n[name]; return n; });
+                              }}
+                            />
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Template — chỉ hiện nếu isNfc */}
+                      <Form.Item noStyle shouldUpdate>
+                        {() => {
+                          const isNfc = form.getFieldValue(['items', name, 'isNfc']);
+                          if (!isNfc) return null;
+                          return (
+                            <Form.Item
+                              name={[name, 'templateId']}
+                              label="Template NFC (tuỳ chọn)"
+                              className="mb-0 mt-2"
+                            >
+                              <Select
+                                size="small"
+                                placeholder="Chọn template"
+                                disabled={fromCatalog && !!catalogProduct?.templateId}
+                              >
+                                {TEMPLATE_LIST.map(tpl => (
+                                  <Select.Option key={tpl.id} value={tpl.id}>
+                                    {tpl.icon} {tpl.name}
+                                  </Select.Option>
+                                ))}
+                              </Select>
+                            </Form.Item>
+                          );
+                        }}
+                      </Form.Item>
+                    </div>
+                  );
+                })}
 
                 <Form.ErrorList errors={errors} />
 
-                <Button
-                  type="dashed"
-                  onClick={() => add(initialItem)}
-                  icon={<PlusOutlined />}
-                  block
-                  size="small"
-                >
+                <Button type="dashed" onClick={() => add(initialItem)} icon={<PlusOutlined />} block size="small">
                   Thêm sản phẩm
                 </Button>
               </div>
@@ -232,8 +321,7 @@ export function CreateOrderModal({ onCreated }: Props) {
           {/* Tổng */}
           <div className="mt-3 flex justify-end">
             <Text type="secondary" className="text-sm">
-              Tổng:{' '}
-              <Text strong>{totalPrice.toLocaleString('vi-VN')}đ</Text>
+              Tổng: <Text strong>{totalPrice.toLocaleString('vi-VN')}đ</Text>
             </Text>
           </div>
 
@@ -242,7 +330,7 @@ export function CreateOrderModal({ onCreated }: Props) {
           </Form.Item>
 
           <div className="flex justify-end gap-2 pt-4">
-            <Button onClick={() => { setOpen(false); form.resetFields(); }}>Hủy</Button>
+            <Button onClick={handleClose}>Hủy</Button>
             <Button type="primary" htmlType="submit" loading={loading}>Tạo đơn</Button>
           </div>
         </Form>

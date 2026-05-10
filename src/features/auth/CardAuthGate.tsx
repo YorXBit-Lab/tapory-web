@@ -110,18 +110,24 @@ function PhoneGate({ cardId, fullScreen, asModal, register, open, onVerified, on
     setLoading(true);
     setError(null);
     try {
-      const endpoint = register ? '/api/auth/register' : '/api/auth/token';
-      const res = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ cardId, phone }),
-      });
-      const data = await res.json();
+      const headers = { 'Content-Type': 'application/json' };
+      const body = JSON.stringify({ cardId, phone });
+      let endpoint = register ? '/api/auth/register' : '/api/auth/token';
+      let res = await fetch(endpoint, { method: 'POST', headers, body });
+      let data = await res.json() as { token?: string; message?: string };
+
+      // Admin already set up phoneHash for this card → fall back to verification
+      if (register && res.status === 409) {
+        endpoint = '/api/auth/token';
+        res = await fetch(endpoint, { method: 'POST', headers, body });
+        data = await res.json() as { token?: string; message?: string };
+      }
+
       if (!res.ok) {
-        setError(data.message ?? (register ? 'Không thể đặt SĐT' : 'Số điện thoại không đúng'));
+        setError(data.message ?? (register ? 'Không thể xác thực' : 'Số điện thoại không đúng'));
         return;
       }
-      await signInWithCustomToken(auth, data.token);
+      await signInWithCustomToken(auth, data.token!);
       onVerified(phone);
     } catch {
       setError('Lỗi kết nối, vui lòng thử lại');

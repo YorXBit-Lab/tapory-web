@@ -1,13 +1,14 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Button, Form, Input, InputNumber, Modal, Select, notification } from 'antd';
+import { App, Button, Form, Input, InputNumber, Modal, Select } from 'antd';
 import { EditOutlined } from '@ant-design/icons';
 import { OrderAPI, type IOrder } from '@/services/OrderAPI';
 import { STATUS_TAG } from '@/components/dashboard';
 
 interface FormValues {
   customerName: string;
+  phone: string;
   address: string;
   price: number;
   notes?: string;
@@ -20,19 +21,28 @@ interface Props {
   asButton?: boolean;
 }
 
+function priceFormatter(v: number | string | undefined) {
+  return `${v ?? ''}`.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+}
+function priceParser(v: string | undefined) {
+  return Number((v ?? '').replace(/\./g, '')) as 0;
+}
+
 export function EditOrderModal({ order, onUpdated, asButton = false }: Props) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen]       = useState(false);
   const [loading, setLoading] = useState(false);
   const [form] = Form.useForm<FormValues>();
+  const { notification } = App.useApp();
 
   useEffect(() => {
     if (open) {
       form.setFieldsValue({
         customerName: order.customerName,
-        address: order.address,
-        price: order.price,
-        notes: order.notes ?? '',
-        status: order.status,
+        phone:        order.phone ?? '',
+        address:      order.address ?? '',
+        price:        order.price,
+        notes:        order.notes ?? '',
+        status:       order.status,
       });
     }
   }, [open, order, form]);
@@ -51,56 +61,68 @@ export function EditOrderModal({ order, onUpdated, asButton = false }: Props) {
     }
   };
 
+  const trigger = asButton ? (
+    <Button icon={<EditOutlined />} size="small" onClick={() => setOpen(true)}>Sửa</Button>
+  ) : (
+    <button
+      className="text-xs text-primary hover:underline"
+      onClick={e => { e.stopPropagation(); setOpen(true); }}
+    >
+      Sửa
+    </button>
+  );
+
   return (
     <>
-      {asButton ? (
-        <Button icon={<EditOutlined />} size="small" onClick={() => setOpen(true)}>Sửa</Button>
-      ) : (
-        <button
-          className="text-primary hover:underline text-xs"
-          onClick={e => { e.stopPropagation(); setOpen(true); }}
-        >
-          Sửa
-        </button>
-      )}
-
+      {trigger}
       <Modal
         title={`Sửa đơn hàng ${order.id}`}
         open={open}
         onCancel={() => setOpen(false)}
         footer={null}
-        destroyOnClose
-        width={440}
+        destroyOnHidden
+        width={480}
       >
         <Form form={form} layout="vertical" onFinish={handleSubmit} className="pt-2">
-          <Form.Item
-            label="Tên khách hàng"
-            name="customerName"
-            rules={[{ required: true, message: 'Nhập tên khách hàng' }]}
-          >
-            <Input />
-          </Form.Item>
+          <div className="grid grid-cols-2 gap-x-3">
+            <Form.Item
+              label="Tên khách hàng"
+              name="customerName"
+              className="col-span-2"
+              rules={[{ required: true, message: 'Nhập tên khách hàng' }]}
+            >
+              <Input placeholder="Nguyễn Văn A" />
+            </Form.Item>
+
+            <Form.Item
+              label="Số điện thoại"
+              name="phone"
+              rules={[{ pattern: /^(0|\+84|84)\d{9}$/, message: 'SĐT không hợp lệ', warningOnly: true }]}
+            >
+              <Input placeholder="0912345678" />
+            </Form.Item>
+
+            <Form.Item label="Trạng thái" name="status">
+              <Select>
+                {Object.entries(STATUS_TAG).map(([value, { label }]) => (
+                  <Select.Option key={value} value={value}>{label}</Select.Option>
+                ))}
+              </Select>
+            </Form.Item>
+          </div>
 
           <Form.Item label="Địa chỉ giao hàng" name="address">
-            <Input />
+            <Input placeholder="123 Nguyễn Huệ, Q.1, TP.HCM" />
           </Form.Item>
 
           <Form.Item label="Giá trị đơn (VNĐ)" name="price">
             <InputNumber
               min={0}
               step={10000}
-              formatter={v => `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, '.')}
-              parser={v => Number((v ?? '').replace(/\./g, '')) as 0}
+              formatter={priceFormatter}
+              parser={priceParser}
               style={{ width: '100%' }}
             />
-          </Form.Item>
-
-          <Form.Item label="Trạng thái" name="status">
-            <Select>
-              {Object.entries(STATUS_TAG).map(([value, { label }]) => (
-                <Select.Option key={value} value={value}>{label}</Select.Option>
-              ))}
-            </Select>
           </Form.Item>
 
           <Form.Item label="Ghi chú" name="notes">

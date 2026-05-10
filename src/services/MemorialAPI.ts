@@ -38,11 +38,14 @@ export const MemorialAPI = {
 
   upsert: async (data: IMemorial) => {
     const ref = doc(db, COL, data.orderId);
+    // Drop server-managed timestamps and strip undefined — Firestore rejects both
+    const { createdAt: _c, updatedAt: _u, ...rest } = data as Record<string, unknown>;
+    const clean = Object.fromEntries(Object.entries(rest).filter(([, v]) => v !== undefined));
     const snap = await getDoc(ref);
     if (snap.exists()) {
-      await updateDoc(ref, { ...data, updatedAt: serverTimestamp() });
+      await updateDoc(ref, { ...clean, updatedAt: serverTimestamp() });
     } else {
-      await setDoc(ref, { ...data, createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
+      await setDoc(ref, { ...clean, createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
     }
     return { data: { orderId: data.orderId } };
   },

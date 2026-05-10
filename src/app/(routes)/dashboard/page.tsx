@@ -1,7 +1,8 @@
 'use client';
 
-import { useMemo } from 'react';
-import { Card, Table, Tag, Typography, theme } from 'antd';
+import { useMemo, useState } from 'react';
+import { Button, Card, Table, Tag, Typography, theme } from 'antd';
+import { LeftOutlined, RightOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
@@ -25,10 +26,13 @@ function fmtVnd(n: number) {
 }
 
 const DAY_LABELS = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
+const MONTH_LABELS = ['T1','T2','T3','T4','T5','T6','T7','T8','T9','T10','T11','T12'];
 
 export default function DashboardOverviewPage() {
   const { token } = theme.useToken();
   const router = useRouter();
+  const currentYear = new Date().getFullYear();
+  const [selectedYear, setSelectedYear] = useState(currentYear);
 
   const { data: orders = [] } = useQuery({ queryKey: ['orders'], queryFn: () => OrderAPI.list(), staleTime: 60_000 });
   const { data: cards = [] }  = useQuery({ queryKey: ['cards-all'], queryFn: () => CardAPI.listAll(), staleTime: 60_000 });
@@ -36,10 +40,12 @@ export default function DashboardOverviewPage() {
   const stats = useMemo(() => {
     const today = new Date().toDateString();
     const thisMonth = new Date().toISOString().slice(0, 7);
-    const todayOrders   = orders.filter(o => o.createdAt && new Date(o.createdAt).toDateString() === today).length;
-    const monthRevenue  = orders.filter(o => o.createdAt?.startsWith(thisMonth)).reduce((s, o) => s + o.price, 0);
+    const todayOrders    = orders.filter(o => o.createdAt && new Date(o.createdAt).toDateString() === today).length;
+    const monthRevenue   = orders.filter(o => o.createdAt?.startsWith(thisMonth)).reduce((s, o) => s + o.price, 0);
     const totalCustomers = new Set(orders.map(o => o.phone)).size;
-    return { todayOrders, monthRevenue, totalCustomers, totalChips: cards.length };
+    const totalChips     = cards.length;
+    const unwrittenChips = cards.filter(c => !c.nfcWritten).length;
+    return { todayOrders, monthRevenue, totalCustomers, totalChips, unwrittenChips };
   }, [orders, cards]);
 
   const dailyChart = useMemo(() => {
@@ -67,6 +73,40 @@ export default function DashboardOverviewPage() {
   }, [orders]);
 
   const maxTpl = Math.max(...templateStats.map(t => t.count), 1);
+
+  const availableYears = useMemo(() => {
+    const yrs = new Set<number>([currentYear]);
+    for (const o of orders) {
+      if (o.createdAt) yrs.add(new Date(o.createdAt).getFullYear());
+    }
+    return Array.from(yrs).sort();
+  }, [orders, currentYear]);
+
+  const monthlyRevenue = useMemo(() => {
+    return Array.from({ length: 12 }, (_, i) => {
+      const month = String(i + 1).padStart(2, '0');
+      const prefix = `${selectedYear}-${month}`;
+      const revenue = orders
+        .filter(o => o.createdAt?.startsWith(prefix))
+        .reduce((s, o) => s + o.price, 0);
+      const isCurrentMonth = i === new Date().getMonth() && selectedYear === currentYear;
+      return { month: MONTH_LABELS[i], revenue, isCurrentMonth };
+    });
+  }, [orders, selectedYear, currentYear]);
+
+  const maxMonth = Math.max(...monthlyRevenue.map(m => m.revenue), 1);
+
+  const yearlyRevenue = useMemo(() => {
+    const map: Record<number, number> = {};
+    for (const o of orders) {
+      if (!o.createdAt) continue;
+      const yr = new Date(o.createdAt).getFullYear();
+      map[yr] = (map[yr] ?? 0) + o.price;
+    }
+    return availableYears.map(yr => ({ year: yr, revenue: map[yr] ?? 0 }));
+  }, [orders, availableYears]);
+
+  const maxYear = Math.max(...yearlyRevenue.map(y => y.revenue), 1);
 
   const recentOrders = orders.slice(0, 6);
 
@@ -104,7 +144,12 @@ export default function DashboardOverviewPage() {
         <StatCard label="Đơn hàng hôm nay"        value={String(stats.todayOrders)}          />
         <StatCard label="Doanh thu tháng"           value={fmtVnd(stats.monthRevenue) + 'đ'}   />
         <StatCard label="Tổng khách hàng"           value={fmt(stats.totalCustomers)}           />
-        <StatCard label="Chip NFC"                  value={fmt(stats.totalChips)}               />
+        <StatCard
+          label="Chip NFC"
+          value={fmt(stats.totalChips)}
+          delta={stats.unwrittenChips > 0 ? `${stats.unwrittenChips} chưa ghi` : 'Tất cả đã ghi'}
+          deltaType={stats.unwrittenChips > 0 ? 'down' : 'up'}
+        />
       </div>
 
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
@@ -136,6 +181,78 @@ export default function DashboardOverviewPage() {
                 <Text strong className="w-6 text-right text-xs">{count}</Text>
               </div>
             ))}
+          </div>
+        </Card>
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
+        <Card
+          className="xl:col-span-2"
+          title="Doanh thu theo tháng"
+          extra={
+            <div className="flex items-center gap-1">
+              <Button
+                size="small"
+                icon={<LeftOutlined />}
+                disabled={selectedYear <= availableYears[0]}
+                onClick={() => setSelectedYear(y => y - 1)}
+              />
+              <Text strong className="w-10 text-center text-sm">{selectedYear}</Text>
+              <Button
+                size="small"
+                icon={<RightOutlined />}
+                disabled={selectedYear >= currentYear}
+                onClick={() => setSelectedYear(y => y + 1)}
+              />
+            </div>
+          }
+        >
+          <div className="mt-2 flex h-28 items-end gap-1.5">
+            {monthlyRevenue.map(({ month, revenue, isCurrentMonth }) => (
+              <div key={month} className="flex flex-1 flex-col items-center gap-1">
+                {revenue > 0 && (
+                  <Text type="secondary" className="text-[9px] leading-none">{fmtVnd(revenue)}</Text>
+                )}
+                <div
+                  className="w-full rounded-t-sm transition-opacity hover:opacity-80"
+                  style={{
+                    height: `${Math.max((revenue / maxMonth) * 90, revenue > 0 ? 4 : 2)}px`,
+                    background: isCurrentMonth ? token.colorPrimary : token.colorFill,
+                  }}
+                />
+                <Text type="secondary" className="text-[10px]">{month}</Text>
+              </div>
+            ))}
+          </div>
+        </Card>
+
+        <Card title="Doanh thu theo năm">
+          <div className="space-y-3">
+            {yearlyRevenue.length === 0 ? (
+              <Text type="secondary" className="text-xs">Chưa có dữ liệu</Text>
+            ) : (
+              yearlyRevenue.map(({ year, revenue }) => (
+                <div key={year} className="flex items-center gap-2">
+                  <Text
+                    type="secondary"
+                    className="w-10 flex-shrink-0 text-xs font-medium"
+                    style={{ color: year === currentYear ? token.colorPrimary : undefined }}
+                  >
+                    {year}
+                  </Text>
+                  <div className="h-2 flex-1 overflow-hidden rounded-full bg-divider">
+                    <div
+                      className="h-full rounded-full transition-all"
+                      style={{
+                        width: `${(revenue / maxYear) * 100}%`,
+                        background: year === currentYear ? token.colorPrimary : token.colorFill,
+                      }}
+                    />
+                  </div>
+                  <Text strong className="w-16 text-right text-xs">{fmtVnd(revenue)}đ</Text>
+                </div>
+              ))
+            )}
           </div>
         </Card>
       </div>

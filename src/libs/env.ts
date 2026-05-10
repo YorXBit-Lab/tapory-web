@@ -8,4 +8,5 @@ export const env = {
     messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID ?? '',
     appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID ?? '',
   },
+  r2PublicUrl: process.env.NEXT_PUBLIC_R2_PUBLIC_URL ?? '',
 } as const;

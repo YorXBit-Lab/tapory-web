@@ -1,5 +1,5 @@
 'use client';
-import { ConfigProvider, theme as antdTheme } from 'antd';
+import { App, ConfigProvider, theme as antdTheme } from 'antd';
 import { StyleProvider } from '@ant-design/cssinjs';
 import { useTheme } from 'next-themes';
 import { useEffect, useState } from 'react';
@@ -50,7 +50,9 @@ export function AntdProvider({ children }: { children: React.ReactNode }) {
         },
       }}
     >
-      <StyleProvider hashPriority="low">{children}</StyleProvider>
+      <StyleProvider hashPriority="low">
+        <App>{children}</App>
+      </StyleProvider>
     </ConfigProvider>
   );
 }

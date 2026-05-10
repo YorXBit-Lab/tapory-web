@@ -31,6 +31,12 @@ import type { ICard } from '@/configs/types';
 
 const { Text } = Typography;
 
+function formatDate(iso?: string) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
+}
+
 /* ── Web NFC types (not in TS stdlib) ── */
 interface NDEFRecord { recordType: string; data: string }
 interface NDEFWriter { write(msg: { records: NDEFRecord[] }): Promise<void> }
@@ -226,7 +232,7 @@ export default function OrderDetailPage() {
       render: (_: unknown, record: ICard) => (
         <span className="flex gap-3 text-xs">
           <Link href={`/view/${record.id}`} target="_blank" className="text-primary hover:opacity-70">Xem</Link>
-          <Link href={`/edit/${record.id}`} target="_blank" className="text-primary hover:opacity-70">Sửa</Link>
+          <Link href={`/edit/${record.id}${record.templateId ? `?template=${record.templateId}` : ''}`} target="_blank" className="text-primary hover:opacity-70">Sửa</Link>
         </span>
       ),
     },
@@ -303,7 +309,7 @@ export default function OrderDetailPage() {
     <div className="space-y-4">
       {/* Back + title */}
       <div className="flex items-center gap-3">
-        <Button icon={<ArrowLeftOutlined />} onClick={() => router.push('/dashboard/orders')} />
+        <Button icon={<ArrowLeftOutlined />} onClick={() => router.push('/dashboard/orders')}>Đơn hàng</Button>
         <h2 className="text-base font-semibold">Đơn hàng {order.id}</h2>
         <Tag color={statusTag?.color}>{statusTag?.label}</Tag>
         <Tag color={srcInfo.color}>{srcInfo.label}</Tag>
@@ -321,6 +327,7 @@ export default function OrderDetailPage() {
         <Descriptions size="small" column={{ xs: 1, sm: 2, md: 3 }}>
           <Descriptions.Item label="Khách hàng">{order.customerName}</Descriptions.Item>
           <Descriptions.Item label="SĐT">{order.phone || '—'}</Descriptions.Item>
+          <Descriptions.Item label="Ngày đặt">{formatDate(order.createdAt)}</Descriptions.Item>
           <Descriptions.Item label="Địa chỉ">{order.address || '—'}</Descriptions.Item>
           <Descriptions.Item label="Tổng giá trị">
             <Text strong>{order.price.toLocaleString('vi-VN')}đ</Text>
@@ -338,7 +345,7 @@ export default function OrderDetailPage() {
           <Table
             columns={itemColumns}
             dataSource={order.items}
-            rowKey={(_, i) => String(i)}
+            rowKey={(item) => `${item.productName}|${item.unitPrice}|${item.quantity}`}
             size="small"
             pagination={false}
             summary={() => (
