@@ -204,7 +204,7 @@ const STORIES: {
     type: 'featured',
     label: 'Cặp đôi',
     title: 'Cho người ở rất xa.',
-    body: 'Mua một cặp Tapory — một móc cho mình, một móc cho người ấy, cả hai cùng chỉ về một trang. Mỗi lần chạm là một lần nhớ.',
+    body: 'Mua một cặp Góc Chạm — một móc cho mình, một móc cho người ấy, cả hai cùng chỉ về một trang. Mỗi lần chạm là một lần nhớ.',
     quote: '"Em ở Hà Nội, anh ở Sài Gòn. Đêm nào cũng chạm vào nó như chào nhau ngủ ngon."',
     author: 'Hằng & Quân — Khách hàng tháng 03',
   },
@@ -394,7 +394,7 @@ export default function HomePage() {
         <div className="mx-auto flex h-[60px] max-w-[1240px] items-center justify-between px-6">
           <Link href="/" className="text-primary flex items-center gap-2 text-2xl font-bold">
             <span className="bg-primary inline-block h-2 w-2 rounded-full" />
-            Tapory
+            Góc Chạm
           </Link>
 
           <div className="hidden gap-6 md:flex">
@@ -472,8 +472,8 @@ export default function HomePage() {
                 kỷ niệm.
               </h1>
               <Paragraph className="text-content2 mb-8 max-w-[480px] !text-lg !leading-relaxed">
-                Mỗi móc khóa Tapory mang một chip NFC riêng. Chạm điện thoại — trang kỷ niệm bạn tự
-                tay thiết kế hiện ra ngay lập tức. Không cần app, không cần đăng ký.
+                Mỗi móc khóa Góc Chạm mang một chip NFC riêng. Chạm điện thoại — trang kỷ niệm bạn
+                tự tay thiết kế hiện ra ngay lập tức. Không cần app, không cần đăng ký.
               </Paragraph>
 
               <div className="flex flex-wrap gap-3">
@@ -740,7 +740,7 @@ export default function HomePage() {
             eyebrow="Cảm hứng"
             title={
               <>
-                Tapory được tặng vào những <span className="text-primary">khoảnh khắc</span> nào?
+                Góc Chạm được tặng vào những <span className="text-primary">khoảnh khắc</span> nào?
               </>
             }
           />
@@ -807,8 +807,8 @@ export default function HomePage() {
                 <span className="text-primary">Chỉ một cái chạm.</span>
               </h2>
               <Paragraph className="!text-content2 !mb-6 max-w-[460px] !text-base">
-                NFC là chuẩn không dây tầm gần đã có sẵn trong gần như mọi điện thoại từ 2017.
-                Tapory dùng nó để mở thẳng trang web kỷ niệm.
+                NFC là chuẩn không dây tầm gần đã có sẵn trong gần như mọi điện thoại từ 2017. Góc
+                Chạm dùng nó để mở thẳng trang web kỷ niệm.
               </Paragraph>
               <div className="divide-border border-border divide-y border-y">
                 {NFC_BULLETS.map((b) => (
@@ -958,7 +958,7 @@ export default function HomePage() {
             đáng để giữ cả đời.
           </h2>
           <Paragraph className="text-background/55 mx-auto mb-10 max-w-[500px] text-lg">
-            Tapory đang mở đặt hàng lứa đầu — giao trong 5 ngày làm việc.
+            Góc Chạm đang mở đặt hàng lứa đầu — giao trong 5 ngày làm việc.
           </Paragraph>
           <Button
             type="primary"
@@ -979,7 +979,7 @@ export default function HomePage() {
             <div>
               <div className="text-primary mb-2 flex items-center gap-2 text-2xl font-bold">
                 <span className="bg-primary h-2 w-2 rounded-full" />
-                Tapory
+                Góc Chạm
               </div>
               <Paragraph className="!text-content3 !mb-0 max-w-[300px] !text-sm">
                 Móc khóa NFC kỷ niệm — thủ công tại Việt Nam, cho những khoảnh khắc đáng giữ.
@@ -1007,7 +1007,7 @@ export default function HomePage() {
           </div>
           <Divider className="border-border mt-0" />
           <div className="flex items-center justify-between">
-            <Text className="text-content3">© 2026 Tapory — Móc khóa kỷ niệm NFC.</Text>
+            <Text className="text-content3">© 2026 Góc Chạm — Móc khóa kỷ niệm NFC.</Text>
             <Text className="text-content3">Crafted in Vietnam ♥</Text>
           </div>
         </div>

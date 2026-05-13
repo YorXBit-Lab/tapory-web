@@ -33,14 +33,18 @@ const dancing = Dancing_Script({
 });
 
 export const metadata: Metadata = {
-  title: 'Tapory – Móc Khóa Kỷ Niệm NFC',
+  title: 'Góc Chạm – Móc Khóa Kỷ Niệm NFC',
   description: 'Tạo trang kỷ niệm cá nhân hóa được gắn vào móc khóa NFC của bạn',
   keywords: ['móc khóa NFC', 'kỷ niệm', 'quà tặng', 'cá nhân hóa'],
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="vi" className={`${montserrat.variable} ${playfair.variable} ${dancing.variable}`} suppressHydrationWarning>
+    <html
+      lang="vi"
+      className={`${montserrat.variable} ${playfair.variable} ${dancing.variable}`}
+      suppressHydrationWarning
+    >
       <body className="flex min-h-full flex-col transition-colors">
         <ThemeProvider>
           <ReduxProvider>

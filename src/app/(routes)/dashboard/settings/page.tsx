@@ -1,6 +1,17 @@
 'use client';
 
-import { Button, Card, Divider, Form, Input, InputNumber, Switch, Tag, Typography, notification } from 'antd';
+import {
+  Button,
+  Card,
+  Divider,
+  Form,
+  Input,
+  InputNumber,
+  Switch,
+  Tag,
+  Typography,
+  notification,
+} from 'antd';
 import { useEffect, useState } from 'react';
 import { useAdminAuth } from '@/contexts/AdminAuthContext';
 
@@ -37,7 +48,9 @@ function TiktokCard() {
     }
   };
 
-  useEffect(() => { fetchStatus(); }, [user]);
+  useEffect(() => {
+    fetchStatus();
+  }, [user]);
 
   const handleTest = async () => {
     if (!user) return;
@@ -52,7 +65,7 @@ function TiktokCard() {
       notification.success({
         message: 'Kết nối TikTok API thành công ✓',
         description: (
-          <pre className="text-xs mt-1 max-h-40 overflow-auto">
+          <pre className="mt-1 max-h-40 overflow-auto text-xs">
             {JSON.stringify(json.data, null, 2)}
           </pre>
         ),
@@ -91,7 +104,12 @@ function TiktokCard() {
     }
   };
 
-  const handleSaveToken = async (values: { access_token: string; refresh_token?: string; shop_id: string; expires_in_hours: number }) => {
+  const handleSaveToken = async (values: {
+    access_token: string;
+    refresh_token?: string;
+    shop_id: string;
+    expires_in_hours: number;
+  }) => {
     if (!user) return;
     setSavingToken(true);
     try {
@@ -129,12 +147,20 @@ function TiktokCard() {
               <div className="flex items-center gap-2">
                 <Tag color="green">Đã kết nối</Tag>
                 {status.token_expired && <Tag color="orange">Token hết hạn — cần kết nối lại</Tag>}
-                {status.shop_id && <Text type="secondary" className="text-xs">Shop ID: {status.shop_id}</Text>}
+                {status.shop_id && (
+                  <Text type="secondary" className="text-xs">
+                    Shop ID: {status.shop_id}
+                  </Text>
+                )}
               </div>
-              <Text type="secondary" className="mt-1 block text-xs">Sync lần cuối: {lastSync}</Text>
+              <Text type="secondary" className="mt-1 block text-xs">
+                Sync lần cuối: {lastSync}
+              </Text>
             </>
           ) : (
-            <Text type="secondary" className="text-sm">Chưa kết nối TikTok Shop</Text>
+            <Text type="secondary" className="text-sm">
+              Chưa kết nối TikTok Shop
+            </Text>
           )}
         </div>
 
@@ -164,8 +190,9 @@ function TiktokCard() {
           <Divider style={{ margin: '12px 0' }} />
           <div className="rounded-md bg-gray-50 px-3 py-2">
             <Text type="secondary" className="text-xs">
-              <strong>Lưu ý:</strong> Đơn TikTok được đánh dấu <code>source: tiktok</code> — không thể sửa từ dashboard.
-              Sản phẩm tên có chứa &quot;NFC&quot; / &quot;móc khóa&quot; sẽ tự nhận diện là có chip NFC.
+              <strong>Lưu ý:</strong> Đơn TikTok được đánh dấu <code>source: tiktok</code> — không
+              thể sửa từ dashboard. Sản phẩm tên có chứa &quot;NFC&quot; / &quot;móc khóa&quot; sẽ
+              tự nhận diện là có chip NFC.
             </Text>
           </div>
         </>
@@ -173,12 +200,7 @@ function TiktokCard() {
 
       <Divider style={{ margin: '12px 0' }} />
       <div>
-        <Button
-          size="small"
-          type="link"
-          className="px-0"
-          onClick={() => setShowManual((v) => !v)}
-        >
+        <Button size="small" type="link" className="px-0" onClick={() => setShowManual((v) => !v)}>
           {showManual ? 'Ẩn' : 'Nhập token thủ công'}
         </Button>
         {showManual && (
@@ -223,19 +245,23 @@ function TiktokCard() {
 
 export default function SettingsPage() {
   const [notifs, setNotifs] = useState({
-    newOrder:        true,
+    newOrder: true,
     remindCustomize: true,
-    weeklyReport:    false,
+    weeklyReport: false,
   });
 
   return (
     <div className="grid max-w-4xl grid-cols-1 gap-5 md:grid-cols-2">
       <TiktokCard />
       <Card title="Cửa hàng">
-        <SettingRow name="Tên cửa hàng"       desc="Tapory – Móc Khóa Kỷ Niệm NFC"  action={<EditBtn />} />
-        <SettingRow name="Giá bán mặc định"    desc="189.000đ / móc khóa"             action={<EditBtn />} />
-        <SettingRow name="Domain NFC"          desc="tapory.com/view/{orderId}"       action={<EditBtn />} />
-        <SettingRow name="Email liên hệ"       desc="hello@tapory.com"                action={<EditBtn />} />
+        <SettingRow
+          name="Tên cửa hàng"
+          desc="Góc Chạm – Móc Khóa Kỷ Niệm NFC"
+          action={<EditBtn />}
+        />
+        <SettingRow name="Giá bán mặc định" desc="189.000đ / móc khóa" action={<EditBtn />} />
+        <SettingRow name="Domain NFC" desc="tapory.com/view/{orderId}" action={<EditBtn />} />
+        <SettingRow name="Email liên hệ" desc="hello@tapory.com" action={<EditBtn />} />
       </Card>
 
       <Card title="Thông báo">
@@ -275,16 +301,28 @@ export default function SettingsPage() {
       </Card>
 
       <Card title="Vận chuyển">
-        <SettingRow name="Đơn vị giao hàng"    desc="GHN, GHTK, J&T Express"        action={<ConfigBtn />} />
-        <SettingRow name="Phí vận chuyển"       desc="Miễn phí toàn quốc"            action={<EditBtn />}   />
-        <SettingRow name="Thời gian giao hàng"  desc="2–4 ngày làm việc"             action={<EditBtn />}   />
+        <SettingRow name="Đơn vị giao hàng" desc="GHN, GHTK, J&T Express" action={<ConfigBtn />} />
+        <SettingRow name="Phí vận chuyển" desc="Miễn phí toàn quốc" action={<EditBtn />} />
+        <SettingRow name="Thời gian giao hàng" desc="2–4 ngày làm việc" action={<EditBtn />} />
       </Card>
 
       <Card title="Tích hợp">
-        <SettingRow name="Spotify API"       desc="Hỗ trợ template nhạc – bấm mở thẳng Spotify" action={<ConnectedTag />} />
-        <SettingRow name="Google Analytics"  desc="Phân tích hành vi người dùng"                 action={<ConnectedTag />} />
-        <SettingRow name="Facebook Pixel"    desc="Theo dõi chuyển đổi quảng cáo"               action={<ConnectBtn />}   />
-        <SettingRow name="Zalo OA"           desc="Gửi thông báo đơn hàng qua Zalo"             action={<ConnectBtn />}   />
+        <SettingRow
+          name="Spotify API"
+          desc="Hỗ trợ template nhạc – bấm mở thẳng Spotify"
+          action={<ConnectedTag />}
+        />
+        <SettingRow
+          name="Google Analytics"
+          desc="Phân tích hành vi người dùng"
+          action={<ConnectedTag />}
+        />
+        <SettingRow
+          name="Facebook Pixel"
+          desc="Theo dõi chuyển đổi quảng cáo"
+          action={<ConnectBtn />}
+        />
+        <SettingRow name="Zalo OA" desc="Gửi thông báo đơn hàng qua Zalo" action={<ConnectBtn />} />
       </Card>
     </div>
   );
@@ -303,8 +341,12 @@ function SettingRow({
     <>
       <div className="flex items-center justify-between py-2.5">
         <div>
-          <Text strong className="text-sm block">{name}</Text>
-          <Text type="secondary" className="text-xs">{desc}</Text>
+          <Text strong className="block text-sm">
+            {name}
+          </Text>
+          <Text type="secondary" className="text-xs">
+            {desc}
+          </Text>
         </div>
         <div className="ml-4 flex-shrink-0">{action}</div>
       </div>

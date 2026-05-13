@@ -1,4 +1,4 @@
-# Tapory — Luồng hoàn chỉnh từ đặt hàng đến xem trang final
+# Góc Chạm — Luồng hoàn chỉnh từ đặt hàng đến xem trang final
 
 > **Kênh bán hàng:** TikTok Shop & Shopee — không có form đặt hàng trên website.
 
@@ -25,22 +25,27 @@
 ## GIAI ĐOẠN 1 — Khách đặt hàng trên TikTok Shop / Shopee
 
 ### 1.1 Khách tìm thấy sản phẩm
+
 - Xem video TikTok demo thẻ NFC → vào TikTok Shop đặt.
 - Hoặc tìm kiếm "thẻ NFC kỷ niệm" trên Shopee → xem ảnh mẫu → đặt.
 - Khách **không cần vào tapory.vn** ở bước này.
 
 ### 1.2 Khách đặt hàng trên sàn
+
 - Điền địa chỉ giao hàng như mọi đơn bình thường.
 - Chọn biến thể nếu có (Basic / Premium / Bundle).
 - Phần **Ghi chú đơn hàng** (note): khuyến khích khách ghi thêm:
+
   ```
   "SĐT nhận thẻ: 0912345678 (nếu khác SĐT đặt hàng)"
   ```
+
   > Vì SĐT trên TikTok/Shopee có thể là SĐT phụ hoặc bị ẩn một phần.
 
 - Thanh toán qua cổng của sàn (COD, ShopeePay, TikTok Pay...).
 
 ### 1.3 Sàn thông báo cho shop
+
 - TikTok Shop / Shopee gửi notification đơn mới vào app Seller Center.
 - Admin thấy đơn kèm:
   - Tên người mua (có thể là nickname)
@@ -51,9 +56,9 @@
 
 ---
 
-## GIAI ĐOẠN 2 — Admin nhận đơn & nhập vào Tapory Dashboard
+## GIAI ĐOẠN 2 — Admin nhận đơn & nhập vào Góc Chạm Dashboard
 
-### 2.1 Admin nhập đơn vào Tapory Dashboard
+### 2.1 Admin nhập đơn vào Góc Chạm Dashboard
 
 Admin mở Seller Center TikTok/Shopee → thấy đơn mới với đầy đủ thông tin (tên, SĐT, địa chỉ).
 
@@ -75,7 +80,7 @@ Ghi chú:        Khách ghi "tặng bạn gái ngày 20/5"
 
 ```
 orders/{autoId} = {
-  orderCode:     "TP-001234",         ← mã nội bộ Tapory
+  orderCode:     "TP-001234",         ← mã nội bộ Góc Chạm
   source:        "tiktok",            ← "tiktok" | "shopee" | "other"
   platformOrderId: "TK-20260508-ABC", ← mã đơn trên sàn (để tra cứu)
   customerName:  "Nguyễn Thị Mai",
@@ -119,6 +124,7 @@ Dashboard hiển thị: URL sẽ ghi vào chip: "tapory.vn/c/tp_x7k2m9"
 ### 3.1 Lập trình NFC chip
 
 Kỹ thuật viên (hoặc chính admin):
+
 1. Mở **NFC Tools** (Android) hoặc **NFC for iPhone**.
 2. Chọn **Write → URL**.
 3. Nhập: `https://tapory.vn/c/tp_x7k2m9`
@@ -165,13 +171,14 @@ Mỗi đơn hàng kèm 1 tờ nhỏ:
   - Khách đánh giá 5 sao trực tiếp trên sàn.
   - Shop nhận doanh thu từ sàn sau khi giao thành công.
 - Admin cập nhật trạng thái giao hàng trên Seller Center của sàn.
-- Đồng thời cập nhật trên Tapory dashboard: `status: 'shipped'`, nhập mã vận đơn.
+- Đồng thời cập nhật trên Góc Chạm dashboard: `status: 'shipped'`, nhập mã vận đơn.
 
 ---
 
 ## GIAI ĐOẠN 4 — Khách quét thẻ NFC lần đầu
 
 ### 4.1 Khách nhận hàng & quét thẻ
+
 - Khách nhận hàng → mở hộp → đọc tờ hướng dẫn.
 - Chạm điện thoại vào thẻ:
   - **Android:** Notification popup xuất hiện → tap để mở Chrome.
@@ -217,6 +224,7 @@ Increment cards.stats.totalViews += 1
 ### 5.1 Trang /edit/tp_x7k2m9 load lên
 
 Trước khi hiện editor, kiểm tra auth:
+
 ```
 Có "tapory_auth_tp_x7k2m9" trong sessionStorage?
   ├── Có & còn hạn → vào editor luôn
@@ -228,7 +236,7 @@ Có "tapory_auth_tp_x7k2m9" trong sessionStorage?
 ```
 ┌─────────────────────────────────────┐
 │                                      │
-│         🪪  Tapory                  │
+│         🪪  Góc Chạm                  │
 │                                      │
 │   Nhập số điện thoại bạn đã dùng    │
 │   khi đặt hàng trên TikTok/Shopee   │
@@ -388,7 +396,7 @@ Bất kỳ ai quét thẻ:
 ```ts
 // middleware.ts chạy tại /view/[cardId]
 // Nếu templateId === 'redirect' AND memorial.website hợp lệ
-// → 302 redirect ra ngoài ngay, người xem không thấy trang Tapory
+// → 302 redirect ra ngoài ngay, người xem không thấy trang Góc Chạm
 ```
 
 ### 6.3 Trang /view render
@@ -437,33 +445,40 @@ Góc phải dưới: nút ✏️ nhỏ
 ## Edge cases thực tế khi bán qua sàn
 
 ### ❌ Khách quên SĐT đã đặt hàng
+
 **Tình huống:** Khách có nhiều SĐT, không nhớ dùng SĐT nào khi đặt trên TikTok/Shopee.
 
 **Giải pháp:**
-- Tờ hướng dẫn trong hộp ghi gợi nhớ: *"SĐT kích hoạt: 091\*\*\*678"* (3 số đầu + 3 số cuối).
+
+- Tờ hướng dẫn trong hộp ghi gợi nhớ: _"SĐT kích hoạt: 091\*\*\*678"_ (3 số đầu + 3 số cuối).
 - Khách vẫn không nhớ → chat shop TikTok/Shopee → admin tra `platformOrderId` → báo lại SĐT cho khách.
 - Admin có thể **đổi SĐT** trên dashboard nếu khách yêu cầu (xác minh qua chat sàn là đủ).
 
 ### 🎁 Mua tặng người khác
-- Người mua đặt hàng → trong ghi chú ghi *"SĐT người nhận: 0933333333"*.
+
+- Người mua đặt hàng → trong ghi chú ghi _"SĐT người nhận: 0933333333"_.
 - Admin nhập `customerPhone = 0933333333` (SĐT người nhận, không phải người mua).
 - Người nhận quà nhập SĐT của mình → vào editor được.
 
 ### 📦 Đơn Bundle 3 thẻ
+
 - Admin tạo 3 cardId riêng: `tp_aaa111`, `tp_bbb222`, `tp_ccc333`.
 - Cả 3 đều có `phoneHash` giống nhau (cùng 1 SĐT đặt hàng).
 - Hoặc nếu 3 thẻ cho 3 người khác nhau → admin nhập 3 SĐT riêng.
 
 ### ⭐ Quản lý đánh giá sàn
+
 - Sau khi `cards.status = "published"`, hệ thống có thể gửi SMS/Zalo:
-  *"Thẻ Tapory của bạn đã hoạt động! Nếu hài lòng, hãy đánh giá 5⭐ cho shop nhé: [link review Shopee/TikTok]"*
+  _"Thẻ Góc Chạm của bạn đã hoạt động! Nếu hài lòng, hãy đánh giá 5⭐ cho shop nhé: [link review Shopee/TikTok]"_
 - Tăng rating sàn, tăng hiển thị tự nhiên.
 
 ### 🔄 Khách muốn đổi mẫu sau khi đã publish
+
 - Nhấn ✏️ → `/edit/tp_x7k2m9` → nhập lại SĐT → vào editor với data cũ.
 - Thay đổi thoải mái → nhấn Lưu → `MemorialAPI.updateOne(...)` ghi đè.
 
 ### 📵 Khách không biết cách quét NFC (iPhone cũ / không quen)
+
 - Tờ hướng dẫn cần có QR code backup: `qr.tapory.vn/tp_x7k2m9` → cùng redirect logic.
 - Khách quét QR = quét NFC, cùng kết quả.
 
@@ -474,7 +489,7 @@ Góc phải dưới: nút ✏️ nhỏ
 ```
 T+0       Khách đặt hàng trên TikTok/Shopee
 T+1-2h    Admin nhận đơn trên Seller Center
-T+2-3h    Admin nhập đơn vào Tapory Dashboard, sinh cardId
+T+2-3h    Admin nhập đơn vào Góc Chạm Dashboard, sinh cardId
 T+2-3h    Kỹ thuật viên lập trình chip NFC
 T+3-4h    Đóng gói, bàn giao shipper (nội thành)
 T+1-3d    Shipper giao hàng đến khách
@@ -487,13 +502,13 @@ T+?+SMS   Hệ thống nhắc khách đánh giá sàn ⭐⭐⭐⭐⭐
 
 ## Mapping vào codebase hiện tại
 
-| Bước | Hiện trạng | Cần làm |
-|------|-----------|---------|
-| Route `/c/[cardId]` | ❌ Chưa có | Tạo `app/(routes)/c/[cardId]/route.ts` |
-| Màn hình auth SĐT | ❌ Chưa có | Gate trước `EditorContainer` |
-| Bước chọn template lần đầu | ❌ Chưa có | Thêm vào `EditClient` khi chưa có memorial |
-| Cloud Function `issueCardToken` | ❌ Chưa có | Firebase Functions |
-| Dashboard nhập đơn thủ công | ✅ UI có (mock) | Wire Firestore + form tạo đơn |
-| Field `source` / `platformOrderId` | ❌ Chưa có | Thêm vào `orders` schema |
-| Analytics `cardViews` | ❌ Chưa có | Tạo collection + ghi khi quét |
-| SMS/Zalo nhắc đánh giá | ❌ Chưa có | ESMS / Zalo OA API (sau này) |
+| Bước                               | Hiện trạng      | Cần làm                                    |
+| ---------------------------------- | --------------- | ------------------------------------------ |
+| Route `/c/[cardId]`                | ❌ Chưa có      | Tạo `app/(routes)/c/[cardId]/route.ts`     |
+| Màn hình auth SĐT                  | ❌ Chưa có      | Gate trước `EditorContainer`               |
+| Bước chọn template lần đầu         | ❌ Chưa có      | Thêm vào `EditClient` khi chưa có memorial |
+| Cloud Function `issueCardToken`    | ❌ Chưa có      | Firebase Functions                         |
+| Dashboard nhập đơn thủ công        | ✅ UI có (mock) | Wire Firestore + form tạo đơn              |
+| Field `source` / `platformOrderId` | ❌ Chưa có      | Thêm vào `orders` schema                   |
+| Analytics `cardViews`              | ❌ Chưa có      | Tạo collection + ghi khi quét              |
+| SMS/Zalo nhắc đánh giá             | ❌ Chưa có      | ESMS / Zalo OA API (sau này)               |

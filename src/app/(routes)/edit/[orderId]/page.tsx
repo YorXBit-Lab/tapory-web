@@ -3,7 +3,7 @@ import { EditClient } from './EditClient';
 import type { TemplateId } from '@/configs/types';
 
 export const metadata = {
-  title: 'Chỉnh sửa kỷ niệm – Tapory',
+  title: 'Chỉnh sửa kỷ niệm – Góc Chạm',
 };
 
 export default async function EditPage({
@@ -16,7 +16,16 @@ export default async function EditPage({
   const { orderId } = await params;
   const { template } = await searchParams;
 
-  const validTemplates: TemplateId[] = ['graduation', 'wedding', 'birthday', 'anniversary', 'spotify', 'social', 'profile', 'redirect'];
+  const validTemplates: TemplateId[] = [
+    'graduation',
+    'wedding',
+    'birthday',
+    'anniversary',
+    'spotify',
+    'social',
+    'profile',
+    'redirect',
+  ];
   const initialTemplate: TemplateId = validTemplates.includes(template as TemplateId)
     ? (template as TemplateId)
     : 'graduation';

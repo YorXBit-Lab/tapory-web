@@ -67,7 +67,7 @@ function DashboardInner({ children }: { children: React.ReactNode }) {
     staleTime: 60_000,
     enabled: isAdmin,
   });
-  const newOrderCount = orders.filter(o => o.status === 'new').length;
+  const newOrderCount = orders.filter((o) => o.status === 'new').length;
 
   const isLoginPage = pathname === '/dashboard/login';
 
@@ -94,9 +94,8 @@ function DashboardInner({ children }: { children: React.ReactNode }) {
     Object.keys(PAGE_TITLES)
       .filter((k) => (k === '/dashboard' ? pathname === k : pathname.startsWith(k)))
       .sort((a, b) => b.length - a.length)[0] ?? '/dashboard';
-  const dynamicBadge: Record<string, number> = newOrderCount > 0
-    ? { '/dashboard/orders': newOrderCount }
-    : {};
+  const dynamicBadge: Record<string, number> =
+    newOrderCount > 0 ? { '/dashboard/orders': newOrderCount } : {};
 
   const menuItems = NAV_ITEMS.map((group) => ({
     type: 'group' as const,
@@ -149,7 +148,7 @@ function DashboardInner({ children }: { children: React.ReactNode }) {
           </div>
           {!collapsed && (
             <Text strong className="text-sm tracking-tight">
-              Tapory
+              Góc Chạm
             </Text>
           )}
           <button
@@ -202,7 +201,16 @@ function DashboardInner({ children }: { children: React.ReactNode }) {
               title="Đăng xuất"
               className="text-gray-400 hover:text-gray-600"
             >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
                 <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
                 <polyline points="16 17 21 12 16 7" />
                 <line x1="21" y1="12" x2="9" y2="12" />
