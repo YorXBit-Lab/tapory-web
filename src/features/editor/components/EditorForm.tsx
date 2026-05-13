@@ -17,8 +17,8 @@ import { TextareaField } from './fields/TextareaField';
 
 export function EditorForm() {
   const { draft, fields, dispatch } = useEditorContext();
-  const { uploading, handlePhoto } = useImageUpload(draft.orderId);
-  const { handleSave } = useSaveDraft();
+  const { uploading, handlePhoto, onSaved } = useImageUpload(draft.orderId);
+  const { handleSave } = useSaveDraft({ onSaved });
   const isSpotify   = draft.templateId === 'spotify';
   const isRedirect  = draft.templateId === 'redirect';
 

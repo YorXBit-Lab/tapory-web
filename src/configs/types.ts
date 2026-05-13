@@ -54,6 +54,18 @@ export interface ITemplate {
   };
 }
 
+export interface IProduct {
+  id: string;
+  name: string;
+  price: number;
+  isNfc: boolean;
+  templateId?: TemplateId;
+  description?: string;
+  imageUrl?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export interface IMemorial {
   orderId: string;
   templateId: TemplateId;

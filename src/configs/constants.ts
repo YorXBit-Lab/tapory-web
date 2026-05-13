@@ -136,4 +136,5 @@ export const FIRESTORE_COLLECTIONS = {
   CARD_VIEWS: 'cardViews',
   ORDERS: 'orders',
   ADMINS: 'admins',
+  PRODUCTS: 'products',
 } as const;

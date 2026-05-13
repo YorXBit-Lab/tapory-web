@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { Button, Card, Input, Select, Table, Tag, Typography } from 'antd';
+import { Input, Segmented, Table, Tag, Typography } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import Link from 'next/link';
@@ -31,8 +31,9 @@ function formatDate(iso?: string) {
 }
 
 export default function MemoriesPage() {
-  const [search, setSearch] = useState('');
-  const [contentFilter, setContentFilter] = useState<string | null>(null);
+  const [search, setSearch]       = useState('');
+  const [contentFilter, setContentFilter] = useState('all');
+  const [pageSize, setPageSize]   = useState(10);
 
   const { data: memorials = [] } = useQuery({ queryKey: ['memorials'], queryFn: () => MemorialAPI.list(), staleTime: 60_000 });
   const { data: orders = [] }    = useQuery({ queryKey: ['orders'],    queryFn: () => OrderAPI.list(),   staleTime: 60_000 });
@@ -55,28 +56,43 @@ export default function MemoriesPage() {
     };
   }), [memorials, orderMap, cardMap]);
 
-  const notCustomized = useMemo(() => cards.filter(c => !c.hasContent).length, [cards]);
+  const stats = useMemo(() => ({
+    total:      rows.length,
+    customized: rows.filter(r => r.hasContent).length,
+    blank:      rows.filter(r => !r.hasContent).length,
+    totalViews: rows.reduce((s, r) => s + r.views, 0),
+  }), [rows]);
 
-  const templateOrderStats = useMemo(() => {
+  const templateStats = useMemo(() => {
     const counts: Record<string, number> = {};
     for (const m of memorials) counts[m.templateId] = (counts[m.templateId] ?? 0) + 1;
     return Object.entries(TEMPLATES)
       .map(([id, t]) => ({ id, label: `${t.icon} ${t.name}`, count: counts[id] ?? 0, color: t.colors.primary }))
+      .filter(t => t.count > 0)
       .sort((a, b) => b.count - a.count);
   }, [memorials]);
 
-  const maxCount = Math.max(...templateOrderStats.map(t => t.count), 1);
+  const maxCount = Math.max(...templateStats.map(t => t.count), 1);
+
+  const filterOptions = [
+    { label: `Tất cả (${stats.total})`,               value: 'all'        },
+    { label: `Đã tùy chỉnh (${stats.customized})`,    value: 'customized' },
+    { label: `Chưa tùy chỉnh (${stats.blank})`,       value: 'blank'      },
+  ];
 
   const visible = rows.filter(r => {
     const q = search.toLowerCase();
-    const matchSearch   = !q || r.customerName.toLowerCase().includes(q) || r.title.toLowerCase().includes(q) || r.id.toLowerCase().includes(q);
-    const matchContent  = contentFilter === null || String(r.hasContent) === contentFilter;
+    const matchSearch  = !q || r.customerName.toLowerCase().includes(q) || r.title.toLowerCase().includes(q) || r.id.toLowerCase().includes(q);
+    const matchContent =
+      contentFilter === 'all'        ? true :
+      contentFilter === 'customized' ? r.hasContent :
+      contentFilter === 'blank'      ? !r.hasContent : true;
     return matchSearch && matchContent;
   });
 
   const columns: ColumnsType<MemoryRow> = [
     {
-      title: 'URL',
+      title: 'Link',
       dataIndex: 'id',
       render: (id: string) => (
         <Link href={`/view/${id}`} target="_blank" className="font-mono text-xs text-primary hover:opacity-70">
@@ -92,9 +108,10 @@ export default function MemoriesPage() {
     {
       title: 'Template',
       dataIndex: 'templateId',
-      render: (id: string) => { const t = TEMPLATES[id as keyof typeof TEMPLATES]; return t ? `${t.icon} ${t.name}` : id; },
-      filters: Object.values(TEMPLATES).map(t => ({ text: `${t.icon} ${t.name}`, value: t.id })),
-      onFilter: (value, record) => record.templateId === value,
+      render: (id: string) => {
+        const t = TEMPLATES[id as keyof typeof TEMPLATES];
+        return t ? `${t.icon} ${t.name}` : id;
+      },
     },
     {
       title: 'Tiêu đề',
@@ -102,82 +119,101 @@ export default function MemoriesPage() {
       render: (v: string) => <Text type="secondary">{v}</Text>,
     },
     {
+      title: 'Lượt xem',
+      dataIndex: 'views',
+      sorter: (a, b) => a.views - b.views,
+      render: (v: number) => <Text strong>{v}</Text>,
+    },
+    {
       title: 'Cập nhật',
       dataIndex: 'updatedAt',
+      sorter: (a, b) => (a.updatedAt ?? '').localeCompare(b.updatedAt ?? ''),
+      defaultSortOrder: 'descend',
       render: (v: string) => <Text type="secondary" className="text-xs">{formatDate(v)}</Text>,
     },
     {
       title: 'Trạng thái',
       dataIndex: 'hasContent',
-      filters: [{ text: 'Đã tùy chỉnh', value: 'true' }, { text: 'Chưa', value: 'false' }],
-      onFilter: (value, record) => String(record.hasContent) === value,
       render: (v: boolean) => <Tag color={v ? 'green' : 'gold'}>{v ? 'Đã tùy chỉnh' : 'Chưa'}</Tag>,
     },
     {
       title: 'Hành động',
-      render: (_: unknown, record: MemoryRow) => (
-        <div className="flex gap-2">
-          <Link href={`/view/${record.id}`} target="_blank">
-            <Button type="link" size="small" style={{ padding: 0 }}>Xem</Button>
-          </Link>
-          <Link href={`/edit/${record.id}`} target="_blank">
-            <Button type="link" size="small" style={{ padding: 0 }}>Sửa</Button>
-          </Link>
-        </div>
+      render: (_: unknown, r: MemoryRow) => (
+        <span className="flex gap-2 text-xs">
+          <Link href={`/view/${r.id}`} target="_blank" className="text-primary hover:opacity-70">Xem</Link>
+          <Link href={`/edit/${r.id}`} target="_blank" className="text-primary hover:opacity-70">Sửa</Link>
+        </span>
       ),
     },
   ];
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-2">
-        <StatCard label="Đã tùy chỉnh"   value={String(rows.filter(r => r.hasContent).length)} />
-        <StatCard label="Chưa tùy chỉnh" value={String(notCustomized)} delta="cần nhắc nhở" deltaType="down" />
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+        <StatCard label="Tổng kỷ niệm"     value={String(stats.total)}      />
+        <StatCard label="Đã tùy chỉnh"     value={String(stats.customized)} deltaType="up"   />
+        <StatCard label="Chưa tùy chỉnh"   value={String(stats.blank)}      deltaType="down" />
+        <StatCard label="Tổng lượt xem"    value={String(stats.totalViews)} />
       </div>
 
-      <Card>
-        <div className="mb-3 flex flex-wrap items-center gap-2">
+      <div className="space-y-3">
+        <Segmented options={filterOptions} value={contentFilter} onChange={v => setContentFilter(v as string)} />
+
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <Input
-            prefix={<SearchOutlined />}
-            placeholder="Tìm khách hàng, tiêu đề, URL..."
+            prefix={<SearchOutlined className="text-gray-400" />}
+            placeholder="Tìm khách hàng, tiêu đề, link..."
             allowClear
             onChange={e => setSearch(e.target.value)}
             size="small"
-            style={{ width: 260 }}
+            style={{ width: 280 }}
           />
-          <Select
-            placeholder="Trạng thái"
-            allowClear
-            onChange={v => setContentFilter(v ?? null)}
-            size="small"
-            style={{ width: 160 }}
-            options={[{ label: 'Đã tùy chỉnh', value: 'true' }, { label: 'Chưa tùy chỉnh', value: 'false' }]}
-          />
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-gray-400">Hiển thị</span>
+            <input
+              type="number"
+              min={1}
+              max={500}
+              value={pageSize}
+              onChange={e => setPageSize(Number(e.target.value) || 10)}
+              className="w-14 rounded border border-gray-200 px-2 py-0.5 text-center text-xs"
+            />
+            <span className="text-xs text-gray-400">dòng</span>
+          </div>
         </div>
+
         <Table
           columns={columns}
           dataSource={visible}
           rowKey="id"
           size="small"
-          pagination={{ pageSize: 10, showSizeChanger: true, pageSizeOptions: ['10', '20', '50'],
-            showTotal: (t, r) => `${r[0]}-${r[1]} / ${t}`, size: 'small' }}
+          pagination={{
+            pageSize,
+            showSizeChanger: false,
+            showQuickJumper: true,
+            showTotal: (t, r) => `${r[0]}–${r[1]} / ${t} kỷ niệm`,
+            size: 'small',
+          }}
           scroll={{ x: 'max-content' }}
         />
-      </Card>
+      </div>
 
-      <Card title="Kỷ niệm theo template">
-        <div className="space-y-2.5">
-          {templateOrderStats.map(({ id, label, count, color }) => (
-            <div key={id} className="flex items-center gap-3">
-              <Text type="secondary" className="w-36 flex-shrink-0 text-xs">{label}</Text>
-              <div className="h-2 flex-1 overflow-hidden rounded-full bg-divider">
-                <div className="h-full rounded-full" style={{ width: `${(count / maxCount) * 100}%`, background: color }} />
+      {templateStats.length > 0 && (
+        <div className="rounded-lg border border-gray-100 bg-white p-4">
+          <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-gray-400">Template phổ biến</p>
+          <div className="space-y-2.5">
+            {templateStats.map(({ id, label, count, color }) => (
+              <div key={id} className="flex items-center gap-3">
+                <Text type="secondary" className="w-36 flex-shrink-0 text-xs">{label}</Text>
+                <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-gray-100">
+                  <div className="h-full rounded-full" style={{ width: `${(count / maxCount) * 100}%`, background: color }} />
+                </div>
+                <Text strong className="w-6 text-right text-xs">{count}</Text>
               </div>
-              <Text strong className="w-6 text-right text-xs">{count}</Text>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
-      </Card>
+      )}
     </div>
   );
 }

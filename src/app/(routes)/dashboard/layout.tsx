@@ -1,8 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { Avatar, Button, Input, Layout, Menu, Typography, theme } from 'antd';
-import { SearchOutlined } from '@ant-design/icons';
+import { Avatar, Layout, Menu, Typography, theme } from 'antd';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useState } from 'react';
@@ -25,6 +24,7 @@ const NAV_ITEMS = [
     label: 'Kinh doanh',
     children: [
       { key: '/dashboard/orders', icon: <OrderIcon />, label: 'Đơn hàng' },
+      { key: '/dashboard/products', icon: <ProductIcon />, label: 'Sản phẩm' },
       { key: '/dashboard/users', icon: <UserIcon />, label: 'Khách hàng' },
     ],
   },
@@ -32,7 +32,6 @@ const NAV_ITEMS = [
     type: 'group' as const,
     label: 'Nội dung',
     children: [
-      { key: '/dashboard/templates', icon: <TemplateIcon />, label: 'Templates' },
       { key: '/dashboard/memories', icon: <MemoryIcon />, label: 'Kỷ niệm khách hàng' },
       { key: '/dashboard/nfcs', icon: <NfcIcon />, label: 'Chip NFC' },
     ],
@@ -47,8 +46,8 @@ const NAV_ITEMS = [
 const PAGE_TITLES: Record<string, string> = {
   '/dashboard': 'Tổng quan',
   '/dashboard/orders': 'Đơn hàng',
+  '/dashboard/products': 'Sản phẩm',
   '/dashboard/users': 'Khách hàng',
-  '/dashboard/templates': 'Quản lý Templates',
   '/dashboard/memories': 'Kỷ niệm khách hàng',
   '/dashboard/nfcs': 'Chip NFC',
   '/dashboard/settings': 'Cài đặt',
@@ -223,7 +222,7 @@ function DashboardInner({ children }: { children: React.ReactNode }) {
       {/* ── Main ── */}
       <Layout>
         <Header
-          className="flex items-center gap-3"
+          className="flex items-center"
           style={{
             height: 52,
             lineHeight: '52px',
@@ -232,23 +231,9 @@ function DashboardInner({ children }: { children: React.ReactNode }) {
             padding: '0 20px',
           }}
         >
-          <h1 className="flex-1 text-sm font-semibold" style={{ color: token.colorText }}>
+          <h1 className="text-sm font-semibold" style={{ color: token.colorText }}>
             {PAGE_TITLES[activeKey] ?? 'Dashboard'}
           </h1>
-
-          <Input
-            placeholder="Tìm kiếm..."
-            prefix={<SearchOutlined style={{ color: token.colorTextPlaceholder }} />}
-            className="w-56"
-            size="small"
-          />
-
-          <div className="flex gap-2">
-            <Button size="small">Xuất CSV</Button>
-            <Button size="small" type="primary">
-              + Thêm mới
-            </Button>
-          </div>
         </Header>
 
         <Content className="overflow-y-auto p-5">{children}</Content>
@@ -291,15 +276,6 @@ function UserIcon() {
     </svg>
   );
 }
-function TemplateIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
-      <rect x="1" y="1" width="14" height="4" rx="1" />
-      <rect x="1" y="7" width="6" height="8" rx="1" />
-      <rect x="9" y="7" width="6" height="8" rx="1" />
-    </svg>
-  );
-}
 function MemoryIcon() {
   return (
     <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
@@ -329,6 +305,13 @@ function SettingIcon() {
     <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
       <path d="M8 5a3 3 0 100 6A3 3 0 008 5zm0 1a2 2 0 110 4A2 2 0 018 6z" />
       <path d="M6.5 0h3l.4 1.6a5.5 5.5 0 011.3.75l1.55-.65 2.12 2.12-.65 1.55c.3.4.56.83.75 1.3L16 7v3l-1.58.38c-.19.47-.45.9-.75 1.3l.65 1.55-2.12 2.12-1.55-.65c-.4.3-.83.56-1.3.75L9 16H6l-.38-1.58a5.5 5.5 0 01-1.3-.75l-1.55.65L.65 12.2l.65-1.55A5.5 5.5 0 011.05 9.4L0 9V6l1.58-.38c.19-.47.45-.9.75-1.3L1.68 2.77 3.8.65l1.55.65A5.5 5.5 0 016.65 1L6.5 0z" />
+    </svg>
+  );
+}
+function ProductIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+      <path d="M1 2a1 1 0 011-1h2.5l1.5 3H14a1 1 0 01.95 1.316l-2 6A1 1 0 0112 12H5a1 1 0 01-.95-.684L1.05 3.316A1 1 0 011 3V2zm4.5 9a1.5 1.5 0 100 3 1.5 1.5 0 000-3zm6 0a1.5 1.5 0 100 3 1.5 1.5 0 000-3z" />
     </svg>
   );
 }

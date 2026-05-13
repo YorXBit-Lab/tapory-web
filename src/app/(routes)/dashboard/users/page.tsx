@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { Avatar, Card, Input, Select, Table, Typography } from 'antd';
+import { Input, Select, Table, Typography, theme } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { useQuery } from '@tanstack/react-query';
@@ -29,8 +29,10 @@ function formatDate(iso?: string) {
 }
 
 export default function UsersPage() {
-  const [search, setSearch] = useState('');
+  const { token } = theme.useToken();
+  const [search, setSearch]       = useState('');
   const [minOrders, setMinOrders] = useState<number | null>(null);
+  const [pageSize, setPageSize]   = useState(10);
 
   const { data: orders = [] } = useQuery({ queryKey: ['orders'], queryFn: () => OrderAPI.list(), staleTime: 60_000 });
 
@@ -44,7 +46,7 @@ export default function UsersPage() {
       c.totalSpent += o.price;
       if (o.createdAt && (!c.firstOrder || o.createdAt < c.firstOrder)) c.firstOrder = o.createdAt;
     }
-    return Array.from(map.values()).sort((a, b) => b.orderCount - a.orderCount);
+    return Array.from(map.values()).sort((a, b) => b.totalSpent - a.totalSpent);
   }, [orders]);
 
   const stats = useMemo(() => {
@@ -69,9 +71,12 @@ export default function UsersPage() {
       sorter: (a, b) => a.name.localeCompare(b.name, 'vi'),
       render: (name: string) => (
         <div className="flex items-center gap-2">
-          <Avatar size={24} style={{ backgroundColor: 'var(--color-primary)', color: '#fff', fontSize: 10, flexShrink: 0 }}>
+          <div
+            className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full text-[10px] font-semibold"
+            style={{ backgroundColor: token.colorPrimaryBg, color: token.colorPrimary }}
+          >
             {initials(name)}
-          </Avatar>
+          </div>
           <Text strong>{name}</Text>
         </div>
       ),
@@ -82,7 +87,17 @@ export default function UsersPage() {
       dataIndex: 'orderCount',
       align: 'center',
       sorter: (a, b) => a.orderCount - b.orderCount,
-      render: (v: number) => <Text strong>{v}</Text>,
+      render: (v: number) => (
+        <span
+          className="inline-flex items-center justify-center rounded-full px-2 py-0.5 text-xs font-semibold"
+          style={{
+            backgroundColor: v > 1 ? token.colorPrimaryBg : token.colorFillSecondary,
+            color: v > 1 ? token.colorPrimary : token.colorTextSecondary,
+          }}
+        >
+          {v}
+        </span>
+      ),
     },
     {
       title: 'Tổng chi tiêu',
@@ -92,7 +107,7 @@ export default function UsersPage() {
       render: (v: number) => <Text strong>{v.toLocaleString('vi-VN')}đ</Text>,
     },
     {
-      title: 'Đăng ký',
+      title: 'Khách từ',
       dataIndex: 'firstOrder',
       sorter: (a, b) => (a.firstOrder ?? '').localeCompare(b.firstOrder ?? ''),
       render: (v: string) => <Text type="secondary" className="text-xs">{formatDate(v)}</Text>,
@@ -102,40 +117,62 @@ export default function UsersPage() {
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <StatCard label="Tổng khách hàng"  value={String(stats.total)}                              />
-        <StatCard label="Đã mua lại"        value={String(stats.repeat)}  delta={`${stats.repeat > 0 ? Math.round(stats.repeat / stats.total * 100) : 0}% quay lại`} deltaType="up" />
-        <StatCard label="TB đơn / khách"    value={stats.avgOrders}                                  />
-        <StatCard label="Chi tiêu TB"       value={`${(stats.avgSpend / 1000).toFixed(0)}K`}         />
+        <StatCard label="Tổng khách hàng" value={String(stats.total)}                                                    />
+        <StatCard label="Mua lại"          value={String(stats.repeat)}  delta={`${stats.total > 0 ? Math.round(stats.repeat / stats.total * 100) : 0}% quay lại`} deltaType="up" />
+        <StatCard label="TB đơn / khách"  value={stats.avgOrders}                                                         />
+        <StatCard label="Chi tiêu TB"      value={`${(stats.avgSpend / 1000).toFixed(0)}K`}                               />
       </div>
 
-      <Card>
-        <div className="mb-3 flex flex-wrap items-center gap-2">
+      <div className="space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <Input
-            prefix={<SearchOutlined />}
+            prefix={<SearchOutlined className="text-gray-400" />}
             placeholder="Tìm tên, số điện thoại..."
             allowClear
             onChange={e => setSearch(e.target.value)}
             size="small"
-            style={{ width: 240 }}
+            style={{ width: 260 }}
           />
-          <Select
-            placeholder="Số đơn tối thiểu"
-            allowClear
-            onChange={v => setMinOrders(v ?? null)}
-            size="small"
-            style={{ width: 170 }}
-            options={[{ label: '≥ 1 đơn', value: 1 }, { label: '≥ 2 đơn', value: 2 }, { label: '≥ 3 đơn', value: 3 }]}
-          />
+          <div className="flex items-center gap-2">
+            <Select
+              placeholder="Số đơn tối thiểu"
+              allowClear
+              onChange={v => setMinOrders(v ?? null)}
+              size="small"
+              style={{ width: 160 }}
+              options={[
+                { label: '≥ 1 đơn', value: 1 },
+                { label: '≥ 2 đơn (mua lại)', value: 2 },
+                { label: '≥ 3 đơn', value: 3 },
+              ]}
+            />
+            <span className="text-xs text-gray-400">Hiển thị</span>
+            <input
+              type="number"
+              min={1}
+              max={500}
+              value={pageSize}
+              onChange={e => setPageSize(Number(e.target.value) || 10)}
+              className="w-14 rounded border border-gray-200 px-2 py-0.5 text-center text-xs"
+            />
+            <span className="text-xs text-gray-400">dòng</span>
+          </div>
         </div>
+
         <Table
           columns={columns}
           dataSource={visible}
           rowKey="phone"
           size="small"
-          pagination={{ pageSize: 10, showSizeChanger: true, pageSizeOptions: ['10', '20', '50'],
-            showTotal: (t, r) => `${r[0]}-${r[1]} / ${t}`, size: 'small' }}
+          pagination={{
+            pageSize,
+            showSizeChanger: false,
+            showQuickJumper: true,
+            showTotal: (t, r) => `${r[0]}–${r[1]} / ${t} khách`,
+            size: 'small',
+          }}
         />
-      </Card>
+      </div>
     </div>
   );
 }

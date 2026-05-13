@@ -6,7 +6,7 @@ import { MemorialAPI } from '@/services/MemorialAPI';
 import { CardAPI } from '@/services/CardAPI';
 import { useCardAuthCtx } from '@/features/auth/CardAuthContext';
 
-export function useSaveDraft() {
+export function useSaveDraft(callbacks?: { onSaved?: (imageUrl: string) => void }) {
   const dispatch = useDispatch<AppDispatch>();
   const draft = useSelector((s: RootState) => s.edit);
   const { requireAuth } = useCardAuthCtx();
@@ -18,6 +18,7 @@ export function useSaveDraft() {
         await MemorialAPI.upsert(memorial);
         CardAPI.markPublished(draft.orderId, draft.templateId).catch(() => {});
         dispatch(markSaved());
+        callbacks?.onSaved?.(draft.imageUrl ?? '');
         toast.success('Đã lưu thành công');
       } catch (err) {
         console.error('[useSaveDraft]', err);

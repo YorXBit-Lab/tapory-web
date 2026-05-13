@@ -80,7 +80,7 @@ export const OrderAPI = {
 
   update: async (
     orderId: string,
-    fields: Partial<Pick<IOrder, 'customerName' | 'address' | 'price' | 'notes' | 'status'>>,
+    fields: Partial<Pick<IOrder, 'customerName' | 'phone' | 'address' | 'price' | 'notes' | 'status'>>,
   ): Promise<void> => {
     await updateDoc(doc(db, COL, orderId), { ...fields, updatedAt: serverTimestamp() });
   },
