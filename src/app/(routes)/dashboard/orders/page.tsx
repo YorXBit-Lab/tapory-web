@@ -1,7 +1,7 @@
 'use client';
 
-import { Button, DatePicker, Drawer, Input, InputNumber, notification, Select, Segmented, Table, Tag, Typography } from 'antd';
-import { DownloadOutlined, SearchOutlined } from '@ant-design/icons';
+import { Button, DatePicker, Input, notification, Popconfirm, Select, Segmented, Table, Tag, Typography } from 'antd';
+import { DeleteOutlined, DownloadOutlined, SearchOutlined } from '@ant-design/icons';
 import { useRouter } from 'next/navigation';
 import type { ColumnsType } from 'antd/es/table';
 import { useState } from 'react';
@@ -10,7 +10,6 @@ import dayjs, { type Dayjs } from 'dayjs';
 import { STATUS_TAG, type StatusKey } from '@/components/dashboard';
 import { OrderAPI, type IOrder, type OrderSource } from '@/services/OrderAPI';
 import { CreateOrderModal } from './CreateOrderModal';
-import { EditOrderModal } from './EditOrderModal';
 
 const { Text } = Typography;
 const { RangePicker } = DatePicker;
@@ -64,7 +63,6 @@ export default function OrdersPage() {
   const [filter, setFilter]       = useState('all');
   const [search, setSearch]       = useState('');
   const [dateRange, setDateRange] = useState<[Dayjs, Dayjs] | null>(null);
-  const [selected, setSelected]   = useState<IOrder | null>(null);
   const [pageSize, setPageSize]   = useState(10);
 
   const { data: orders = [], refetch } = useQuery({
@@ -113,6 +111,16 @@ export default function OrdersPage() {
       queryClient.invalidateQueries({ queryKey: ['orders'] });
     } catch {
       notification.error({ message: 'Cập nhật trạng thái thất bại' });
+    }
+  };
+
+  const handleDelete = async (orderId: string) => {
+    try {
+      await OrderAPI.delete(orderId);
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+      notification.success({ message: `Đã xóa đơn ${orderId}` });
+    } catch {
+      notification.error({ message: 'Xóa đơn hàng thất bại' });
     }
   };
 
@@ -187,10 +195,30 @@ export default function OrdersPage() {
         return <Tag color={src.color}>{src.label}</Tag>;
       },
     },
+    {
+      title: '',
+      key: 'actions',
+      width: 40,
+      render: (_: unknown, record: IOrder) => (
+        <Popconfirm
+          title="Xóa đơn hàng?"
+          description={`Đơn ${record.id} sẽ bị xóa vĩnh viễn.`}
+          okText="Xóa"
+          cancelText="Hủy"
+          okButtonProps={{ danger: true }}
+          onConfirm={() => handleDelete(record.id)}
+        >
+          <Button
+            size="small"
+            danger
+            type="text"
+            icon={<DeleteOutlined />}
+            onClick={e => e.stopPropagation()}
+          />
+        </Popconfirm>
+      ),
+    },
   ];
-
-  const openDetail = (record: IOrder) => setSelected(record);
-  const closeDetail = () => setSelected(null);
 
   return (
     <div className="space-y-3">
@@ -248,7 +276,6 @@ export default function OrdersPage() {
         dataSource={visible}
         rowKey="id"
         size="small"
-        rowClassName={r => r.id === selected?.id ? 'bg-blue-50' : ''}
         pagination={{
           pageSize,
           showSizeChanger: false,
@@ -257,93 +284,10 @@ export default function OrdersPage() {
           size: 'small',
         }}
         onRow={record => ({
-          onClick: () => openDetail(record),
+          onClick: () => router.push(`/dashboard/orders/${record.id}`),
           style: { cursor: 'pointer' },
         })}
       />
-
-      {/* Detail drawer */}
-      <Drawer
-        open={!!selected}
-        onClose={closeDetail}
-        width={400}
-        title={
-          selected && (
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="font-mono text-sm">{selected.id}</span>
-              <Tag color={STATUS_TAG[selected.status]?.color}>{STATUS_TAG[selected.status]?.label}</Tag>
-              <Tag color={SOURCE_TAG[selected.source as OrderSource]?.color ?? 'blue'}>
-                {SOURCE_TAG[selected.source as OrderSource]?.label ?? 'Local'}
-              </Tag>
-            </div>
-          )
-        }
-        footer={
-          selected && (
-            <div className="flex gap-2">
-              <Button type="primary" onClick={() => router.push(`/dashboard/orders/${selected.id}`)}>
-                Xem chi tiết
-              </Button>
-              {selected.source === 'local' && (
-                <EditOrderModal order={selected} onUpdated={() => { refetch(); closeDetail(); }} />
-              )}
-            </div>
-          )
-        }
-      >
-        {selected && (
-          <div className="space-y-5 text-sm">
-            <section>
-              <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-gray-400">Khách hàng</p>
-              <div className="space-y-2">
-                {[
-                  { label: 'Tên',      value: selected.customerName },
-                  { label: 'SĐT',      value: selected.phone || '—' },
-                  { label: 'Địa chỉ',  value: selected.address || '—' },
-                  { label: 'Ngày đặt', value: formatDate(selected.createdAt) },
-                ].map(({ label, value }) => (
-                  <div key={label} className="flex justify-between gap-4">
-                    <span className="text-gray-400">{label}</span>
-                    <span className="text-right font-medium">{value}</span>
-                  </div>
-                ))}
-              </div>
-            </section>
-
-            <hr className="border-gray-100" />
-
-            <section>
-              <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-gray-400">Sản phẩm</p>
-              <div className="space-y-2">
-                {selected.items.map((item, i) => (
-                  <div key={i} className="flex items-center justify-between gap-2">
-                    <span className="text-gray-700">
-                      {item.productName}
-                      <span className="ml-1 text-gray-400">×{item.quantity}</span>
-                      {item.isNfc && <Tag color="purple" className="ml-1 text-[10px]">NFC</Tag>}
-                    </span>
-                    <span className="font-medium">{formatPrice(item.unitPrice * item.quantity)}</span>
-                  </div>
-                ))}
-                <div className="flex justify-between border-t border-gray-100 pt-2 font-semibold">
-                  <span>Tổng cộng</span>
-                  <span>{formatPrice(selected.price)}</span>
-                </div>
-              </div>
-            </section>
-
-            {selected.notes && (
-              <>
-                <hr className="border-gray-100" />
-                <section>
-                  <p className="mb-1 text-[11px] font-semibold uppercase tracking-wider text-gray-400">Ghi chú</p>
-                  <p className="text-gray-700">{selected.notes}</p>
-                </section>
-              </>
-            )}
-          </div>
-        )}
-      </Drawer>
     </div>
   );
 }

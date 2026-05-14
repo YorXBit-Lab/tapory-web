@@ -1,5 +1,6 @@
 import {
   doc,
+  deleteDoc,
   getDoc,
   getDocs,
   updateDoc,
@@ -68,6 +69,33 @@ export const CardAPI = {
     });
     // Sort by id (chip suffix C1, C2...) client-side to avoid composite index requirement
     return cards.sort((a, b) => a.id.localeCompare(b.id, undefined, { numeric: true }));
+  },
+
+  deleteByOrder: async (orderId: string): Promise<void> => {
+    const CARD_AUTH = FIRESTORE_COLLECTIONS.CARD_AUTH;
+    const CARD_VIEWS = FIRESTORE_COLLECTIONS.CARD_VIEWS;
+
+    const cardSnaps = await getDocs(
+      query(collection(db, CARDS), where('orderId', '==', orderId)),
+    );
+
+    await Promise.all(
+      cardSnaps.docs.map(async (cardDoc) => {
+        const cardId = cardDoc.id;
+
+        // cardAuth — doc id = cardId
+        await deleteDoc(doc(db, CARD_AUTH, cardId)).catch(() => null);
+
+        // cardViews — query by cardId
+        const viewSnaps = await getDocs(
+          query(collection(db, CARD_VIEWS), where('cardId', '==', cardId)),
+        );
+        await Promise.all(viewSnaps.docs.map(s => deleteDoc(s.ref)));
+
+        // card itself
+        await deleteDoc(cardDoc.ref);
+      }),
+    );
   },
 
   markNfcWritten: async (cardId: string) => {

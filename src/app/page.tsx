@@ -2,7 +2,10 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Button, Tag, Typography, Divider } from 'antd';
+import { useProducts } from '@/hooks/product';
+import type { IProduct } from '@/configs/types';
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -73,35 +76,6 @@ const HERO_STATS = [
   { num: '2s', lab: 'CHẠM LÀ XEM' },
 ];
 
-const PRODUCTS = [
-  {
-    name: 'Trái tim',
-    tag: 'Bestseller',
-    price: '35.000đ',
-    desc: 'Dáng kinh điển cho những lời thì thầm yêu thương.',
-    feats: ['3.5cm', 'Hồng pastel', 'Resin'],
-    from: '#fce4e8',
-    to: '#c4456a',
-  },
-  {
-    name: 'Thẻ tag',
-    tag: 'Mới',
-    price: '40.000đ',
-    desc: 'Khắc ngày kỷ niệm hoặc dòng chữ ngắn ở mặt sau.',
-    feats: ['3×4cm', 'Vàng kem', 'Khắc 2 mặt'],
-    from: '#fdf2e9',
-    to: '#d6a47a',
-  },
-  {
-    name: 'Đĩa tròn',
-    tag: 'Đôi',
-    price: '45.000đ',
-    desc: 'Bộ đôi cho hai người — hai móc cùng dẫn về một trang.',
-    feats: ['⌀ 3.2cm', 'Tím rượu', 'Cặp đôi'],
-    from: '#e0d5e8',
-    to: '#6b3a48',
-  },
-];
 
 const HOW_STEPS = [
   {
@@ -396,6 +370,7 @@ const SectionHead = ({
 ══════════════════════════════════════════ */
 export default function HomePage() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const { data: products = [], isLoading: productsLoading } = useProducts();
   return (
     <div className="bg-background text-content1 min-h-screen font-sans">
       {/* keyframes */}
@@ -671,46 +646,76 @@ export default function HomePage() {
             eyebrow="Bộ sưu tập"
             title={
               <>
-                Ba dáng móc khóa, một <span className="text-primary">tâm hồn</span> kỷ niệm.
+                Móc khóa kỷ niệm, một <span className="text-primary">tâm hồn</span> riêng biệt.
               </>
             }
             sub="Móc khóa kim loại phủ resin, chip NFC ẩn bên trong. Chống nước, chống xước. Mỗi mẫu được lập trình sẵn link riêng để bạn tùy biến."
           />
-          <div className="grid gap-6 md:grid-cols-3">
-            {PRODUCTS.map((p) => (
-              <div
-                key={p.name}
-                className="bg-background border-border relative rounded-2xl border px-5 py-8 text-center transition-all duration-200 hover:-translate-y-1 hover:shadow-xl md:px-7 md:py-12"
-              >
-                {/* AntD Tag for badge */}
-                <Tag
-                  color="#8B6B52"
-                  className="!absolute !top-4 !right-4 !text-[10px] !font-bold !tracking-widest !uppercase"
-                >
-                  {p.tag}
-                </Tag>
-                {/* shape preview circle */}
+          {productsLoading ? (
+            <div className="grid gap-6 md:grid-cols-3">
+              {[1, 2, 3].map((i) => (
                 <div
-                  className="mx-auto mb-7 h-36 w-36 rounded-full shadow-lg"
-                  style={{ background: `radial-gradient(circle at 35% 30%,${p.from},${p.to})` }}
-                />
-                <Title level={4} className="!text-content1 !mb-1">
-                  {p.name}
-                </Title>
-                <Text className="!text-primary mb-3 block text-sm font-semibold tracking-wide">
-                  {p.price}
-                </Text>
-                <Paragraph className="!text-content3 !mb-5 !text-sm">{p.desc}</Paragraph>
-                <div className="flex flex-wrap justify-center gap-1.5">
-                  {p.feats.map((f) => (
-                    <Tag key={f} bordered className="!text-content3 !text-[11px]">
-                      {f}
-                    </Tag>
-                  ))}
+                  key={i}
+                  className="bg-background border-border animate-pulse rounded-2xl border px-5 py-8 text-center md:px-7 md:py-12"
+                >
+                  <div className="bg-elevated mx-auto mb-7 h-36 w-36 rounded-full" />
+                  <div className="bg-elevated mx-auto mb-2 h-5 w-32 rounded-lg" />
+                  <div className="bg-elevated mx-auto mb-5 h-4 w-20 rounded-lg" />
+                  <div className="bg-elevated mx-auto h-10 w-full rounded-lg" />
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : products.length === 0 ? (
+            <div className="border-border rounded-2xl border py-16 text-center">
+              <Text className="!text-content3">Chưa có sản phẩm nào.</Text>
+            </div>
+          ) : (
+            <div className="grid gap-6 md:grid-cols-3">
+              {(products as IProduct[]).map((p) => (
+                <div
+                  key={p.id}
+                  className="bg-background border-border relative rounded-2xl border px-5 py-8 text-center transition-all duration-200 hover:-translate-y-1 hover:shadow-xl md:px-7 md:py-12"
+                >
+                  {p.isNfc && (
+                    <Tag
+                      color="#8B6B52"
+                      className="!absolute !top-4 !right-4 !text-[10px] !font-bold !tracking-widest !uppercase"
+                    >
+                      NFC
+                    </Tag>
+                  )}
+                  <div className="relative mx-auto mb-7 h-36 w-36 overflow-hidden rounded-full shadow-lg">
+                    {p.imageUrl ? (
+                      <Image
+                        src={p.imageUrl}
+                        alt={p.name}
+                        fill
+                        sizes="144px"
+                        className="object-cover"
+                        unoptimized
+                      />
+                    ) : (
+                      <div
+                        className="h-full w-full"
+                        style={{
+                          background: 'radial-gradient(circle at 35% 30%,#F6F0E8,#8B6B52)',
+                        }}
+                      />
+                    )}
+                  </div>
+                  <Title level={4} className="!text-content1 !mb-1">
+                    {p.name}
+                  </Title>
+                  <Text className="!text-primary mb-3 block text-sm font-semibold tracking-wide">
+                    {p.price.toLocaleString('vi-VN')}đ
+                  </Text>
+                  {p.description && (
+                    <Paragraph className="!text-content3 !mb-0 !text-sm">{p.description}</Paragraph>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
