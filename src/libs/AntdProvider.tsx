@@ -23,14 +23,14 @@ export function AntdProvider({ children }: { children: React.ReactNode }) {
         algorithm: isDark ? antdTheme.darkAlgorithm : antdTheme.defaultAlgorithm,
         token: {
           ...BASE_TOKEN,
-          colorPrimary:     isDark ? '#f4a7c3' : '#e07a9e',
-          colorLink:        isDark ? '#f4a7c3' : '#e07a9e',
-          colorBgContainer: isDark ? '#1c1c2e' : '#ffffff',
-          colorBgLayout:    isDark ? '#0f0f1a' : '#f5f5f5',
+          colorPrimary:     isDark ? '#D8C3AE' : '#8B6B52',
+          colorLink:        isDark ? '#D8C3AE' : '#8B6B52',
+          colorBgContainer: isDark ? '#261A0E' : '#FFFDF9',
+          colorBgLayout:    isDark ? '#1A1208' : '#F6F0E8',
         },
         components: {
           Button: {
-            primaryColor: isDark ? '#0f0f1a' : '#ffffff',
+            primaryColor: isDark ? '#1A1208' : '#ffffff',
           },
           Card: {
             bodyPadding: 16,
@@ -41,7 +41,7 @@ export function AntdProvider({ children }: { children: React.ReactNode }) {
             cellPaddingInline: 12,
           },
           Layout: {
-            siderBg: isDark ? '#0f0f1a' : '#f5f5f5',
+            siderBg: isDark ? '#1A1208' : '#F6F0E8',
           },
           Menu: {
             itemBg: 'transparent',

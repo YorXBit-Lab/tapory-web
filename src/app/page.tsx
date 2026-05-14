@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { Button, Tag, Typography, Divider } from 'antd';
 
@@ -20,6 +21,30 @@ const ArrowRight = () => (
 const MoonIcon = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
     <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+  </svg>
+);
+const HamburgerIcon = ({ open }: { open: boolean }) => (
+  <svg
+    width="18"
+    height="18"
+    viewBox="0 0 18 18"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+  >
+    {open ? (
+      <>
+        <line x1="3" y1="3" x2="15" y2="15" />
+        <line x1="15" y1="3" x2="3" y2="15" />
+      </>
+    ) : (
+      <>
+        <line x1="2" y1="5" x2="16" y2="5" />
+        <line x1="2" y1="9" x2="16" y2="9" />
+        <line x1="2" y1="13" x2="16" y2="13" />
+      </>
+    )}
   </svg>
 );
 
@@ -313,9 +338,9 @@ const HeartKey = ({ size = 160 }: { size?: number }) => (
   <svg viewBox="0 0 200 200" width={size} height={size}>
     <defs>
       <radialGradient id="hg" cx="35%" cy="30%">
-        <stop offset="0%" stopColor="#fce4e8" />
-        <stop offset="60%" stopColor="#f4a7c3" />
-        <stop offset="100%" stopColor="#e07a9e" />
+        <stop offset="0%" stopColor="#F6F0E8" />
+        <stop offset="60%" stopColor="#D8C3AE" />
+        <stop offset="100%" stopColor="#8B6B52" />
       </radialGradient>
       <radialGradient id="rg" cx="40%" cy="40%">
         <stop offset="0%" stopColor="#f5e6c5" />
@@ -327,7 +352,7 @@ const HeartKey = ({ size = 160 }: { size?: number }) => (
     <path
       d="M100 180 C60 140,30 110,50 80 C60 65,85 65,100 90 C115 65,140 65,150 80 C170 110,140 140,100 180 Z"
       fill="url(#hg)"
-      stroke="#c4456a"
+      stroke="#5E4634"
       strokeWidth="1.5"
     />
     <g transform="translate(100,130)">
@@ -355,7 +380,7 @@ const SectionHead = ({
   title: React.ReactNode;
   sub?: string;
 }) => (
-  <div className="mb-16 text-center">
+  <div className="mb-10 text-center md:mb-16">
     <Eyebrow>{eyebrow}</Eyebrow>
     <h2 className="text-content1 mb-4 text-[clamp(30px,4vw,50px)] leading-[1.1] font-bold">
       {title}
@@ -370,6 +395,7 @@ const SectionHead = ({
    PAGE
 ══════════════════════════════════════════ */
 export default function HomePage() {
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   return (
     <div className="bg-background text-content1 min-h-screen font-sans">
       {/* keyframes */}
@@ -391,8 +417,8 @@ export default function HomePage() {
 
       {/* ────────── NAV ────────── */}
       <nav className="border-border bg-background/85 sticky top-0 z-[1020] border-b backdrop-blur-lg">
-        <div className="mx-auto flex h-[60px] max-w-[1240px] items-center justify-between px-6">
-          <Link href="/" className="text-primary flex items-center gap-2 text-2xl font-bold">
+        <div className="mx-auto flex h-[60px] max-w-[1240px] items-center justify-between px-4 sm:px-6">
+          <Link href="/" className="text-primary flex items-center gap-2 text-xl font-bold sm:text-2xl">
             <span className="bg-primary inline-block h-2 w-2 rounded-full" />
             Góc Chạm
           </Link>
@@ -409,25 +435,64 @@ export default function HomePage() {
             ))}
           </div>
 
-          <div className="flex items-center gap-2.5">
-            <button className="border-border text-content2 hover:border-primary hover:text-primary flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border bg-transparent transition-colors">
+          <div className="flex items-center gap-2">
+            {/* Desktop: moon + CTA */}
+            <button className="border-border text-content2 hover:border-primary hover:text-primary hidden h-9 w-9 cursor-pointer items-center justify-center rounded-full border bg-transparent transition-colors md:flex">
               <MoonIcon />
             </button>
-            {/* AntD Button — picks up theme colorPrimary automatically */}
-            <Button type="primary" href="#pricing" shape="round">
+            <Button type="primary" href="#pricing" shape="round" className="hidden md:inline-flex">
               Mua ngay
             </Button>
+            {/* Mobile: hamburger */}
+            <button
+              onClick={() => setMobileNavOpen(!mobileNavOpen)}
+              className="border-border text-content2 hover:text-content1 flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border bg-transparent transition-colors md:hidden"
+              aria-label="Menu"
+            >
+              <HamburgerIcon open={mobileNavOpen} />
+            </button>
           </div>
         </div>
+
+        {/* Mobile dropdown */}
+        {mobileNavOpen && (
+          <div className="border-border bg-background border-t md:hidden">
+            <div className="mx-auto flex max-w-[1240px] flex-col gap-0.5 px-4 py-3">
+              {NAV_LINKS.map((l) => (
+                <a
+                  key={l.href}
+                  href={l.href}
+                  onClick={() => setMobileNavOpen(false)}
+                  className="text-content2 hover:text-primary hover:bg-elevated rounded-lg px-3 py-2.5 text-sm font-medium transition-colors"
+                >
+                  {l.label}
+                </a>
+              ))}
+              <div className="border-border mt-2 flex items-center gap-2 border-t pt-3">
+                <button className="border-border text-content2 hover:border-primary hover:text-primary flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border bg-transparent transition-colors">
+                  <MoonIcon />
+                </button>
+                <Button
+                  type="primary"
+                  href="#pricing"
+                  shape="round"
+                  onClick={() => setMobileNavOpen(false)}
+                >
+                  Mua ngay
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
       </nav>
 
       {/* ────────── HERO ────────── */}
       <section
-        className="relative overflow-hidden py-20 pb-28"
+        className="relative overflow-hidden py-12 pb-16 md:py-20 md:pb-28"
         style={{
           background: [
-            'radial-gradient(900px 500px at 75% 15%, color-mix(in oklab,var(--color-secondary) 30%,transparent), transparent 60%)',
-            'radial-gradient(700px 400px at 8% 88%, color-mix(in oklab,var(--color-secondary) 18%,transparent), transparent 60%)',
+            'radial-gradient(900px 500px at 75% 15%, color-mix(in oklab,var(--color-primary) 18%,transparent), transparent 60%)',
+            'radial-gradient(700px 400px at 8% 88%, color-mix(in oklab,var(--color-secondary) 35%,transparent), transparent 60%)',
             'var(--color-background)',
           ].join(','),
         }}
@@ -452,15 +517,15 @@ export default function HomePage() {
         ].map((o, i) => (
           <span
             key={i}
-            className="text-primary/35 pointer-events-none absolute hidden font-sans font-semibold italic select-none md:block"
+            className="text-primary/50 pointer-events-none absolute hidden font-sans font-semibold italic select-none md:block"
             style={{ ...o.style, fontSize: o.size }}
           >
             {o.text}
           </span>
         ))}
 
-        <div className="mx-auto max-w-[1240px] px-6">
-          <div className="grid items-center gap-16 md:grid-cols-2">
+        <div className="mx-auto max-w-[1240px] px-4 sm:px-6">
+          <div className="grid items-center gap-10 md:gap-16 md:grid-cols-2">
             {/* left */}
             <div>
               <Eyebrow>Móc khóa NFC kỷ niệm</Eyebrow>
@@ -494,7 +559,7 @@ export default function HomePage() {
 
               {/* stats */}
               <Divider className="!border-border !mt-10 !mb-6 max-w-[480px]" />
-              <div className="flex max-w-[480px] gap-10">
+              <div className="flex max-w-[480px] gap-6 sm:gap-10">
                 {HERO_STATS.map((s) => (
                   <div key={s.lab}>
                     <div className="text-primary text-[28px] leading-none font-bold">{s.num}</div>
@@ -516,28 +581,28 @@ export default function HomePage() {
                 <div
                   className="h-[440px] w-[220px] rounded-[36px]"
                   style={{
-                    background: 'linear-gradient(160deg,#2a1020,#140810)',
+                    background: 'linear-gradient(160deg,#261A0E,#1A1208)',
                     boxShadow:
-                      '0 28px 56px -18px rgba(224,122,158,.28),inset 0 0 0 2px #3a2030,inset 0 0 0 7px #140810',
+                      '0 28px 56px -18px rgba(139,107,82,.32),inset 0 0 0 2px #3D2810,inset 0 0 0 7px #1A1208',
                   }}
                 >
                   <div
                     className="absolute inset-[14px] overflow-hidden rounded-[26px]"
-                    style={{ background: 'linear-gradient(170deg,#fdf3f4,#f6dde6)' }}
+                    style={{ background: 'linear-gradient(170deg,#FFFDF9,#F6F0E8)' }}
                   >
                     <div
                       className="mx-auto h-4 w-20 rounded-b-xl"
-                      style={{ background: '#140810' }}
+                      style={{ background: '#1A1208' }}
                     />
                     <div
-                      className="mx-3 mt-4 flex flex-col gap-2.5 rounded-2xl bg-white p-3.5"
-                      style={{ boxShadow: '0 4px 16px rgba(224,122,158,.1)' }}
+                      className="mx-3 mt-4 flex flex-col gap-2.5 rounded-2xl bg-background p-3.5"
+                      style={{ boxShadow: '0 4px 16px rgba(139,107,82,.12)' }}
                     >
                       <div className="text-primary text-base font-bold">Mai &amp; Long</div>
                       <div
                         className="h-[96px] rounded-xl"
                         style={{
-                          background: 'radial-gradient(circle at 30% 30%,#f4c2c8,#e07a9e 70%)',
+                          background: 'radial-gradient(circle at 30% 30%,#E9DDCF,#8B6B52 70%)',
                         }}
                       />
                       <div className="bg-elevated h-2 rounded-full" />
@@ -574,7 +639,7 @@ export default function HomePage() {
                 className="absolute right-[6%] bottom-[10%] z-20"
                 style={{
                   transform: 'rotate(14deg)',
-                  filter: 'drop-shadow(0 16px 32px rgba(224,122,158,.3))',
+                  filter: 'drop-shadow(0 16px 32px rgba(139,107,82,.28))',
                 }}
               >
                 <HeartKey size={170} />
@@ -600,8 +665,8 @@ export default function HomePage() {
       </div>
 
       {/* ────────── PRODUCTS ────────── */}
-      <section id="products" className="bg-elevated py-24">
-        <div className="mx-auto max-w-[1240px] px-6">
+      <section id="products" className="bg-elevated py-14 md:py-24">
+        <div className="mx-auto max-w-[1240px] px-4 sm:px-6">
           <SectionHead
             eyebrow="Bộ sưu tập"
             title={
@@ -615,11 +680,11 @@ export default function HomePage() {
             {PRODUCTS.map((p) => (
               <div
                 key={p.name}
-                className="bg-background border-border relative rounded-2xl border px-7 py-12 text-center transition-all duration-200 hover:-translate-y-1 hover:shadow-xl"
+                className="bg-background border-border relative rounded-2xl border px-5 py-8 text-center transition-all duration-200 hover:-translate-y-1 hover:shadow-xl md:px-7 md:py-12"
               >
                 {/* AntD Tag for badge */}
                 <Tag
-                  color="pink"
+                  color="#8B6B52"
                   className="!absolute !top-4 !right-4 !text-[10px] !font-bold !tracking-widest !uppercase"
                 >
                   {p.tag}
@@ -650,8 +715,8 @@ export default function HomePage() {
       </section>
 
       {/* ────────── HOW IT WORKS ────────── */}
-      <section id="how" className="bg-background py-24">
-        <div className="mx-auto max-w-[1240px] px-6">
+      <section id="how" className="bg-background py-14 md:py-24">
+        <div className="mx-auto max-w-[1240px] px-4 sm:px-6">
           <SectionHead
             eyebrow="Cách hoạt động"
             title={
@@ -671,7 +736,7 @@ export default function HomePage() {
               }}
             />
             {HOW_STEPS.map((s, i) => (
-              <div key={i} className="px-8 text-center">
+              <div key={i} className="px-4 text-center md:px-8">
                 <div className="border-primary text-primary bg-background relative z-10 mx-auto mb-8 flex h-[116px] w-[116px] items-center justify-center rounded-full border">
                   {s.icon}
                 </div>
@@ -688,8 +753,8 @@ export default function HomePage() {
       </section>
 
       {/* ────────── TEMPLATES ────────── */}
-      <section id="templates" className="bg-elevated py-24">
-        <div className="mx-auto max-w-[1240px] px-6">
+      <section id="templates" className="bg-elevated py-14 md:py-24">
+        <div className="mx-auto max-w-[1240px] px-4 sm:px-6">
           <SectionHead
             eyebrow="8 mẫu thiết kế"
             title={
@@ -734,8 +799,8 @@ export default function HomePage() {
       </section>
 
       {/* ────────── STORIES ────────── */}
-      <section id="stories" className="bg-background py-24">
-        <div className="mx-auto max-w-[1240px] px-6">
+      <section id="stories" className="bg-background py-14 md:py-24">
+        <div className="mx-auto max-w-[1240px] px-4 sm:px-6">
           <SectionHead
             eyebrow="Cảm hứng"
             title={
@@ -750,14 +815,14 @@ export default function HomePage() {
               const wrapCls: Record<StoryType, string> = {
                 featured: 'text-white',
                 plain: 'bg-elevated border border-border text-content1',
-                blush: 'bg-secondary/15 text-content1',
+                blush: 'bg-primary/10 border border-primary/20 text-content1',
                 dark: 'bg-content1 text-background',
               };
               return (
                 <div
                   key={i}
-                  className={`flex flex-col rounded-2xl p-8 ${wrapCls[s.type]} ${isFeat ? 'min-h-[560px] md:row-span-2' : 'min-h-[320px]'}`}
-                  style={isFeat ? { background: 'linear-gradient(165deg,#e07a9e,#c4456a)' } : {}}
+                  className={`flex flex-col rounded-2xl p-6 sm:p-8 ${wrapCls[s.type]} ${isFeat ? 'min-h-[320px] sm:min-h-[520px] md:row-span-2' : 'min-h-[240px] sm:min-h-[280px]'}`}
+                  style={isFeat ? { background: 'linear-gradient(165deg,#8B6B52,#5E4634)' } : {}}
                 >
                   <Text
                     className={`mb-4 block !text-[11px] font-bold tracking-[0.18em] uppercase ${isFeat ? '!text-white/75' : '!text-content3'}`}
@@ -794,9 +859,9 @@ export default function HomePage() {
       </section>
 
       {/* ────────── NFC DEMO ────────── */}
-      <section className="bg-elevated overflow-hidden py-28">
-        <div className="mx-auto max-w-[1240px] px-6">
-          <div className="grid items-center gap-20 md:grid-cols-2">
+      <section className="bg-elevated overflow-hidden py-16 md:py-28">
+        <div className="mx-auto max-w-[1240px] px-4 sm:px-6">
+          <div className="grid items-center gap-10 md:gap-20 md:grid-cols-2">
             <div>
               <Eyebrow>Công nghệ NFC</Eyebrow>
               <h2 className="text-content1 mb-6 text-[clamp(30px,4vw,46px)] leading-[1.1] font-bold">
@@ -839,9 +904,9 @@ export default function HomePage() {
               <div
                 className="absolute top-1/2 left-[14%] h-[332px] w-[166px] rounded-[26px]"
                 style={{
-                  background: 'linear-gradient(160deg,#2a1020,#120608)',
+                  background: 'linear-gradient(160deg,#261A0E,#1A1208)',
                   boxShadow:
-                    '0 20px 40px -20px rgba(0,0,0,.4),inset 0 0 0 2px #3a2030,inset 0 0 0 6px #120608',
+                    '0 20px 40px -20px rgba(0,0,0,.4),inset 0 0 0 2px #3D2810,inset 0 0 0 6px #1A1208',
                   animation: 'phoneTap 4s ease-in-out infinite',
                 }}
               />
@@ -869,8 +934,8 @@ export default function HomePage() {
       </section>
 
       {/* ────────── PRICING ────────── */}
-      <section id="pricing" className="bg-background py-24">
-        <div className="mx-auto max-w-[1240px] px-6">
+      <section id="pricing" className="bg-background py-14 md:py-24">
+        <div className="mx-auto max-w-[1240px] px-4 sm:px-6">
           <SectionHead
             eyebrow="Bảng giá"
             title={
@@ -891,7 +956,7 @@ export default function HomePage() {
                 }`}
               >
                 {p.popular && (
-                  <span className="bg-primary absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-full px-4 py-1.5 text-[11px] font-bold tracking-widest whitespace-nowrap text-white uppercase">
+                  <span className="bg-secondary absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-full px-4 py-1.5 text-[11px] font-bold tracking-widest whitespace-nowrap text-content1 uppercase">
                     Phổ biến nhất
                   </span>
                 )}
@@ -908,11 +973,11 @@ export default function HomePage() {
                 </Text>
                 <div className="mb-6 flex items-baseline gap-1">
                   <span
-                    className={`text-5xl leading-none font-bold ${p.popular ? 'text-primary' : 'text-content1'}`}
+                    className={`text-5xl leading-none font-bold ${p.popular ? 'text-secondary' : 'text-content1'}`}
                   >
                     {p.price}
                   </span>
-                  <span className={`text-base ${p.popular ? 'opacity-60' : 'text-content3'}`}>
+                  <span className={`text-base ${p.popular ? 'text-secondary/60' : 'text-content3'}`}>
                     {p.unit}
                   </span>
                 </div>
@@ -920,18 +985,20 @@ export default function HomePage() {
                 <ul className="m-0 mb-7 flex flex-1 list-none flex-col gap-3 p-0">
                   {p.items.map((item) => (
                     <li key={item} className="flex items-start gap-2 text-sm">
-                      <span className="text-primary mt-0.5 flex-shrink-0 font-bold">✓</span>
-                      <span className={p.popular ? 'opacity-85' : 'text-content2'}>{item}</span>
+                      <span className={`mt-0.5 flex-shrink-0 font-bold ${p.popular ? 'text-secondary' : 'text-primary'}`}>✓</span>
+                      <span className={p.popular ? 'text-background/85' : 'text-content2'}>{item}</span>
                     </li>
                   ))}
                 </ul>
                 {/* AntD Button */}
                 <Button
-                  type={p.popular ? 'primary' : 'default'}
+                  type={p.popular ? 'default' : 'default'}
+                  ghost={p.popular}
                   size="large"
                   shape="round"
                   block
                   href="#"
+                  className={p.popular ? '!border-secondary/60 !text-secondary hover:!border-secondary hover:!text-secondary' : ''}
                 >
                   {p.cta}
                 </Button>
@@ -942,7 +1009,7 @@ export default function HomePage() {
       </section>
 
       {/* ────────── FINAL CTA ────────── */}
-      <section className="bg-content1 relative overflow-hidden py-32 text-center">
+      <section className="bg-content1 relative overflow-hidden py-20 text-center md:py-32">
         <div
           className="absolute -top-1/2 right-[-10%] h-[540px] w-[540px] rounded-full opacity-20"
           style={{ background: 'radial-gradient(circle,var(--color-primary),transparent 60%)' }}
@@ -974,8 +1041,8 @@ export default function HomePage() {
 
       {/* ────────── FOOTER ────────── */}
       <footer className="bg-elevated border-border border-t pt-16 pb-8">
-        <div className="mx-auto max-w-[1240px] px-6">
-          <div className="mb-12 grid gap-12 md:grid-cols-[2fr_1fr_1fr_1fr]">
+        <div className="mx-auto max-w-[1240px] px-4 sm:px-6">
+          <div className="mb-12 grid gap-8 sm:grid-cols-2 md:grid-cols-[2fr_1fr_1fr_1fr] md:gap-12">
             <div>
               <div className="text-primary mb-2 flex items-center gap-2 text-2xl font-bold">
                 <span className="bg-primary h-2 w-2 rounded-full" />
@@ -1006,7 +1073,7 @@ export default function HomePage() {
             ))}
           </div>
           <Divider className="border-border mt-0" />
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-2">
             <Text className="text-content3">© 2026 Góc Chạm — Móc khóa kỷ niệm NFC.</Text>
             <Text className="text-content3">Crafted in Vietnam ♥</Text>
           </div>

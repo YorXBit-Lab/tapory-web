@@ -126,6 +126,8 @@ function DashboardInner({ children }: { children: React.ReactNode }) {
         collapsible
         collapsed={collapsed}
         onCollapse={setCollapsed}
+        breakpoint="md"
+        onBreakpoint={(broken) => { if (broken) setCollapsed(true); }}
         width={220}
         collapsedWidth={60}
         trigger={null}
