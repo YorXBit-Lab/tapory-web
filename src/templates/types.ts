@@ -10,6 +10,8 @@ export interface LayoutColors {
 export interface LayoutProps {
   data: IEditDraft;
   c: LayoutColors;
+  /** True on the view page — layouts may use this to auto-start playback. */
+  autoPlay?: boolean;
 }
 
 export type FieldType = 'image' | 'text' | 'textarea' | 'date' | 'url';

@@ -163,7 +163,7 @@ export function ViewClient({ orderId }: { orderId: string }) {
               ...screenBg,
             } as React.CSSProperties}
           >
-            {activeStyle && <TemplateRenderer data={draft} style={activeStyle} />}
+            {activeStyle && <TemplateRenderer data={draft} style={activeStyle} autoPlay />}
           </div>
         </div>
       </div>

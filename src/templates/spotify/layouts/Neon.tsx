@@ -1,5 +1,7 @@
 'use client';
 import type { LayoutProps } from '@/templates/types';
+import { toSpotifyUri } from '../utils';
+import { useSpotifyEmbed } from '@/hooks/useSpotifyEmbed';
 
 const EQ_ANIMS = [
   [10,24],[18,8],[8,28],[22,10],[14,26],[6,20],
@@ -7,8 +9,10 @@ const EQ_ANIMS = [
   [6,18],[22,8],[14,28],[8,16],
 ];
 
-export function SpotNeon({ data, c }: LayoutProps) {
+export function SpotNeon({ data, c, autoPlay }: LayoutProps) {
   const hasUrl = !!data.spotifyUrl;
+  const uri = toSpotifyUri(data.spotifyUrl);
+  const { holderRef, isPlaying: playing, isLoading, isReady, error, toggle } = useSpotifyEmbed(uri, autoPlay);
 
   return (
     <div className="relative flex min-h-full w-full flex-col overflow-hidden"
@@ -95,28 +99,45 @@ export function SpotNeon({ data, c }: LayoutProps) {
       <div className="relative z-10 mx-8 mt-3"
         style={{ height:1, background:`linear-gradient(to right,transparent,${c.primary}88,${c.secondary}66,transparent)`, boxShadow:`0 0 8px ${c.primary}55` }} />
 
-      {/* Play button */}
-      <a href={hasUrl ? data.spotifyUrl : undefined} target="_blank" rel="noopener noreferrer"
-        className="relative z-10 mx-auto mt-4" style={{ textDecoration:'none', pointerEvents: hasUrl ? 'auto' : 'none' }}>
-        <div className="flex items-center gap-2.5 rounded px-7 py-3"
-          style={{
-            border:`1.5px solid ${hasUrl ? c.primary : c.primary+'33'}`,
-            background: hasUrl ? `${c.primary}18` : 'transparent',
-            animation: hasUrl ? '_neonBtn 2s ease-in-out infinite' : undefined,
-          }}>
-          <span style={{ fontSize:13, color: hasUrl ? c.primary : c.primary+'44', textShadow: hasUrl ? `0 0 10px ${c.primary}` : undefined }}>▶</span>
-          <span style={{ fontSize:8, fontWeight:800, letterSpacing:'.14em', textTransform:'uppercase', fontFamily:'monospace',
-            color: hasUrl ? c.primary : c.primary+'44', textShadow: hasUrl ? `0 0 8px ${c.primary}` : undefined }}>
-            {hasUrl ? 'PLAY_ON_SPOTIFY' : 'NO_LINK_SET'}
-          </span>
-        </div>
-      </a>
+      {/* ── Play / Pause ── */}
+      <button type="button" disabled={!hasUrl || !isReady || isLoading || !!error} onClick={toggle}
+        className="relative z-10 mx-auto mt-4 flex items-center gap-2.5 rounded px-7 py-3"
+        style={{
+          border:`1.5px solid ${hasUrl ? c.primary : c.primary+'33'}`,
+          background: hasUrl ? `${c.primary}18` : 'transparent',
+          animation: hasUrl && !playing ? '_neonBtn 2s ease-in-out infinite' : undefined,
+          cursor: hasUrl ? 'pointer' : 'default',
+        }}>
+        <span style={{ fontSize:13, color: hasUrl ? c.primary : c.primary+'44', textShadow: hasUrl ? `0 0 10px ${c.primary}` : undefined }}>
+          {playing ? '⏸' : '▶'}
+        </span>
+        <span style={{ fontSize:8, fontWeight:800, letterSpacing:'.14em', textTransform:'uppercase', fontFamily:'monospace',
+          color: hasUrl ? c.primary : c.primary+'44', textShadow: hasUrl ? `0 0 8px ${c.primary}` : undefined }}>
+          {!hasUrl ? 'NO_LINK_SET' : playing ? 'STOP' : 'PLAY'}
+        </span>
+      </button>
+      {hasUrl && (
+        <a href={data.spotifyUrl} target="_blank" rel="noopener noreferrer"
+          className="relative z-10 mt-2 flex items-center justify-center gap-1.5"
+          style={{ textDecoration: 'none', opacity: .55 }}>
+          <svg width="10" height="10" viewBox="0 0 24 24" fill={c.primary}><path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm4.586 14.424a.622.622 0 01-.857.207c-2.348-1.435-5.304-1.76-8.785-.964a.622.622 0 11-.277-1.215c3.809-.87 7.077-.496 9.712 1.115a.623.623 0 01.207.857zm1.223-2.722a.78.78 0 01-1.072.257c-2.687-1.652-6.786-2.13-9.965-1.166a.779.779 0 01-.519-.973.78.78 0 01.972-.519c3.632-1.102 8.147-.568 11.234 1.328a.78.78 0 01.257 1.072zm.105-2.835C14.692 8.95 9.375 8.775 6.297 9.71a.937.937 0 11-.543-1.794c3.532-1.072 9.404-.865 13.115 1.338a.937.937 0 01-.955 1.613z"/></svg>
+          <span style={{ fontSize: 7.5, fontWeight: 700, color: c.primary, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'monospace' }}>OPEN_SPOTIFY</span>
+        </a>
+      )}
+      {hasUrl && <div ref={holderRef} aria-hidden style={{ position: 'fixed', bottom: 0, right: 0, width: 1, height: 1, pointerEvents: 'none', visibility: 'hidden' }} />}
 
       {data.description && (
-        <p className="relative z-10 mt-3 px-6 text-center text-[7px] italic leading-[1.82]"
-          style={{ color:c.secondary, opacity:.35, fontFamily:'monospace' }}>
-          // {data.description}
-        </p>
+        <div className="relative z-10 mx-5 mt-4 mb-4 rounded px-5 pt-5 pb-4"
+          style={{ background:`${c.primary}0e`, border:`1px solid ${c.primary}33`, backdropFilter:'blur(12px)', WebkitBackdropFilter:'blur(12px)', boxShadow:`0 0 12px ${c.primary}0a` }}>
+          <span className="pointer-events-none absolute -top-[14px] left-3 text-[32px] leading-none"
+            style={{ color:c.primary, opacity:.55, fontFamily:'Georgia, serif', textShadow:`0 0 8px ${c.primary}` }}>❝</span>
+          <p className="text-center text-[8.5px] italic leading-[1.9]"
+            style={{ color:c.secondary, opacity:.8, fontFamily:'monospace' }}>
+            {data.description}
+          </p>
+          <span className="pointer-events-none absolute -bottom-[14px] right-3 text-[32px] leading-none"
+            style={{ color:c.primary, opacity:.55, fontFamily:'Georgia, serif', textShadow:`0 0 8px ${c.primary}` }}>❞</span>
+        </div>
       )}
     </div>
   );
