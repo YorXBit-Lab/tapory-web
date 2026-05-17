@@ -56,9 +56,14 @@ export function SocNeon({ data, c }: LayoutProps) {
       {/* Social icon pills */}
       <div className="flex gap-3">
         {rows.map(({ key, icon, label }) => {
-          const hasLink = !!data[key];
+          const url = data[key] as string | undefined;
+          const hasLink = !!url;
+          const Tag = hasLink ? 'a' : 'div';
           return (
-            <div key={key} className="flex flex-col items-center gap-0.5">
+            <Tag key={key}
+              {...(hasLink ? { href: url, target: '_blank', rel: 'noopener noreferrer' } : {})}
+              className="flex flex-col items-center gap-0.5"
+              style={{ textDecoration: 'none', cursor: hasLink ? 'pointer' : 'default' }}>
               <div className="flex h-9 w-9 items-center justify-center rounded-full text-[13px]"
                 style={{
                   background: `${c.primary}${hasLink ? '1a' : '0a'}`,
@@ -69,7 +74,7 @@ export function SocNeon({ data, c }: LayoutProps) {
                 {icon}
               </div>
               <span className="text-[6.5px] font-bold opacity-60" style={{ color: hasLink ? c.primary : 'rgba(255,255,255,0.3)' }}>{label}</span>
-            </div>
+            </Tag>
           );
         })}
       </div>

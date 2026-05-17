@@ -48,16 +48,22 @@ export function SocMinimal({ data, c }: LayoutProps) {
       {/* Social icons */}
       <div className="flex gap-4">
         {rows.map(({ key, icon }) => {
-          const hasLink = !!data[key];
+          const url = data[key] as string | undefined;
+          const hasLink = !!url;
+          const Tag = hasLink ? 'a' : 'div';
           return (
-            <div key={key} className="flex h-8 w-8 items-center justify-center rounded-full text-[12px]"
+            <Tag key={key}
+              {...(hasLink ? { href: url, target: '_blank', rel: 'noopener noreferrer' } : {})}
+              className="flex h-8 w-8 items-center justify-center rounded-full text-[12px]"
               style={{
                 border: `1px solid ${c.secondary}${hasLink ? '44' : '1a'}`,
                 backgroundColor: `${c.secondary}${hasLink ? '10' : '05'}`,
                 opacity: hasLink ? 1 : 0.3,
+                textDecoration: 'none',
+                cursor: hasLink ? 'pointer' : 'default',
               }}>
               {icon}
-            </div>
+            </Tag>
           );
         })}
       </div>

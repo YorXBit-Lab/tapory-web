@@ -96,10 +96,11 @@ export function ProfileDark({ data, c }: LayoutProps) {
       {socials.length > 0 && (
         <div className="relative z-10 mx-6 mt-4 flex gap-2.5">
           {socials.map(({ key, bg, Icon }) => (
-            <div key={key} className="flex h-7 w-7 items-center justify-center rounded-full"
-              style={{ background: bg }}>
+            <a key={key} href={data[key] as string} target="_blank" rel="noopener noreferrer"
+              className="flex h-7 w-7 items-center justify-center rounded-full"
+              style={{ background: bg, textDecoration: 'none' }}>
               <Icon />
-            </div>
+            </a>
           ))}
         </div>
       )}

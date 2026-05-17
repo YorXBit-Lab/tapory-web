@@ -176,13 +176,16 @@ export function ProfileCreative({ data, c }: LayoutProps) {
             <div className="my-3 h-px w-full" style={{ backgroundColor: `${c.primary}0d` }} />
             <div className="flex gap-2">
               {socials.map(({ key, bg, Icon }) => (
-                <div
+                <a
                   key={key}
+                  href={data[key] as string}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="flex h-7 w-7 items-center justify-center rounded-full"
-                  style={{ background: bg }}
+                  style={{ background: bg, textDecoration: 'none' }}
                 >
                   <Icon />
-                </div>
+                </a>
               ))}
             </div>
           </>

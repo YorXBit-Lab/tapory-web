@@ -71,16 +71,23 @@ export function SocProfile({ data, c }: LayoutProps) {
         {/* Social icons */}
         <div className="mt-3 flex gap-2.5">
           {rows.map(({ key, icon }) => {
-            const hasLink = !!data[key];
+            const url = data[key] as string | undefined;
+            const hasLink = !!url;
+            const Tag = hasLink ? 'a' : 'div';
             return (
-              <div key={key} className="flex h-7 w-7 items-center justify-center rounded-full text-[11px]"
+              <Tag
+                key={key}
+                {...(hasLink ? { href: url, target: '_blank', rel: 'noopener noreferrer' } : {})}
+                className="flex h-7 w-7 items-center justify-center rounded-full text-[11px]"
                 style={{
                   border: `1px solid ${c.secondary}${hasLink ? '44' : '1a'}`,
                   backgroundColor: `${c.secondary}${hasLink ? '10' : '05'}`,
                   opacity: hasLink ? 1 : 0.35,
+                  cursor: hasLink ? 'pointer' : 'default',
+                  textDecoration: 'none',
                 }}>
                 {icon}
-              </div>
+              </Tag>
             );
           })}
         </div>

@@ -44,19 +44,24 @@ export function SocLinktree({ data, c }: LayoutProps) {
       {/* Link buttons */}
       <div className="relative z-10 mt-5 flex w-full flex-col gap-2">
         {rows.map(({ key, icon, label }, i) => {
-          const hasLink = !!data[key];
+          const url = data[key] as string | undefined;
+          const hasLink = !!url;
+          const Tag = hasLink ? 'a' : 'div';
           return (
-            <div key={key}
+            <Tag key={key}
+              {...(hasLink ? { href: url, target: '_blank', rel: 'noopener noreferrer' } : {})}
               className="flex w-full items-center justify-center gap-2 rounded-full py-2.5 text-[10px] font-semibold shadow-sm"
               style={{
                 backgroundColor: (hasLink && i === 0) ? c.primary : hasLink ? `${c.primary}12` : `${c.primary}07`,
                 color: (hasLink && i === 0) ? '#fff' : hasLink ? c.primary : `${c.primary}44`,
                 border: `1.5px solid ${c.primary}${hasLink ? '22' : '12'}`,
+                cursor: hasLink ? 'pointer' : 'default',
+                textDecoration: 'none',
               }}>
               <span>{icon}</span>
               <span>{label}</span>
               {!hasLink && <span className="text-[7px] opacity-50">— chưa có link</span>}
-            </div>
+            </Tag>
           );
         })}
       </div>

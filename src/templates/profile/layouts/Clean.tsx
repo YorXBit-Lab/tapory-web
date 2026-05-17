@@ -92,10 +92,11 @@ export function ProfileClean({ data, c }: LayoutProps) {
             <div className="my-3 h-px w-full opacity-[0.08]" style={{ backgroundColor: c.primary }} />
             <div className="flex gap-2.5">
               {socials.map(({ key, bg, Icon }) => (
-                <div key={key} className="flex h-7 w-7 items-center justify-center rounded-full"
-                  style={{ background: bg }}>
+                <a key={key} href={data[key] as string} target="_blank" rel="noopener noreferrer"
+                  className="flex h-7 w-7 items-center justify-center rounded-full"
+                  style={{ background: bg, textDecoration: 'none' }}>
                   <Icon />
-                </div>
+                </a>
               ))}
             </div>
           </>
