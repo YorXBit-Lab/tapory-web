@@ -1,5 +1,7 @@
 'use client';
 import type { LayoutProps } from '@/templates/types';
+import { toSpotifyUri } from '../utils';
+import { useSpotifyEmbed } from '@/hooks/useSpotifyEmbed';
 
 const DUST = [
   {top:'6%', left:'9%', size:2,dur:'8s', del:'0s'},
@@ -10,8 +12,10 @@ const DUST = [
   {top:'88%',left:'22%',size:2,dur:'10s',del:'0.8s'},
 ];
 
-export function SpotLofi({ data, c }: LayoutProps) {
+export function SpotLofi({ data, c, autoPlay }: LayoutProps) {
   const hasUrl = !!data.spotifyUrl;
+  const uri = toSpotifyUri(data.spotifyUrl);
+  const { holderRef, isPlaying: playing, isLoading, isReady, error, toggle } = useSpotifyEmbed(uri, autoPlay);
 
   return (
     <div className="relative flex min-h-full w-full flex-col overflow-hidden"
@@ -97,27 +101,44 @@ export function SpotLofi({ data, c }: LayoutProps) {
         <div style={{ width:28, height:1.5, background:c.primary, opacity:.35, borderRadius:1 }} />
       </div>
 
-      {/* Play button */}
-      <a href={hasUrl ? data.spotifyUrl : undefined} target="_blank" rel="noopener noreferrer"
-        className="relative z-10 mx-auto mt-4" style={{ textDecoration:'none', pointerEvents: hasUrl ? 'auto' : 'none' }}>
-        <div className="flex items-center gap-2.5 rounded-xl px-7 py-3"
-          style={{ background: hasUrl ? `rgba(255,255,255,0.65)` : `rgba(255,255,255,0.3)`,
-            backdropFilter:'blur(8px)', WebkitBackdropFilter:'blur(8px)',
-            border:`1px solid ${c.primary}${hasUrl?'44':'22'}`,
-            animation: hasUrl ? '_lofiBtn 3s ease-in-out infinite' : undefined }}>
-          <span style={{ fontSize:13, color: hasUrl ? c.primary : c.primary+'55' }}>▶</span>
-          <span style={{ fontSize:8.5, fontWeight:700, letterSpacing:'.1em', textTransform:'uppercase',
-            color: hasUrl ? c.secondary : c.secondary+'55', fontFamily:'Georgia, serif' }}>
-            {hasUrl ? 'Phát nhạc' : 'Chưa có link'}
-          </span>
-        </div>
-      </a>
+      {/* ── Play / Pause ── */}
+      <button type="button" disabled={!hasUrl || !isReady || isLoading || !!error} onClick={toggle}
+        className="relative z-10 mx-auto mt-4 flex items-center gap-2.5 rounded-xl px-7 py-3"
+        style={{
+          background: hasUrl ? (playing ? `rgba(255,255,255,0.4)` : `rgba(255,255,255,0.65)`) : `rgba(255,255,255,0.3)`,
+          backdropFilter:'blur(8px)', WebkitBackdropFilter:'blur(8px)',
+          border:`1px solid ${c.primary}${hasUrl?'44':'22'}`,
+          animation: hasUrl && !playing ? '_lofiBtn 3s ease-in-out infinite' : undefined,
+          cursor: hasUrl ? 'pointer' : 'default',
+        }}>
+        <span style={{ fontSize:13, color: hasUrl ? c.primary : c.primary+'55' }}>{playing ? '⏸' : '▶'}</span>
+        <span style={{ fontSize:8.5, fontWeight:700, letterSpacing:'.1em', textTransform:'uppercase',
+          color: hasUrl ? c.secondary : c.secondary+'55', fontFamily:'Georgia, serif' }}>
+          {!hasUrl ? 'Chưa có link' : playing ? 'Dừng lại' : 'Phát nhạc'}
+        </span>
+      </button>
+      {hasUrl && (
+        <a href={data.spotifyUrl} target="_blank" rel="noopener noreferrer"
+          className="relative z-10 mt-2 flex items-center justify-center gap-1.5"
+          style={{ textDecoration: 'none', opacity: .5 }}>
+          <svg width="10" height="10" viewBox="0 0 24 24" fill={c.primary}><path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm4.586 14.424a.622.622 0 01-.857.207c-2.348-1.435-5.304-1.76-8.785-.964a.622.622 0 11-.277-1.215c3.809-.87 7.077-.496 9.712 1.115a.623.623 0 01.207.857zm1.223-2.722a.78.78 0 01-1.072.257c-2.687-1.652-6.786-2.13-9.965-1.166a.779.779 0 01-.519-.973.78.78 0 01.972-.519c3.632-1.102 8.147-.568 11.234 1.328a.78.78 0 01.257 1.072zm.105-2.835C14.692 8.95 9.375 8.775 6.297 9.71a.937.937 0 11-.543-1.794c3.532-1.072 9.404-.865 13.115 1.338a.937.937 0 01-.955 1.613z"/></svg>
+          <span style={{ fontSize: 7.5, fontWeight: 700, color: c.primary, letterSpacing: '.1em', textTransform: 'uppercase', fontFamily: 'Georgia, serif' }}>Mở trên Spotify</span>
+        </a>
+      )}
+      {hasUrl && <div ref={holderRef} aria-hidden style={{ position: 'fixed', bottom: 0, right: 0, width: 1, height: 1, pointerEvents: 'none', visibility: 'hidden' }} />}
 
       {data.description && (
-        <p className="relative z-10 mt-3.5 px-7 text-center text-[7.5px] italic leading-[1.9]"
-          style={{ color:c.secondary, opacity:.5, fontFamily:'Georgia, serif' }}>
-          "{data.description}"
-        </p>
+        <div className="relative z-10 mx-5 mt-4 rounded-2xl px-5 pt-5 pb-4"
+          style={{ background:`${c.primary}0e`, border:`1px solid ${c.primary}2a`, backdropFilter:'blur(8px)', WebkitBackdropFilter:'blur(8px)' }}>
+          <span className="pointer-events-none absolute -top-[14px] left-3 text-[32px] leading-none"
+            style={{ color:c.primary, opacity:.5, fontFamily:'Georgia, serif' }}>❝</span>
+          <p className="text-center text-[9px] italic leading-[1.9]"
+            style={{ color:c.secondary, opacity:.78, fontFamily:'Georgia, serif' }}>
+            {data.description}
+          </p>
+          <span className="pointer-events-none absolute -bottom-[14px] right-3 text-[32px] leading-none"
+            style={{ color:c.primary, opacity:.5, fontFamily:'Georgia, serif' }}>❞</span>
+        </div>
       )}
 
       <div className="relative z-10 mt-auto flex items-center justify-center gap-1 pb-4 pt-3">

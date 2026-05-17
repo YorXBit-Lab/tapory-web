@@ -1,8 +1,18 @@
 'use client';
 import type { LayoutProps } from '@/templates/types';
+import { toSpotifyUri } from '../utils';
+import { useSpotifyEmbed } from '@/hooks/useSpotifyEmbed';
 
-export function SpotEmbed({ data, c }: LayoutProps) {
+const SpotifyLogo = ({ size = 14, color = '#000' }: { size?: number; color?: string }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill={color}>
+    <path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm4.586 14.424a.622.622 0 01-.857.207c-2.348-1.435-5.304-1.76-8.785-.964a.622.622 0 11-.277-1.215c3.809-.87 7.077-.496 9.712 1.115a.623.623 0 01.207.857zm1.223-2.722a.78.78 0 01-1.072.257c-2.687-1.652-6.786-2.13-9.965-1.166a.779.779 0 01-.519-.973.78.78 0 01.972-.519c3.632-1.102 8.147-.568 11.234 1.328a.78.78 0 01.257 1.072zm.105-2.835C14.692 8.95 9.375 8.775 6.297 9.71a.937.937 0 11-.543-1.794c3.532-1.072 9.404-.865 13.115 1.338a.937.937 0 01-.955 1.613z"/>
+  </svg>
+);
+
+export function SpotEmbed({ data, c, autoPlay }: LayoutProps) {
   const hasUrl = !!data.spotifyUrl;
+  const uri = toSpotifyUri(data.spotifyUrl);
+  const { holderRef, isPlaying: playing, isLoading, isReady, error, toggle } = useSpotifyEmbed(uri, autoPlay);
 
   return (
     <div className="relative flex min-h-full w-full flex-col items-center overflow-hidden"
@@ -12,6 +22,7 @@ export function SpotEmbed({ data, c }: LayoutProps) {
         @keyframes _embFloat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-7px)} }
         @keyframes _embPulse { 0%,100%{opacity:.45} 50%{opacity:1} }
         @keyframes _embRing  { 0%,100%{transform:scale(1);opacity:.3} 50%{transform:scale(1.18);opacity:0} }
+        @keyframes _embSlideUp { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
       `}</style>
 
       <div className="pointer-events-none absolute -top-20 left-1/2 h-96 w-96 -translate-x-1/2 rounded-full"
@@ -21,13 +32,11 @@ export function SpotEmbed({ data, c }: LayoutProps) {
       <div className="pointer-events-none absolute inset-0"
         style={{ background: 'radial-gradient(ellipse at center, transparent 35%, rgba(0,0,0,0.5) 100%)' }} />
 
-      <div className="flex-shrink-0" style={{ height: 52 }} />
+      <div className="flex-shrink-0" style={{ height: 48 }} />
 
       {/* Spotify logo */}
       <div style={{ animation: '_embPulse 3s ease-in-out infinite' }}>
-        <svg width="36" height="36" viewBox="0 0 24 24" fill={c.primary}>
-          <path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm4.586 14.424a.622.622 0 01-.857.207c-2.348-1.435-5.304-1.76-8.785-.964a.622.622 0 11-.277-1.215c3.809-.87 7.077-.496 9.712 1.115a.623.623 0 01.207.857zm1.223-2.722a.78.78 0 01-1.072.257c-2.687-1.652-6.786-2.13-9.965-1.166a.779.779 0 01-.519-.973.78.78 0 01.972-.519c3.632-1.102 8.147-.568 11.234 1.328a.78.78 0 01.257 1.072zm.105-2.835C14.692 8.95 9.375 8.775 6.297 9.71a.937.937 0 11-.543-1.794c3.532-1.072 9.404-.865 13.115 1.338a.937.937 0 01-.955 1.613z"/>
-        </svg>
+        <SpotifyLogo size={36} color={c.primary} />
       </div>
 
       {/* Album art */}
@@ -62,26 +71,60 @@ export function SpotEmbed({ data, c }: LayoutProps) {
       <div className="relative z-10 mt-4 w-[55%]"
         style={{ height: 1, background: `linear-gradient(to right, transparent, ${c.primary}66, transparent)` }} />
 
-      {/* Play button */}
-      <a href={hasUrl ? data.spotifyUrl : undefined} target="_blank" rel="noopener noreferrer"
-        className="relative z-10 mt-5" style={{ textDecoration: 'none', pointerEvents: hasUrl ? 'auto' : 'none' }}>
-        <div className="flex items-center gap-2.5 rounded-full px-8 py-3.5"
-          style={{
-            background: hasUrl ? c.primary : `rgba(255,255,255,0.08)`,
-            boxShadow: hasUrl ? `0 6px 24px ${c.primary}55, 0 0 0 4px ${c.primary}18` : 'none',
-          }}>
-          <span style={{ fontSize: 13, color: hasUrl ? '#000' : 'rgba(255,255,255,0.25)' }}>▶</span>
-          <span style={{ fontSize: 9, fontWeight: 800, color: hasUrl ? '#000' : 'rgba(255,255,255,0.25)', letterSpacing: '.12em', textTransform: 'uppercase' }}>
-            {hasUrl ? 'Phát trên Spotify' : 'Chưa có link'}
+      {/* ── Play / Pause button ── */}
+      <button
+        type="button"
+        disabled={!hasUrl || !isReady || isLoading || !!error}
+        onClick={toggle}
+        className="relative z-10 mt-5 flex items-center gap-2.5 rounded-full px-8 py-3.5 transition-opacity"
+        style={{
+          background: hasUrl ? (playing ? `rgba(255,255,255,0.15)` : c.primary) : `rgba(255,255,255,0.08)`,
+          boxShadow: hasUrl && !playing ? `0 6px 24px ${c.primary}55, 0 0 0 4px ${c.primary}18` : 'none',
+          border: playing ? `1px solid rgba(255,255,255,0.25)` : 'none',
+          cursor: hasUrl ? 'pointer' : 'default',
+        }}
+      >
+        <span style={{ fontSize: 13, color: playing ? 'rgba(255,255,255,0.9)' : (hasUrl ? '#000' : 'rgba(255,255,255,0.25)') }}>
+          {playing ? '⏸' : '▶'}
+        </span>
+        <span style={{
+          fontSize: 9, fontWeight: 800, letterSpacing: '.12em', textTransform: 'uppercase',
+          color: playing ? 'rgba(255,255,255,0.85)' : (hasUrl ? '#000' : 'rgba(255,255,255,0.25)'),
+        }}>
+          {!hasUrl ? 'Chưa có link' : playing ? 'Dừng lại' : 'Phát nhạc'}
+        </span>
+      </button>
+
+      {/* ── Open Spotify link ── */}
+      {hasUrl && (
+        <a
+          href={data.spotifyUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="relative z-10 mt-2.5 flex items-center gap-1.5"
+          style={{ textDecoration: 'none', opacity: .65 }}
+        >
+          <SpotifyLogo size={10} color={c.primary} />
+          <span style={{ fontSize: 8, fontWeight: 700, color: c.primary, letterSpacing: '.12em', textTransform: 'uppercase' }}>
+            Mở trên Spotify
           </span>
-        </div>
-      </a>
+        </a>
+      )}
+
+      {hasUrl && <div ref={holderRef} aria-hidden style={{ position: 'fixed', bottom: 0, right: 0, width: 1, height: 1, pointerEvents: 'none', visibility: 'hidden' }} />}
 
       {data.description && (
-        <p className="relative z-10 mt-4 px-7 text-center text-[7.5px] italic leading-[1.9]"
-          style={{ color: c.secondary, opacity: .35 }}>
-          {data.description}
-        </p>
+        <div className="relative z-10 mx-5 mt-4 mb-4 rounded-2xl px-5 pt-5 pb-4"
+          style={{ background:`${c.primary}0e`, border:`1px solid ${c.primary}2a`, backdropFilter:'blur(12px)', WebkitBackdropFilter:'blur(12px)' }}>
+          <span className="pointer-events-none absolute -top-[14px] left-3 text-[32px] leading-none"
+            style={{ color:c.primary, opacity:.5, fontFamily:'Georgia, serif' }}>❝</span>
+          <p className="text-center text-[9px] italic leading-[1.9]"
+            style={{ color:c.secondary, opacity:.8, fontFamily:'Georgia, serif' }}>
+            {data.description}
+          </p>
+          <span className="pointer-events-none absolute -bottom-[14px] right-3 text-[32px] leading-none"
+            style={{ color:c.primary, opacity:.5, fontFamily:'Georgia, serif' }}>❞</span>
+        </div>
       )}
     </div>
   );
