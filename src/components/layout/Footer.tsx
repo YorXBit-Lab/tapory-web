@@ -1,7 +1,7 @@
 export function Footer() {
   return (
-    <footer className="mt-auto py-8 border-t border-divider text-center text-sm text-content3">
-      <p>© {new Date().getFullYear()} Tapory – Móc Khóa Kỷ Niệm NFC</p>
+    <footer className="border-divider text-content3 mt-auto border-t py-8 text-center text-sm">
+      <p>© {new Date().getFullYear()} Góc Chạm – Móc Khóa Kỷ Niệm NFC</p>
     </footer>
   );
 }

@@ -6,8 +6,10 @@ import {
   Modal, Select, Tag, Typography,
 } from 'antd';
 import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
+import { useQuery } from '@tanstack/react-query';
 import { useAdminAuth } from '@/contexts/AdminAuthContext';
 import { TEMPLATE_LIST } from '@/configs/constants';
+import { OrderAPI } from '@/services/OrderAPI';
 import { useProducts } from '@/hooks/product';
 import type { IOrderItem } from '@/services/OrderAPI';
 import type { IProduct } from '@/configs/types';
@@ -43,6 +45,30 @@ export function CreateOrderModal({ onCreated }: Props) {
 
   const { data: products = [] } = useProducts();
   const productList = products as IProduct[];
+
+  // Derive khách cũ từ orders history — lookup khi nhập SĐT
+  const { data: pastOrders = [] } = useQuery({
+    queryKey: ['orders'],
+    queryFn: () => OrderAPI.list(),
+    staleTime: 60_000,
+    enabled: open,
+  });
+  const customerByPhone = new Map(
+    pastOrders
+      .filter(o => o.phone)
+      .map(o => [o.phone, { name: o.customerName, address: o.address ?? '' }]),
+  );
+
+  const handlePhoneBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    const phone = e.target.value.trim();
+    if (!phone) return;
+    const existing = customerByPhone.get(phone);
+    if (!existing) return;
+    const currentName = form.getFieldValue('customerName');
+    if (!currentName) form.setFieldValue('customerName', existing.name);
+    const currentAddr = form.getFieldValue('address');
+    if (!currentAddr) form.setFieldValue('address', existing.address);
+  };
 
   // Track item index → product ID (để biết item nào đã chọn từ catalog)
   const [itemProductMap, setItemProductMap] = useState<Record<number, string>>({});
@@ -130,15 +156,6 @@ export function CreateOrderModal({ onCreated }: Props) {
           {/* Thông tin khách hàng */}
           <div className="grid grid-cols-2 gap-x-3">
             <Form.Item
-              label="Tên khách hàng"
-              name="customerName"
-              rules={[{ required: true, message: 'Nhập tên khách hàng' }]}
-              className="col-span-2"
-            >
-              <Input placeholder="Nguyễn Văn A" />
-            </Form.Item>
-
-            <Form.Item
               label="Số điện thoại"
               name="phone"
               rules={[
@@ -147,10 +164,18 @@ export function CreateOrderModal({ onCreated }: Props) {
               ]}
               extra={hasNfc ? 'Dùng làm PIN xác thực NFC card' : undefined}
             >
-              <Input placeholder="0912345678" />
+              <Input placeholder="0912345678" onBlur={handlePhoneBlur} />
             </Form.Item>
 
-            <Form.Item label="Địa chỉ giao hàng" name="address">
+            <Form.Item
+              label="Tên khách hàng"
+              name="customerName"
+              rules={[{ required: true, message: 'Nhập tên khách hàng' }]}
+            >
+              <Input placeholder="Nguyễn Văn A" />
+            </Form.Item>
+
+            <Form.Item label="Địa chỉ giao hàng" name="address" className="col-span-2">
               <Input placeholder="123 Nguyễn Huệ, Q.1, TP.HCM" />
             </Form.Item>
           </div>

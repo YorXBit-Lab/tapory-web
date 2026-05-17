@@ -231,7 +231,11 @@ export default function OrderDetailPage() {
       title: 'Xem / Sửa',
       render: (_: unknown, record: ICard) => (
         <span className="flex gap-3 text-xs">
-          <Link href={`/view/${record.id}`} target="_blank" className="text-primary hover:opacity-70">Xem</Link>
+          {record.hasContent ? (
+            <Link href={`/view/${record.id}`} target="_blank" className="text-primary hover:opacity-70">Xem</Link>
+          ) : (
+            <span className="text-gray-300 cursor-not-allowed">Xem</span>
+          )}
           <Link href={`/edit/${record.id}${record.templateId ? `?template=${record.templateId}` : ''}`} target="_blank" className="text-primary hover:opacity-70">Sửa</Link>
         </span>
       ),
@@ -272,6 +276,22 @@ export default function OrderDetailPage() {
   };
   const srcInfo = SOURCE_LABEL[order.source as OrderSource] ?? SOURCE_LABEL.local;
 
+  // Build item → chip IDs mapping using sequential NFC counter
+  const itemChipMap = (() => {
+    const map = new Map<number, string[]>();
+    let counter = 0;
+    order.items.forEach((item, idx) => {
+      if (!item.isNfc) return;
+      const chipIds: string[] = [];
+      for (let q = 0; q < (item.quantity ?? 1); q++) {
+        counter++;
+        chipIds.push(`${orderId}C${counter}`);
+      }
+      map.set(idx, chipIds);
+    });
+    return map;
+  })();
+
   const itemColumns: ColumnsType<IOrderItem> = [
     {
       title: 'Sản phẩm',
@@ -295,18 +315,32 @@ export default function OrderDetailPage() {
       render: (_: unknown, r: IOrderItem) => (r.unitPrice * r.quantity).toLocaleString('vi-VN') + 'đ',
     },
     {
-      title: 'Loại',
-      width: 110,
-      render: (_: unknown, r: IOrderItem) => {
+      title: 'Loại / Template',
+      render: (_: unknown, r: IOrderItem, idx: number) => {
         if (!r.isNfc) return <Tag>Thường</Tag>;
         const tpl = TEMPLATES[r.templateId as keyof typeof TEMPLATES];
-        return <Tag color="purple">{tpl ? `${tpl.icon} NFC` : 'NFC'}</Tag>;
+        const chipIds = itemChipMap.get(idx) ?? [];
+        return (
+          <div className="flex flex-wrap items-center gap-1">
+            <Tag color="purple">{tpl ? `${tpl.icon} NFC` : 'NFC'}</Tag>
+            {chipIds.map(chipId => (
+              <Link
+                key={chipId}
+                href={`/edit/${chipId}${r.templateId ? `?template=${r.templateId}` : ''}`}
+                target="_blank"
+                className="font-mono text-[11px] text-primary hover:opacity-70"
+              >
+                {chipId}
+              </Link>
+            ))}
+          </div>
+        );
       },
     },
   ];
 
   return (
-    <div className="space-y-4">
+    <div className="flex flex-col gap-6">
       {/* Back + title */}
       <div className="flex items-center gap-3">
         <Button icon={<ArrowLeftOutlined />} onClick={() => router.push('/dashboard/orders')}>Đơn hàng</Button>

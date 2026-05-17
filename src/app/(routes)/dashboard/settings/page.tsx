@@ -37,7 +37,9 @@ function TiktokCard() {
     }
   };
 
-  useEffect(() => { fetchStatus(); }, [user]);
+  useEffect(() => {
+    fetchStatus();
+  }, [user]);
 
   const handleTest = async () => {
     if (!user) return;
@@ -48,6 +50,7 @@ function TiktokCard() {
       const json  = await res.json();
       if (!res.ok || !json.ok) throw new Error(json.error);
       notification.success({
+
         message: 'Kết nối TikTok API thành công',
         description: <pre className="mt-1 max-h-40 overflow-auto text-xs">{JSON.stringify(json.data, null, 2)}</pre>,
         duration: 10,
@@ -79,7 +82,12 @@ function TiktokCard() {
     }
   };
 
-  const handleSaveToken = async (values: { access_token: string; refresh_token?: string; shop_id: string; expires_in_hours: number }) => {
+  const handleSaveToken = async (values: {
+    access_token: string;
+    refresh_token?: string;
+    shop_id: string;
+    expires_in_hours: number;
+  }) => {
     if (!user) return;
     setSavingToken(true);
     try {
@@ -229,13 +237,24 @@ function NotifRow({ label, desc, checked, onChange }: { label: string; desc: str
 ───────────────────────────────────────────── */
 export default function SettingsPage() {
   const [notifs, setNotifs] = useState({
-    newOrder:        true,
+    newOrder: true,
     remindCustomize: true,
-    weeklyReport:    false,
+    weeklyReport: false,
   });
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6">
+    <div className="grid max-w-4xl grid-cols-1 gap-5 md:grid-cols-2">
+      <TiktokCard />
+      <Card title="Cửa hàng">
+        <SettingRow
+          name="Tên cửa hàng"
+          desc="Góc Chạm – Móc Khóa Kỷ Niệm NFC"
+          action={<EditBtn />}
+        />
+        <SettingRow name="Giá bán mặc định" desc="189.000đ / móc khóa" action={<EditBtn />} />
+        <SettingRow name="Domain NFC" desc="tapory.com/view/{orderId}" action={<EditBtn />} />
+        <SettingRow name="Email liên hệ" desc="hello@tapory.com" action={<EditBtn />} />
+      </Card>
 
       {/* Tích hợp sàn */}
       <section>
@@ -250,36 +269,77 @@ export default function SettingsPage() {
         </div>
       </section>
 
-      {/* Thông báo */}
-      <section>
-        <Title level={5} className="mb-3">Thông báo</Title>
-        <Card size="small" bodyStyle={{ padding: '0 16px' }}>
-          <NotifRow
-            label="Đơn hàng mới"
-            desc="Nhận thông báo khi có đơn mới"
-            checked={notifs.newOrder}
-            onChange={v => setNotifs(p => ({ ...p, newOrder: v }))}
-          />
-          <NotifRow
-            label="Nhắc khách tùy chỉnh"
-            desc="Gửi nhắc sau 24h nếu khách chưa tùy chỉnh chip NFC"
-            checked={notifs.remindCustomize}
-            onChange={v => setNotifs(p => ({ ...p, remindCustomize: v }))}
-          />
-          <NotifRow
-            label="Báo cáo hàng tuần"
-            desc="Tóm tắt doanh thu & đơn hàng gửi thứ Hai"
-            checked={notifs.weeklyReport}
-            onChange={v => setNotifs(p => ({ ...p, weeklyReport: v }))}
-          />
-          <div className="py-2">
-            <Text type="secondary" className="text-xs">
-              * Thông báo chưa được gửi đi thực tế — tính năng đang trong quá trình phát triển.
-            </Text>
-          </div>
-        </Card>
-      </section>
+      <Card title="Vận chuyển">
+        <SettingRow name="Đơn vị giao hàng" desc="GHN, GHTK, J&T Express" action={<ConfigBtn />} />
+        <SettingRow name="Phí vận chuyển" desc="Miễn phí toàn quốc" action={<EditBtn />} />
+        <SettingRow name="Thời gian giao hàng" desc="2–4 ngày làm việc" action={<EditBtn />} />
+      </Card>
 
+      <Card title="Tích hợp">
+        <SettingRow
+          name="Spotify API"
+          desc="Hỗ trợ template nhạc – bấm mở thẳng Spotify"
+          action={<ConnectedTag />}
+        />
+        <SettingRow
+          name="Google Analytics"
+          desc="Phân tích hành vi người dùng"
+          action={<ConnectedTag />}
+        />
+        <SettingRow
+          name="Facebook Pixel"
+          desc="Theo dõi chuyển đổi quảng cáo"
+          action={<ConnectBtn />}
+        />
+        <SettingRow name="Zalo OA" desc="Gửi thông báo đơn hàng qua Zalo" action={<ConnectBtn />} />
+      </Card>
     </div>
   );
+}
+
+function SettingRow({
+  name,
+  desc,
+  action,
+}: {
+  name: string;
+  desc: string;
+  action: React.ReactNode;
+}) {
+  return (
+    <>
+      <div className="flex items-center justify-between py-2.5">
+        <div>
+          <Text strong className="block text-sm">
+            {name}
+          </Text>
+          <Text type="secondary" className="text-xs">
+            {desc}
+          </Text>
+        </div>
+        <div className="ml-4 flex-shrink-0">{action}</div>
+      </div>
+      <Divider style={{ margin: 0 }} />
+    </>
+  );
+}
+
+function EditBtn() {
+  return <Button size="small">Sửa</Button>;
+}
+
+function ConfigBtn() {
+  return <Button size="small">Cấu hình</Button>;
+}
+
+function ConnectBtn() {
+  return (
+    <Button size="small" type="primary">
+      Kết nối
+    </Button>
+  );
+}
+
+function ConnectedTag() {
+  return <Tag color="green">Đã kết nối</Tag>;
 }

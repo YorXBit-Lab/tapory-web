@@ -2,14 +2,10 @@ import type { Metadata } from 'next';
 import { ViewClient } from './ViewClient';
 
 export const metadata: Metadata = {
-  title: 'Tapory',
+  title: 'Góc Chạm',
 };
 
-export default async function ViewPage({
-  params,
-}: {
-  params: Promise<{ orderId: string }>;
-}) {
+export default async function ViewPage({ params }: { params: Promise<{ orderId: string }> }) {
   const { orderId } = await params;
   return <ViewClient orderId={orderId} />;
 }

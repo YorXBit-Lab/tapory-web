@@ -33,7 +33,7 @@ function LoginForm() {
           <div className="mx-auto mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-600">
             <div className="h-3 w-3 rounded-full bg-white" />
           </div>
-          <h1 className="text-xl font-bold text-gray-900">Tapory Admin</h1>
+          <h1 className="text-xl font-bold text-gray-900">Góc Chạm Admin</h1>
           <p className="mt-1 text-sm text-gray-400">Đăng nhập để quản lý hệ thống</p>
         </div>
 

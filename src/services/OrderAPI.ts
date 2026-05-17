@@ -1,6 +1,7 @@
 import {
   collection,
   doc,
+  deleteDoc,
   getDoc,
   getDocs,
   orderBy,
@@ -12,6 +13,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '@/libs/firebase';
 import { FIRESTORE_COLLECTIONS } from '@/configs/constants';
+import { CardAPI } from '@/services/CardAPI';
 import type { StatusKey } from '@/components/dashboard';
 
 export type OrderSource = 'local' | 'tiktok' | 'shopee';
@@ -80,9 +82,15 @@ export const OrderAPI = {
 
   update: async (
     orderId: string,
-    fields: Partial<Pick<IOrder, 'customerName' | 'phone' | 'address' | 'price' | 'notes' | 'status'>>,
+    fields: Partial<Pick<IOrder, 'customerName' | 'phone' | 'address' | 'price' | 'notes' | 'status' | 'items'>>,
   ): Promise<void> => {
     await updateDoc(doc(db, COL, orderId), { ...fields, updatedAt: serverTimestamp() });
+  },
+
+  delete: async (orderId: string): Promise<void> => {
+    await CardAPI.deleteByOrder(orderId);
+    await deleteDoc(doc(db, FIRESTORE_COLLECTIONS.MEMORIALS, orderId)).catch(() => null);
+    await deleteDoc(doc(db, COL, orderId));
   },
 
   list: async (limitCount = 200): Promise<IOrder[]> => {

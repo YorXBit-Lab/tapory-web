@@ -46,12 +46,45 @@ function LoadingScreen() {
   );
 }
 
-function NotFoundScreen({ orderId }: { orderId: string }) {
+function NoContentScreen({ cardId }: { cardId: string }) {
   return (
-    <div style={{ ...fullscreenCenter, gap: 10, padding: '0 24px', textAlign: 'center' }}>
-      <span style={{ fontSize: 52, lineHeight: 1 }}>🔍</span>
-      <h1 style={{ fontSize: 20, fontWeight: 600, color: '#111', margin: 0 }}>Không tìm thấy</h1>
-      <p style={{ fontSize: 13, color: '#bbb', margin: 0 }}>Mã: {orderId}</p>
+    <div style={{ ...fullscreenCenter, gap: 16, padding: '0 32px', textAlign: 'center' }}>
+      <div style={{
+        width: 72, height: 72, borderRadius: '50%',
+        background: 'linear-gradient(135deg, #f0f4ff 0%, #e8f0fe 100%)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+      }}>
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#6366f1" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M12 20h9" /><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+        </svg>
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <h1 style={{ fontSize: 18, fontWeight: 700, color: '#111', margin: 0, lineHeight: 1.3 }}>
+          Thẻ chưa có nội dung
+        </h1>
+        <p style={{ fontSize: 13, color: '#888', margin: 0, lineHeight: 1.6 }}>
+          Thẻ NFC của bạn chưa được thiết lập.<br />
+          Nhấn nút bên dưới để bắt đầu tạo trang cá nhân của bạn.
+        </p>
+      </div>
+      <a
+        href={`/edit/${cardId}`}
+        style={{
+          display: 'inline-block',
+          marginTop: 8,
+          padding: '12px 28px',
+          borderRadius: 12,
+          background: '#6366f1',
+          color: '#fff',
+          fontSize: 14,
+          fontWeight: 600,
+          textDecoration: 'none',
+          boxShadow: '0 4px 16px rgba(99,102,241,0.35)',
+        }}
+      >
+        Thiết lập ngay →
+      </a>
+      <p style={{ fontSize: 11, color: '#ccc', margin: 0 }}>Mã thẻ: {cardId}</p>
     </div>
   );
 }
@@ -128,7 +161,8 @@ export function ViewClient({ orderId }: { orderId: string }) {
   const activeEffect = EFFECTS.find(e => e.id === (memorial?.effectId ?? 'none')) ?? EFFECTS[0];
 
   if (!scale || isLoading) return <LoadingScreen />;
-  if (!memorial || isError) return <NotFoundScreen orderId={orderId} />;
+  if (isError) return <NoContentScreen cardId={orderId} />;
+  if (!memorial) return <NoContentScreen cardId={orderId} />;
   if (memorial.templateId === 'redirect') return <RedirectingScreen url={memorial.website} />;
 
   const draft: IEditDraft = { ...memorial, orderId: memorial.orderId ?? orderId, isDirty: false };

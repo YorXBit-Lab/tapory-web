@@ -11,8 +11,8 @@
 
 @theme {
   /* Brand */
-  --color-primary: #e07a9e;
-  --color-secondary: #f4a7c3;
+  --color-primary: #8B6B52;
+  --color-secondary: #D8C3AE;
 
   /* Semantic status */
   --color-success: #22c55e;
@@ -21,39 +21,39 @@
   --color-info: #3b82f6;
 
   /* Surface */
-  --color-background: #ffffff;
-  --color-foreground: #171717;
-  --color-elevated: #f8f8f8;
+  --color-background: #FFFDF9;
+  --color-foreground: #5E4634;
+  --color-elevated: #F6F0E8;
 
   /* Text hierarchy */
-  --color-content1: #111111;
-  --color-content2: #444444;
-  --color-content3: #888888;
-  --color-content4: #bbbbbb;
+  --color-content1: #5E4634;
+  --color-content2: #8B6B52;
+  --color-content3: #8B6B52;
+  --color-content4: #D8C3AE;
 
   /* Structure */
-  --color-border: #e5e7eb;
-  --color-divider: #f3f4f6;
+  --color-border: #D8C3AE;
+  --color-divider: #E9DDCF;
 }
 
 /* ══════════════════════════════════════════════════
    DARK MODE OVERRIDES
    ══════════════════════════════════════════════════ */
 .dark {
-  --color-primary: #f4a7c3;
-  --color-secondary: #e07a9e;
+  --color-primary: #D8C3AE;
+  --color-secondary: #8B6B52;
 
-  --color-background: #0f0f1a;
-  --color-foreground: #ededed;
-  --color-elevated: #1c1c2e;
+  --color-background: #1A1208;
+  --color-foreground: #F6F0E8;
+  --color-elevated: #261A0E;
 
-  --color-content1: #f0f0f0;
-  --color-content2: #c0c0c0;
-  --color-content3: #888888;
-  --color-content4: #555555;
+  --color-content1: #F6F0E8;
+  --color-content2: #D8C3AE;
+  --color-content3: #8B6B52;
+  --color-content4: #5E4634;
 
-  --color-border: #2a2a3e;
-  --color-divider: #1e1e2e;
+  --color-border: #3D2810;
+  --color-divider: #2D1E0A;
 }
 
 /* ══════════════════════════════════════════════════
