@@ -12,7 +12,7 @@ export async function middleware(request: NextRequest) {
   try {
     const firestoreUrl =
       `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/memorials/${orderId}`;
-    const res = await fetch(firestoreUrl, { next: { revalidate: 30 } });
+    const res = await fetch(firestoreUrl);
     if (!res.ok) return NextResponse.next();
 
     const doc = await res.json();
