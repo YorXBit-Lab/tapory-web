@@ -1,4 +1,4 @@
-import { fmt } from '@/shared/utils/fmt';
+﻿import { fmt } from '@/shared/utils/fmt';
 import { getFontFamily, getImageFilter, getTitleFontSize } from '@/shared/utils/styleHelpers';
 import type { LayoutProps } from '@/templates/types';
 
@@ -15,7 +15,7 @@ export function BdayPastel({ data, c }: LayoutProps) {
       {/* ── Label ── */}
       <div className="mb-4 flex w-full flex-col items-center gap-1.5">
         <div className="h-px w-20 opacity-45" style={{ backgroundColor: c.secondary }} />
-        <p className="text-[7px] font-bold tracking-[0.5em] uppercase" style={{ color: c.secondary }}>— Birthday —</p>
+        <p className="text-[9px] font-bold tracking-[0.5em] uppercase" style={{ color: c.secondary }}>— Birthday —</p>
         <div className="h-px w-20 opacity-45" style={{ backgroundColor: c.secondary }} />
       </div>
 
@@ -63,17 +63,17 @@ export function BdayPastel({ data, c }: LayoutProps) {
         {data.title || 'Tên người nhận'}
       </p>
       {data.date && (
-        <p className="mt-1 text-[8px] font-semibold tracking-[0.2em]"
+        <p className="mt-1 text-[10px] font-semibold tracking-[0.2em]"
           style={{ color: c.secondary }}>{fmt(data.date)}</p>
       )}
 
       <div className="my-3 flex w-full items-center gap-2">
         <div className="h-px flex-1 rounded opacity-20" style={{ backgroundColor: c.primary }} />
-        <span className="text-[11px]">🎀</span>
+        <span className="text-[13px]">🎀</span>
         <div className="h-px flex-1 rounded opacity-20" style={{ backgroundColor: c.primary }} />
       </div>
 
-      <p className="text-center text-[8.5px] leading-[1.75] opacity-60" style={{ color: c.primary }}>
+      <p className="text-center text-[10.5px] leading-[1.75] opacity-60" style={{ color: c.primary }}>
         {data.description || 'Chúc mừng sinh nhật! Chúc bạn luôn xinh đẹp, hạnh phúc và tràn đầy yêu thương.'}
       </p>
     </div>

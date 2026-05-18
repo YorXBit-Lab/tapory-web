@@ -1,4 +1,4 @@
-import { fmt } from '@/shared/utils/fmt';
+﻿import { fmt } from '@/shared/utils/fmt';
 import { getFontFamily, getImageFilter, getTitleFontSize } from '@/shared/utils/styleHelpers';
 import type { LayoutProps } from '@/templates/types';
 
@@ -56,13 +56,13 @@ export function AnniClassic({ data, c }: LayoutProps) {
 
       {/* Header label */}
       {mode !== 'full' && (
-        <p className="relative z-10 text-[5.5px] font-bold tracking-[0.65em] uppercase"
+        <p className="relative z-10 text-[7px] font-bold tracking-[0.65em] uppercase"
           style={{ color: c.secondary, opacity: 0.55 }}>
           Anniversary
         </p>
       )}
       {mode === 'full' && (
-        <p className="relative z-10 mt-3 text-[5.5px] font-bold tracking-[0.65em] uppercase"
+        <p className="relative z-10 mt-3 text-[7px] font-bold tracking-[0.65em] uppercase"
           style={{ color: c.secondary, opacity: 0.55 }}>
           Anniversary
         </p>
@@ -90,7 +90,7 @@ export function AnniClassic({ data, c }: LayoutProps) {
             </div>
           </div>
           {[{ top: -3, left: -3 }, { top: -3, right: -3 }, { bottom: -3, left: -3 }, { bottom: -3, right: -3 }].map((pos, i) => (
-            <div key={i} className="absolute text-[7px] leading-none"
+            <div key={i} className="absolute text-[9px] leading-none"
               style={{ ...pos, color: c.secondary, opacity: 0.9 }}>✦</div>
           ))}
         </div>
@@ -122,27 +122,27 @@ export function AnniClassic({ data, c }: LayoutProps) {
       <div className="relative z-10 mt-3 flex w-[68%] items-center gap-2">
         <div className="h-px flex-1"
           style={{ background: `linear-gradient(to right, transparent, ${c.secondary}99)` }} />
-        <span className="text-[9px] leading-none" style={{ color: c.secondary }}>♥</span>
+        <span className="text-[11px] leading-none" style={{ color: c.secondary }}>♥</span>
         <div className="h-px flex-1"
           style={{ background: `linear-gradient(to left, transparent, ${c.secondary}99)` }} />
       </div>
 
       {data.date && (
-        <p className="relative z-10 mt-2.5 text-[6.5px] font-bold tracking-[0.45em] uppercase"
+        <p className="relative z-10 mt-2.5 text-[8px] font-bold tracking-[0.45em] uppercase"
           style={{ color: c.secondary, opacity: 0.75 }}>
           {fmt(data.date)}
         </p>
       )}
 
-      <p className="relative z-10 mt-3.5 px-8 text-center text-[7.5px] leading-[1.88] italic"
+      <p className="relative z-10 mt-3.5 px-8 text-center text-[9.5px] leading-[1.88] italic"
         style={{ color: c.primary, opacity: 0.48 }}>
         {data.description || '"Cảm ơn bạn đã ở bên tôi trong những năm tháng tuyệt vời nhất của cuộc đời."'}
       </p>
 
       <div className="relative z-10 mt-auto pt-4 flex items-center gap-1.5">
-        <span className="text-[7px]" style={{ color: c.secondary, opacity: 0.4 }}>♥</span>
-        <span className="text-[7px]" style={{ color: c.secondary, opacity: 0.25 }}>♥</span>
-        <span className="text-[7px]" style={{ color: c.secondary, opacity: 0.4 }}>♥</span>
+        <span className="text-[9px]" style={{ color: c.secondary, opacity: 0.4 }}>♥</span>
+        <span className="text-[9px]" style={{ color: c.secondary, opacity: 0.25 }}>♥</span>
+        <span className="text-[9px]" style={{ color: c.secondary, opacity: 0.4 }}>♥</span>
       </div>
     </div>
   );

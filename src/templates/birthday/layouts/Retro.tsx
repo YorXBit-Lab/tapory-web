@@ -1,4 +1,4 @@
-import { fmt } from '@/shared/utils/fmt';
+﻿import { fmt } from '@/shared/utils/fmt';
 import { getFontFamily, getImageFilter, getTitleFontSize } from '@/shared/utils/styleHelpers';
 import type { LayoutProps } from '@/templates/types';
 
@@ -14,7 +14,7 @@ export function BdayRetro({ data, c }: LayoutProps) {
       <div className="flex w-full flex-col items-center rounded-2xl px-5 py-5"
         style={{ border: `3px solid ${c.primary}` }}>
 
-        <p className="text-[9px] font-black tracking-[0.25em] uppercase" style={{ color: c.secondary }}>★ Happy Birthday ★</p>
+        <p className="text-[11px] font-black tracking-[0.25em] uppercase" style={{ color: c.secondary }}>★ Happy Birthday ★</p>
 
         {/* ── Card mode (default): polaroid ── */}
         {mode === 'card' && (
@@ -58,16 +58,16 @@ export function BdayRetro({ data, c }: LayoutProps) {
           {data.title || 'Tên người nhận'}
         </p>
         {data.date && (
-          <p className="mt-0.5 text-[8.5px] font-bold" style={{ color: c.secondary }}>{fmt(data.date)}</p>
+          <p className="mt-0.5 text-[10.5px] font-bold" style={{ color: c.secondary }}>{fmt(data.date)}</p>
         )}
 
         <div className="my-2.5 flex justify-center gap-1.5">
           {['★', '★', '★'].map((s, i) => (
-            <span key={i} className="text-[11px]" style={{ color: c.secondary }}>{s}</span>
+            <span key={i} className="text-[13px]" style={{ color: c.secondary }}>{s}</span>
           ))}
         </div>
 
-        <p className="text-center text-[8.5px] leading-[1.7]" style={{ color: c.primary, opacity: 0.65 }}>
+        <p className="text-center text-[10.5px] leading-[1.7]" style={{ color: c.primary, opacity: 0.65 }}>
           {data.description || 'Happy Birthday! Chúc bạn luôn hạnh phúc và tràn đầy năng lượng.'}
         </p>
       </div>

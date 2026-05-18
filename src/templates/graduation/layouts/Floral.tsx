@@ -1,4 +1,4 @@
-import { fmt } from '@/shared/utils/fmt';
+﻿import { fmt } from '@/shared/utils/fmt';
 import { getFontFamily, getImageFilter, getTitleFontSize } from '@/shared/utils/styleHelpers';
 import type { LayoutProps } from '@/templates/types';
 
@@ -26,7 +26,7 @@ export function GradFloral({ data, c }: LayoutProps) {
 
       {/* Header */}
       <div className="flex-shrink-0" style={{ height: 42 }} />
-      <p className="relative z-10 text-[8px] font-semibold tracking-[0.28em] uppercase"
+      <p className="relative z-10 text-[10px] font-semibold tracking-[0.28em] uppercase"
         style={{ color: c.secondary }}>
         Big applause for
       </p>
@@ -86,7 +86,7 @@ export function GradFloral({ data, c }: LayoutProps) {
           style={{ borderTop: '14px solid transparent', borderBottom: '14px solid transparent', borderRight: `10px solid ${c.secondary}` }} />
         <div className="flex flex-1 items-center justify-center px-3 py-1.5"
           style={{ backgroundColor: c.secondary, boxShadow: `0 3px 12px ${c.secondary}44` }}>
-          <p className="text-center text-[11px] font-bold tracking-wide text-white">
+          <p className="text-center text-[13px] font-bold tracking-wide text-white">
             {data.title || 'Tên người nhận'}
           </p>
         </div>
@@ -95,19 +95,19 @@ export function GradFloral({ data, c }: LayoutProps) {
       </div>
 
       {data.subtitle && (
-        <p className="relative z-10 mt-1.5 px-6 text-center text-[7px] tracking-[0.18em] uppercase"
+        <p className="relative z-10 mt-1.5 px-6 text-center text-[9px] tracking-[0.18em] uppercase"
           style={{ color: c.primary, opacity: 0.52 }}>
           {data.subtitle}
         </p>
       )}
 
-      <p className="relative z-10 mt-3 px-6 text-center text-[7.5px] leading-[1.78]"
+      <p className="relative z-10 mt-3 px-6 text-center text-[9.5px] leading-[1.78]"
         style={{ color: c.primary, opacity: 0.65 }}>
         {data.description || "You've reached the finish line, and your perseverance is inspiring. May this success be the first of many!"}
       </p>
 
       {data.date && (
-        <p className="relative z-10 mt-3 text-[7px] font-semibold tracking-[0.22em] uppercase"
+        <p className="relative z-10 mt-3 text-[9px] font-semibold tracking-[0.22em] uppercase"
           style={{ color: c.secondary, opacity: 0.6 }}>
           {fmt(data.date)}
         </p>

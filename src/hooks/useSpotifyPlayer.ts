@@ -3,8 +3,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { SpotifyEmbedController, SpotifyIFrameAPI } from '@/types/spotify-iframe';
 
-// ─── Window augmentation ───────────────────────────────────────────────────────
-
 declare global {
   interface Window {
     onSpotifyIframeApiReady: ((api: SpotifyIFrameAPI) => void) | undefined;
@@ -12,8 +10,6 @@ declare global {
 }
 
 // ─── Singleton API loader ──────────────────────────────────────────────────────
-//
-// Shared across all hook instances — script is injected once per page.
 
 const SCRIPT_ID = 'spotify-iframe-api';
 const SCRIPT_SRC = 'https://open.spotify.com/embed/iframe-api/v1';
@@ -61,16 +57,14 @@ function loadSpotifyIFrameApi(): Promise<SpotifyIFrameAPI> {
 // ─── State machine ─────────────────────────────────────────────────────────────
 
 export type PlaybackStatus =
-  | 'idle'         // no URI
-  | 'loading_api'  // waiting for Spotify script
-  | 'loading_ctrl' // controller initialising
-  | 'ready'        // paused, ready for first play
-  | 'playing'      // audio playing
-  | 'paused'       // paused after at least one play
-  | 'blocked'      // resume() called but browser blocked autoplay
-  | 'error';       // unrecoverable
-
-// ─── Types ─────────────────────────────────────────────────────────────────────
+  | 'idle'
+  | 'loading_api'
+  | 'loading_ctrl'
+  | 'ready'
+  | 'playing'
+  | 'paused'
+  | 'blocked'
+  | 'error';
 
 export interface UseSpotifyPlayerReturn {
   holderRef: React.RefObject<HTMLDivElement | null>;
@@ -87,31 +81,40 @@ export interface UseSpotifyPlayerReturn {
 
 const BLOCKED_TIMEOUT_MS = 800;
 
+// Give the Spotify embed a real working size so the holder div is a real element.
+// The wrapper div (0×0 with overflow:hidden) clips the visual output without
+// triggering iOS resource throttling based on element size.
+const IFRAME_WIDTH  = 300;
+const IFRAME_HEIGHT = 80;
+
+// Watchdog: if no playback_update arrives while status==='playing', reset to 'paused'
+// so the button unsticks (iOS iframe throttle, Spotify 30s preview end, etc.)
+const HEARTBEAT_MS = 8_000;
+
 // ─── Hook ──────────────────────────────────────────────────────────────────────
 
 /**
- * iOS Safari-safe Spotify playback hook.
- *
- * Key differences from useSpotifyEmbed:
- * - No autoPlay — resume() is only called synchronously inside user gesture handlers
- * - URI changes use loadUri() — controller is never destroyed/recreated mid-session
- * - holderRef iframe holder uses opacity:0, NOT visibility:hidden (hidden kills iOS audio)
- * - Blocked detection: if resume() yields no playing event within 800ms → status:'blocked'
- * - Controller is destroyed only on component unmount
+ * @param uri      Spotify URI (spotify:track:xxx) or null to disable.
+ * @param autoPlay When true, attempts to resume() as soon as the controller is ready.
+ *                 Works when the user arrived via a click/link/NFC tap (browser
+ *                 preserves user activation across navigations). If the browser blocks
+ *                 it, isBlocked activates so the user can tap once to start.
  */
-export function useSpotifyPlayer(uri: string | null): UseSpotifyPlayerReturn {
-  const holderRef = useRef<HTMLDivElement>(null);
-  const controllerRef = useRef<SpotifyEmbedController | null>(null);
-  const statusRef = useRef<PlaybackStatus>('idle');
-  const mountedRef = useRef(true);
-  const creatingRef = useRef(false);
-  const pendingUriRef = useRef<string | null>(null);
+export function useSpotifyPlayer(uri: string | null, autoPlay = false): UseSpotifyPlayerReturn {
+  const holderRef       = useRef<HTMLDivElement>(null);
+  const controllerRef   = useRef<SpotifyEmbedController | null>(null);
+  const statusRef       = useRef<PlaybackStatus>('idle');
+  const mountedRef      = useRef(true);
+  const creatingRef     = useRef(false);
+  const pendingUriRef   = useRef<string | null>(null);
   const blockedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const heartbeatRef    = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const autoPlayRef     = useRef(autoPlay);
+  autoPlayRef.current   = autoPlay;
 
   const [status, setStatus] = useState<PlaybackStatus>('idle');
-  const [error, setError] = useState<string | null>(null);
+  const [error,  setError]  = useState<string | null>(null);
 
-  // Stable setter — guards against post-unmount updates
   const setStatusSafe = useCallback((s: PlaybackStatus) => {
     if (!mountedRef.current) return;
     statusRef.current = s;
@@ -125,12 +128,55 @@ export function useSpotifyPlayer(uri: string | null): UseSpotifyPlayerReturn {
     }
   }, []);
 
+  const clearHeartbeat = useCallback(() => {
+    if (heartbeatRef.current !== null) {
+      clearTimeout(heartbeatRef.current);
+      heartbeatRef.current = null;
+    }
+  }, []);
+
+  const resetHeartbeat = useCallback(() => {
+    if (heartbeatRef.current !== null) clearTimeout(heartbeatRef.current);
+    heartbeatRef.current = setTimeout(() => {
+      if (statusRef.current === 'playing' && mountedRef.current) {
+        setStatusSafe('paused');
+      }
+    }, HEARTBEAT_MS);
+  }, [setStatusSafe]);
+
+  // ── Play / Pause ─────────────────────────────────────────────────────────────
+  // Defined before the URI effect so the createController callback can call play().
+
+  const play = useCallback(() => {
+    const ctrl = controllerRef.current;
+    if (!ctrl) return;
+    clearBlockedTimer();
+    ctrl.resume();
+    blockedTimerRef.current = setTimeout(() => {
+      if (statusRef.current !== 'playing' && mountedRef.current) {
+        setStatusSafe('blocked');
+      }
+    }, BLOCKED_TIMEOUT_MS);
+  }, [clearBlockedTimer, setStatusSafe]);
+
+  const pause = useCallback(() => {
+    clearBlockedTimer();
+    clearHeartbeat();
+    controllerRef.current?.pause();
+  }, [clearBlockedTimer, clearHeartbeat]);
+
+  const toggle = useCallback(() => {
+    if (statusRef.current === 'playing') pause();
+    else play();
+  }, [play, pause]);
+
   // ── Destroy controller only on unmount ─────────────────────────────────────
   useEffect(() => {
     mountedRef.current = true;
     return () => {
       mountedRef.current = false;
       if (blockedTimerRef.current !== null) clearTimeout(blockedTimerRef.current);
+      if (heartbeatRef.current   !== null) clearTimeout(heartbeatRef.current);
       if (controllerRef.current) {
         try { controllerRef.current.destroy(); } catch { /* ignore */ }
         controllerRef.current = null;
@@ -146,10 +192,11 @@ export function useSpotifyPlayer(uri: string | null): UseSpotifyPlayerReturn {
       return;
     }
 
-    // Controller already exists — swap track with loadUri, never destroy/recreate
+    // Controller exists — swap track, never destroy/recreate
     if (controllerRef.current) {
       try {
         controllerRef.current.loadUri(uri);
+        clearHeartbeat();
         setStatusSafe('ready');
       } catch {
         setStatusSafe('error');
@@ -158,13 +205,11 @@ export function useSpotifyPlayer(uri: string | null): UseSpotifyPlayerReturn {
       return;
     }
 
-    // Creation already in flight — queue the latest URI for when it finishes
     if (creatingRef.current) {
       pendingUriRef.current = uri;
       return;
     }
 
-    // First init
     creatingRef.current = true;
     setStatusSafe('loading_api');
     setError(null);
@@ -174,14 +219,13 @@ export function useSpotifyPlayer(uri: string | null): UseSpotifyPlayerReturn {
         if (!mountedRef.current) { creatingRef.current = false; return; }
         if (!holderRef.current)  { creatingRef.current = false; return; }
 
-        // If URI changed while loading the API, use the latest one
         const uriToLoad = pendingUriRef.current ?? uri;
         pendingUriRef.current = null;
         setStatusSafe('loading_ctrl');
 
         api.createController(
           holderRef.current,
-          { uri: uriToLoad, height: 1, width: 1 },
+          { uri: uriToLoad, height: IFRAME_HEIGHT, width: IFRAME_WIDTH },
           (controller) => {
             creatingRef.current = false;
 
@@ -199,15 +243,20 @@ export function useSpotifyPlayer(uri: string | null): UseSpotifyPlayerReturn {
                 ? (statusRef.current === 'playing' || statusRef.current === 'blocked' ? 'paused' : 'ready')
                 : 'playing';
               setStatusSafe(next);
+              if (next === 'playing') resetHeartbeat();
+              else clearHeartbeat();
             });
 
             setStatusSafe('ready');
 
-            // Apply any URI that arrived while createController was running
             if (pendingUriRef.current) {
               try { controller.loadUri(pendingUriRef.current); } catch { /* ignore */ }
               pendingUriRef.current = null;
             }
+
+            // Autoplay — succeeds when user navigated via click/NFC (activation preserved).
+            // Fails silently on direct URL open; isBlocked activates so user can tap once.
+            if (autoPlayRef.current) play();
           },
         );
       })
@@ -217,31 +266,7 @@ export function useSpotifyPlayer(uri: string | null): UseSpotifyPlayerReturn {
         setStatusSafe('error');
         setError(err instanceof Error ? err.message : 'Lỗi không xác định');
       });
-  }, [uri, setStatusSafe, clearBlockedTimer]);
-
-  // ── Play / Pause — must be called synchronously inside a user gesture ───────
-  const play = useCallback(() => {
-    const ctrl = controllerRef.current;
-    if (!ctrl) return;
-    clearBlockedTimer();
-    ctrl.resume();
-    // iOS Safari blocked detection: if no 'playing' event within 800ms, browser blocked us
-    blockedTimerRef.current = setTimeout(() => {
-      if (statusRef.current !== 'playing' && mountedRef.current) {
-        setStatusSafe('blocked');
-      }
-    }, BLOCKED_TIMEOUT_MS);
-  }, [clearBlockedTimer, setStatusSafe]);
-
-  const pause = useCallback(() => {
-    clearBlockedTimer();
-    controllerRef.current?.pause();
-  }, [clearBlockedTimer]);
-
-  const toggle = useCallback(() => {
-    if (statusRef.current === 'playing') pause();
-    else play();
-  }, [play, pause]);
+  }, [uri, setStatusSafe, clearBlockedTimer, clearHeartbeat, resetHeartbeat, play]);
 
   const isPlaying = status === 'playing';
   const isLoading = status === 'loading_api' || status === 'loading_ctrl';

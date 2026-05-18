@@ -1,4 +1,4 @@
-import { fmt } from '@/shared/utils/fmt';
+﻿import { fmt } from '@/shared/utils/fmt';
 import { getFontFamily, getImageFilter, getTitleFontSize } from '@/shared/utils/styleHelpers';
 import type { LayoutProps } from '@/templates/types';
 
@@ -33,7 +33,7 @@ export function GradLuxury({ data, c }: LayoutProps) {
           <div className="pointer-events-none absolute inset-x-0 bottom-0"
             style={{ height: 64, background: `linear-gradient(to top, ${c.accent}, transparent)` }} />
           <div className="absolute left-5 top-[54px]">
-            <p className="text-[6px] font-bold tracking-[0.62em] uppercase"
+            <p className="text-[7.5px] font-bold tracking-[0.62em] uppercase"
               style={{ color: c.secondary, opacity: 0.55 }}>Class&nbsp;&nbsp;of&nbsp;&nbsp;2026</p>
           </div>
         </div>
@@ -42,7 +42,7 @@ export function GradLuxury({ data, c }: LayoutProps) {
       {mode !== 'full' && (
         <>
           <div className="flex-shrink-0" style={{ height: 52 }} />
-          <p className="relative z-10 text-[6px] font-bold tracking-[0.62em] uppercase"
+          <p className="relative z-10 text-[7.5px] font-bold tracking-[0.62em] uppercase"
             style={{ color: c.secondary, opacity: 0.45 }}>
             Class&nbsp;&nbsp;of&nbsp;&nbsp;2026
           </p>
@@ -93,7 +93,7 @@ export function GradLuxury({ data, c }: LayoutProps) {
       </p>
 
       {data.subtitle && (
-        <p className="relative z-10 mt-2 text-[6.5px] font-semibold tracking-[0.42em] uppercase"
+        <p className="relative z-10 mt-2 text-[8px] font-semibold tracking-[0.42em] uppercase"
           style={{ color: c.secondary, opacity: 0.6 }}>
           {data.subtitle}
         </p>
@@ -103,19 +103,19 @@ export function GradLuxury({ data, c }: LayoutProps) {
       <div className="relative z-10 mt-4 flex w-[72%] items-center gap-2">
         <div className="h-px flex-1"
           style={{ background: `linear-gradient(to right, transparent, ${c.secondary}88)` }} />
-        <span className="text-[7px] leading-none" style={{ color: c.secondary, opacity: 0.7 }}>✦</span>
+        <span className="text-[9px] leading-none" style={{ color: c.secondary, opacity: 0.7 }}>✦</span>
         <div className="h-px flex-1"
           style={{ background: `linear-gradient(to left, transparent, ${c.secondary}88)` }} />
       </div>
 
       {/* Description */}
-      <p className="relative z-10 mt-4 mx-8 text-center text-[7.5px] leading-[1.92]"
+      <p className="relative z-10 mt-4 mx-8 text-center text-[9.5px] leading-[1.92]"
         style={{ color: c.primary, opacity: 0.45 }}>
         {data.description || '"Chúc mừng tốt nghiệp. Tương lai rực rỡ đang chờ đón bạn."'}
       </p>
 
       {data.date && (
-        <p className="relative z-10 mt-5 text-[6px] font-bold tracking-[0.55em] uppercase"
+        <p className="relative z-10 mt-5 text-[7.5px] font-bold tracking-[0.55em] uppercase"
           style={{ color: c.secondary, opacity: 0.5 }}>
           {fmt(data.date)}
         </p>

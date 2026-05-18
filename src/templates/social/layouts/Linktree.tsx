@@ -1,4 +1,4 @@
-import { getFontFamily, getImageFilter, getTitleFontSize } from '@/shared/utils/styleHelpers';
+﻿import { getFontFamily, getImageFilter, getTitleFontSize } from '@/shared/utils/styleHelpers';
 import type { LayoutProps } from '@/templates/types';
 
 const PLATFORMS = [
@@ -37,7 +37,7 @@ export function SocLinktree({ data, c }: LayoutProps) {
       <p className="relative z-10 mt-3 font-bold" style={{ fontFamily: font, fontSize: titleSize, color: c.primary }}>
         {data.title || 'Tên của bạn'}
       </p>
-      <p className="relative z-10 mt-0.5 text-center text-[8.5px]" style={{ color: c.secondary }}>
+      <p className="relative z-10 mt-0.5 text-center text-[10.5px]" style={{ color: c.secondary }}>
         {data.subtitle || 'Bio / Tagline'}
       </p>
 
@@ -50,7 +50,7 @@ export function SocLinktree({ data, c }: LayoutProps) {
           return (
             <Tag key={key}
               {...(hasLink ? { href: url, target: '_blank', rel: 'noopener noreferrer' } : {})}
-              className="flex w-full items-center justify-center gap-2 rounded-full py-2.5 text-[10px] font-semibold shadow-sm"
+              className="flex w-full items-center justify-center gap-2 rounded-full py-2.5 text-[12px] font-semibold shadow-sm"
               style={{
                 backgroundColor: (hasLink && i === 0) ? c.primary : hasLink ? `${c.primary}12` : `${c.primary}07`,
                 color: (hasLink && i === 0) ? '#fff' : hasLink ? c.primary : `${c.primary}44`,
@@ -60,14 +60,14 @@ export function SocLinktree({ data, c }: LayoutProps) {
               }}>
               <span>{icon}</span>
               <span>{label}</span>
-              {!hasLink && <span className="text-[7px] opacity-50">— chưa có link</span>}
+              {!hasLink && <span className="text-[9px] opacity-50">— chưa có link</span>}
             </Tag>
           );
         })}
       </div>
 
       {data.description && (
-        <p className="relative z-10 mt-4 text-center text-[7.5px] leading-[1.7] opacity-45"
+        <p className="relative z-10 mt-4 text-center text-[9.5px] leading-[1.7] opacity-45"
           style={{ color: c.primary }}>{data.description}</p>
       )}
     </div>

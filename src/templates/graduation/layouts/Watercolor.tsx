@@ -1,4 +1,4 @@
-import { fmt } from '@/shared/utils/fmt';
+﻿import { fmt } from '@/shared/utils/fmt';
 import { getFontFamily, getImageFilter, getTitleFontSize } from '@/shared/utils/styleHelpers';
 import type { LayoutProps } from '@/templates/types';
 
@@ -93,19 +93,19 @@ export function GradWatercolor({ data, c }: LayoutProps) {
       </p>
 
       {data.subtitle && (
-        <p className="relative z-10 mt-1 px-6 text-center text-[7px] tracking-[0.18em] uppercase"
+        <p className="relative z-10 mt-1 px-6 text-center text-[9px] tracking-[0.18em] uppercase"
           style={{ color: c.primary, opacity: 0.45 }}>
           {data.subtitle}
         </p>
       )}
 
-      <p className="relative z-10 mt-3 px-7 text-center text-[7.5px] leading-[1.78]"
+      <p className="relative z-10 mt-3 px-7 text-center text-[9.5px] leading-[1.78]"
         style={{ color: c.primary, opacity: 0.6 }}>
         {data.description || 'As you stand at the threshold of your future, let this moment be a reminder of your strength, resilience, and determination.'}
       </p>
 
       {data.date && (
-        <p className="relative z-10 mt-3 text-[7px] font-semibold tracking-[0.22em] uppercase"
+        <p className="relative z-10 mt-3 text-[9px] font-semibold tracking-[0.22em] uppercase"
           style={{ color: c.secondary, opacity: 0.55 }}>
           {fmt(data.date)}
         </p>

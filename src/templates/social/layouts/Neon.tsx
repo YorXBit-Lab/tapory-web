@@ -1,4 +1,4 @@
-import { getFontFamily, getImageFilter, getTitleFontSize } from '@/shared/utils/styleHelpers';
+﻿import { getFontFamily, getImageFilter, getTitleFontSize } from '@/shared/utils/styleHelpers';
 import type { LayoutProps } from '@/templates/types';
 
 const PLATFORMS = [
@@ -44,7 +44,7 @@ export function SocNeon({ data, c }: LayoutProps) {
           textShadow: `0 0 14px ${c.primary}88` }}>
           {data.title || 'Tên của bạn'}
         </p>
-        <p className="mt-0.5 text-[8.5px] opacity-70" style={{ color: c.primary }}>
+        <p className="mt-0.5 text-[10.5px] opacity-70" style={{ color: c.primary }}>
           {data.subtitle || 'Bio / Tagline'}
         </p>
       </div>
@@ -73,14 +73,14 @@ export function SocNeon({ data, c }: LayoutProps) {
                 }}>
                 {icon}
               </div>
-              <span className="text-[6.5px] font-bold opacity-60" style={{ color: hasLink ? c.primary : 'rgba(255,255,255,0.3)' }}>{label}</span>
+              <span className="text-[8px] font-bold opacity-60" style={{ color: hasLink ? c.primary : 'rgba(255,255,255,0.3)' }}>{label}</span>
             </Tag>
           );
         })}
       </div>
 
       {data.description && (
-        <p className="text-center text-[8px] leading-[1.75]" style={{ color: 'rgba(255,255,255,0.35)' }}>
+        <p className="text-center text-[10px] leading-[1.75]" style={{ color: 'rgba(255,255,255,0.35)' }}>
           {data.description}
         </p>
       )}

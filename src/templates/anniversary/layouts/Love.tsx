@@ -1,4 +1,4 @@
-import { fmt } from '@/shared/utils/fmt';
+﻿import { fmt } from '@/shared/utils/fmt';
 import { getFontFamily, getImageFilter, getTitleFontSize } from '@/shared/utils/styleHelpers';
 import type { LayoutProps } from '@/templates/types';
 
@@ -60,12 +60,12 @@ export function AnniLove({ data, c }: LayoutProps) {
 
       {/* "LOVE STORY" label */}
       <div className="relative z-10 mt-3 flex items-center gap-2">
-        <span style={{ color: '#ff6b8a', fontSize: 8, opacity: 0.7 }}>♥</span>
-        <p className="text-[5.5px] font-bold tracking-[0.58em] uppercase"
+        <span style={{ color: '#ff6b8a', fontSize: 10, opacity: 0.7 }}>♥</span>
+        <p className="text-[7px] font-bold tracking-[0.58em] uppercase"
           style={{ color: '#ff8fab', opacity: 0.65 }}>
           Love Story
         </p>
-        <span style={{ color: '#ff6b8a', fontSize: 8, opacity: 0.7 }}>♥</span>
+        <span style={{ color: '#ff6b8a', fontSize: 10, opacity: 0.7 }}>♥</span>
       </div>
 
       {/* Rose gradient rule */}
@@ -107,7 +107,7 @@ export function AnniLove({ data, c }: LayoutProps) {
                 : <div className="flex h-full w-full items-center justify-center text-4xl"
                     style={{ background: 'rgba(220,60,100,0.1)' }}>📷</div>}
             </div>
-            <p className="mt-1 text-center text-[7px] tracking-[0.1em]"
+            <p className="mt-1 text-center text-[9px] tracking-[0.1em]"
               style={{ color: 'rgba(255,107,138,0.55)' }}>♥</p>
           </div>
         </div>
@@ -123,13 +123,13 @@ export function AnniLove({ data, c }: LayoutProps) {
       <div className="relative z-10 mt-3 flex w-[65%] items-center gap-2.5">
         <div className="h-px flex-1"
           style={{ background: 'linear-gradient(to right, transparent, rgba(255,107,138,0.55))' }} />
-        <span className="text-[10px] leading-none" style={{ color: '#ff6b8a' }}>♥</span>
+        <span className="text-[12px] leading-none" style={{ color: '#ff6b8a' }}>♥</span>
         <div className="h-px flex-1"
           style={{ background: 'linear-gradient(to left, transparent, rgba(255,107,138,0.55))' }} />
       </div>
 
       {data.date && (
-        <p className="relative z-10 mt-2.5 text-[6.5px] font-bold tracking-[0.42em] uppercase"
+        <p className="relative z-10 mt-2.5 text-[8px] font-bold tracking-[0.42em] uppercase"
           style={{ color: '#ff8fab', opacity: 0.7 }}>
           {fmt(data.date)}
         </p>
@@ -144,7 +144,7 @@ export function AnniLove({ data, c }: LayoutProps) {
           WebkitBackdropFilter: 'blur(10px)',
           boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06)',
         }}>
-        <p className="text-center text-[7.5px] leading-[1.88] italic"
+        <p className="text-center text-[9.5px] leading-[1.88] italic"
           style={{ color: 'rgba(255,240,243,0.52)' }}>
           {data.description || '"Mỗi ngày bên nhau là một trang mới trong câu chuyện tình yêu của chúng ta."'}
         </p>
@@ -152,9 +152,9 @@ export function AnniLove({ data, c }: LayoutProps) {
 
       {/* Bottom rose petals */}
       <div className="relative z-10 mt-auto flex items-center gap-2 pt-3">
-        <span className="text-[11px]" style={{ opacity: 0.35 }}>🌹</span>
-        <span className="text-[8px]" style={{ color: '#ff6b8a', opacity: 0.3 }}>♥</span>
-        <span className="text-[11px]" style={{ opacity: 0.35 }}>🌹</span>
+        <span className="text-[13px]" style={{ opacity: 0.35 }}>🌹</span>
+        <span className="text-[10px]" style={{ color: '#ff6b8a', opacity: 0.3 }}>♥</span>
+        <span className="text-[13px]" style={{ opacity: 0.35 }}>🌹</span>
       </div>
     </div>
   );

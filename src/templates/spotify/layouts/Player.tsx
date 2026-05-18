@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 import type { LayoutProps } from '@/templates/types';
 import { toSpotifyUri } from '../utils';
 import { useSpotifyPlayer } from '@/hooks/useSpotifyPlayer';
@@ -12,7 +12,7 @@ const SpotifyLogo = ({ size = 10, color = '#1db954' }: { size?: number; color?: 
 export function SpotPlayer({ data, c, autoPlay }: LayoutProps) {
   const hasUrl = !!data.spotifyUrl;
   const uri = toSpotifyUri(data.spotifyUrl);
-  const { holderRef, isPlaying: playing, isLoading, isReady, error, toggle } = useSpotifyPlayer(uri);
+  const { holderRef, isPlaying: playing, isLoading, isReady, error, toggle } = useSpotifyPlayer(uri, autoPlay);
 
   return (
     <div className="relative flex min-h-full w-full flex-col overflow-hidden"
@@ -38,7 +38,7 @@ export function SpotPlayer({ data, c, autoPlay }: LayoutProps) {
           {playing && <div className="absolute inset-0 rounded-full"
             style={{ backgroundColor: c.primary, animation: '_plPing 1s ease-in-out infinite' }} />}
         </div>
-        <p className="text-[5.5px] font-bold tracking-[0.55em] uppercase"
+        <p className="text-[7px] font-bold tracking-[0.55em] uppercase"
           style={{ color: playing ? c.primary : `${c.secondary}40` }}>
           {playing ? 'Now Playing' : 'Spotify'}
         </p>
@@ -73,7 +73,7 @@ export function SpotPlayer({ data, c, autoPlay }: LayoutProps) {
         style={{ color: c.secondary, letterSpacing: '-.01em' }}>
         {data.title || 'Tên bài hát'}
       </p>
-      <p className="relative z-10 mt-0.5 text-center text-[8px] font-semibold tracking-[0.22em] uppercase"
+      <p className="relative z-10 mt-0.5 text-center text-[10px] font-semibold tracking-[0.22em] uppercase"
         style={{ color: c.primary, opacity: .82 }}>
         {data.subtitle || 'Nghệ sĩ'}
       </p>
@@ -134,20 +134,22 @@ export function SpotPlayer({ data, c, autoPlay }: LayoutProps) {
           style={{ textDecoration: 'none', opacity: .55 }}
         >
           <SpotifyLogo size={10} color={c.primary} />
-          <span style={{ fontSize: 7.5, fontWeight: 700, color: c.primary, letterSpacing: '.12em', textTransform: 'uppercase' }}>
+          <span style={{ fontSize: 9.5, fontWeight: 700, color: c.primary, letterSpacing: '.12em', textTransform: 'uppercase' }}>
             Mở trên Spotify
           </span>
         </a>
       )}
 
-      <div ref={holderRef} aria-hidden style={{ position: 'fixed', bottom: 0, right: 0, width: 1, height: 1, opacity: 0, pointerEvents: 'none' }} />
+      <div aria-hidden style={{ position: 'fixed', bottom: 0, right: 0, width: 0, height: 0, overflow: 'hidden', pointerEvents: 'none' }}>
+        <div ref={holderRef} style={{ width: 300, height: 80 }} />
+      </div>
 
       {data.description && (
         <div className="relative z-10 mx-5 mt-4 mb-4 rounded-2xl px-5 pt-5 pb-4"
           style={{ background:`${c.primary}0e`, border:`1px solid ${c.primary}2a`, backdropFilter:'blur(12px)', WebkitBackdropFilter:'blur(12px)' }}>
           <span className="pointer-events-none absolute -top-[14px] left-3 text-[32px] leading-none"
             style={{ color:c.primary, opacity:.5, fontFamily:'Georgia, serif' }}>❝</span>
-          <p className="text-center text-[9px] italic leading-[1.9]"
+          <p className="text-center text-[11px] italic leading-[1.9]"
             style={{ color:c.secondary, opacity:.8 }}>
             {data.description}
           </p>

@@ -1,4 +1,4 @@
-import { fmt } from '@/shared/utils/fmt';
+﻿import { fmt } from '@/shared/utils/fmt';
 import { getFontFamily, getImageFilter, getTitleFontSize } from '@/shared/utils/styleHelpers';
 import type { LayoutProps } from '@/templates/types';
 
@@ -87,7 +87,7 @@ export function GradBoho({ data, c }: LayoutProps) {
           style={{ borderTop: '13px solid transparent', borderBottom: '13px solid transparent', borderRight: `9px solid ${c.secondary}` }} />
         <div className="flex flex-1 items-center justify-center px-3 py-[7px]"
           style={{ backgroundColor: c.secondary, boxShadow: `0 3px 10px ${c.secondary}45` }}>
-          <p className="text-center text-[11px] font-bold tracking-wide text-white">
+          <p className="text-center text-[13px] font-bold tracking-wide text-white">
             {data.title || 'Tên người nhận'}
           </p>
         </div>
@@ -96,19 +96,19 @@ export function GradBoho({ data, c }: LayoutProps) {
       </div>
 
       {data.subtitle && (
-        <p className="relative z-10 mt-1.5 px-6 text-center text-[7px] tracking-[0.18em] uppercase"
+        <p className="relative z-10 mt-1.5 px-6 text-center text-[9px] tracking-[0.18em] uppercase"
           style={{ color: c.primary, opacity: 0.5 }}>
           {data.subtitle}
         </p>
       )}
 
-      <p className="relative z-10 mt-3.5 px-6 text-center text-[7.5px] leading-[1.82]"
+      <p className="relative z-10 mt-3.5 px-6 text-center text-[9.5px] leading-[1.82]"
         style={{ color: c.primary, opacity: 0.6 }}>
         {data.description || 'May all the hard work, prayers, and struggles open the doors to a shining future.'}
       </p>
 
       {data.date && (
-        <p className="relative z-10 mt-3 text-[7px] font-semibold tracking-[0.22em] uppercase"
+        <p className="relative z-10 mt-3 text-[9px] font-semibold tracking-[0.22em] uppercase"
           style={{ color: c.secondary, opacity: 0.55 }}>
           {fmt(data.date)}
         </p>

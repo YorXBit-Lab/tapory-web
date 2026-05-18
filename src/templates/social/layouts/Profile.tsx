@@ -1,4 +1,4 @@
-import { getFontFamily, getImageFilter, getTitleFontSize } from '@/shared/utils/styleHelpers';
+﻿import { getFontFamily, getImageFilter, getTitleFontSize } from '@/shared/utils/styleHelpers';
 import type { LayoutProps } from '@/templates/types';
 
 const PLATFORMS = [
@@ -40,7 +40,7 @@ export function SocProfile({ data, c }: LayoutProps) {
         <p className="mt-2 font-bold" style={{ fontFamily: font, fontSize: titleSize, color: '#111827' }}>
           {data.title || 'Tên của bạn'}
         </p>
-        <p className="mt-0.5 text-[8.5px]" style={{ color: c.secondary }}>
+        <p className="mt-0.5 text-[10.5px]" style={{ color: c.secondary }}>
           {data.subtitle || 'Bio / Tagline'}
         </p>
 
@@ -48,8 +48,8 @@ export function SocProfile({ data, c }: LayoutProps) {
         <div className="my-3 flex gap-5">
           {[['12', 'Bài viết'], ['340', 'Followers'], ['180', 'Following']].map(([n, l]) => (
             <div key={l} className="text-center">
-              <p className="text-[11px] font-bold" style={{ color: '#111827' }}>{n}</p>
-              <p className="text-[7.5px]" style={{ color: '#9ca3af' }}>{l}</p>
+              <p className="text-[13px] font-bold" style={{ color: '#111827' }}>{n}</p>
+              <p className="text-[9.5px]" style={{ color: '#9ca3af' }}>{l}</p>
             </div>
           ))}
         </div>
@@ -78,7 +78,7 @@ export function SocProfile({ data, c }: LayoutProps) {
               <Tag
                 key={key}
                 {...(hasLink ? { href: url, target: '_blank', rel: 'noopener noreferrer' } : {})}
-                className="flex h-7 w-7 items-center justify-center rounded-full text-[11px]"
+                className="flex h-7 w-7 items-center justify-center rounded-full text-[13px]"
                 style={{
                   border: `1px solid ${c.secondary}${hasLink ? '44' : '1a'}`,
                   backgroundColor: `${c.secondary}${hasLink ? '10' : '05'}`,
@@ -93,7 +93,7 @@ export function SocProfile({ data, c }: LayoutProps) {
         </div>
 
         {data.description && (
-          <p className="mt-2 text-[8px] leading-[1.7] opacity-50" style={{ color: '#111827' }}>
+          <p className="mt-2 text-[10px] leading-[1.7] opacity-50" style={{ color: '#111827' }}>
             {data.description}
           </p>
         )}

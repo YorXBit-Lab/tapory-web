@@ -1,4 +1,4 @@
-import { fmt } from '@/shared/utils/fmt';
+﻿import { fmt } from '@/shared/utils/fmt';
 import { getFontFamily, getImageFilter, getTitleFontSize } from '@/shared/utils/styleHelpers';
 import type { LayoutProps } from '@/templates/types';
 
@@ -21,7 +21,7 @@ export function WedRomantic({ data, c }: LayoutProps) {
           <div className="absolute inset-0"
             style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.06) 0%, transparent 25%, rgba(253,245,248,0.75) 88%, #fdf5f8 100%)' }} />
           <div className="absolute top-[48px] left-0 right-0 flex justify-center">
-            <p className="text-[8px] font-light tracking-[0.5em] uppercase"
+            <p className="text-[10px] font-light tracking-[0.5em] uppercase"
               style={{ color: 'rgba(255,255,255,0.92)', textShadow: '0 1px 10px rgba(0,0,0,0.25)' }}>WEDDING</p>
           </div>
         </div>
@@ -30,7 +30,7 @@ export function WedRomantic({ data, c }: LayoutProps) {
       {/* ── Card mode: ảnh portrait có khung viền ── */}
       {mode === 'card' && (
         <div className="flex flex-col items-center px-6 pt-12 pb-2">
-          <p className="mb-5 text-[8px] font-light tracking-[0.5em] uppercase"
+          <p className="mb-5 text-[10px] font-light tracking-[0.5em] uppercase"
             style={{ color: c.primary, opacity: 0.55 }}>WEDDING</p>
           <div style={{ padding: 3, border: `2px solid ${c.secondary}` }}>
             <div style={{ width: 134, height: 162, overflow: 'hidden' }}>
@@ -46,7 +46,7 @@ export function WedRomantic({ data, c }: LayoutProps) {
       {/* ── Circle mode: ảnh tròn căn giữa ── */}
       {mode === 'circle' && (
         <div className="flex flex-col items-center px-6 pt-12 pb-2">
-          <p className="mb-5 text-[8px] font-light tracking-[0.5em] uppercase"
+          <p className="mb-5 text-[10px] font-light tracking-[0.5em] uppercase"
             style={{ color: c.primary, opacity: 0.55 }}>WEDDING</p>
           <div style={{ width: 138, height: 138, borderRadius: '50%', overflow: 'hidden', border: `3px solid ${c.secondary}`, flexShrink: 0 }}>
             {data.imageUrl
@@ -65,15 +65,15 @@ export function WedRomantic({ data, c }: LayoutProps) {
           {data.title || 'Tên đôi'}
         </p>
         {data.date && (
-          <p className="mt-1 text-[8.5px] font-medium tracking-[0.22em]"
+          <p className="mt-1 text-[10.5px] font-medium tracking-[0.22em]"
             style={{ color: c.secondary }}>{fmt(data.date)}</p>
         )}
         <div className="my-3 flex w-full items-center gap-2">
           <div className="h-px flex-1 rounded opacity-20" style={{ backgroundColor: c.primary }} />
-          <span className="text-[11px]">💕</span>
+          <span className="text-[13px]">💕</span>
           <div className="h-px flex-1 rounded opacity-20" style={{ backgroundColor: c.primary }} />
         </div>
-        <p className="text-[8.5px] leading-[1.75] opacity-60" style={{ color: c.primary }}>
+        <p className="text-[10.5px] leading-[1.75] opacity-60" style={{ color: c.primary }}>
           {data.description || 'Chúc hai bạn trăm năm hạnh phúc, mãi mãi yêu thương và gắn bó bên nhau.'}
         </p>
       </div>

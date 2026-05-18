@@ -1,4 +1,4 @@
-import { fmt } from '@/shared/utils/fmt';
+﻿import { fmt } from '@/shared/utils/fmt';
 import { getFontFamily, getImageFilter, getTitleFontSize } from '@/shared/utils/styleHelpers';
 import type { LayoutProps } from '@/templates/types';
 
@@ -30,7 +30,7 @@ export function GradScrapbook({ data, c }: LayoutProps) {
         style={{ transform: 'rotate(-8deg)' }}>✨</span>
       <span className="pointer-events-none absolute right-8 bottom-20 text-[14px] opacity-25"
         style={{ transform: 'rotate(6deg)' }}>🌟</span>
-      <span className="pointer-events-none absolute left-7 bottom-28 text-[10px] opacity-30"
+      <span className="pointer-events-none absolute left-7 bottom-28 text-[12px] opacity-30"
         style={{ transform: 'rotate(-12deg)' }}>✦</span>
 
       {/* ── FULL MODE ── */}
@@ -95,7 +95,7 @@ export function GradScrapbook({ data, c }: LayoutProps) {
       {/* Badge pill */}
       <div className="relative z-10 mt-4 overflow-hidden rounded-full px-4 py-1.5"
         style={{ backgroundColor: c.secondary, boxShadow: `0 2px 12px ${c.secondary}55, inset 0 1px 0 rgba(255,255,255,0.3)` }}>
-        <p className="text-[7px] font-black tracking-[0.28em] uppercase text-white">
+        <p className="text-[9px] font-black tracking-[0.28em] uppercase text-white">
           🎓 Tốt Nghiệp!
         </p>
       </div>
@@ -107,7 +107,7 @@ export function GradScrapbook({ data, c }: LayoutProps) {
           {data.title || 'Tên người nhận'}
         </p>
         {data.subtitle && (
-          <p className="mt-0.5 text-[7.5px] tracking-[0.16em]"
+          <p className="mt-0.5 text-[9.5px] tracking-[0.16em]"
             style={{ color: c.primary, opacity: 0.48 }}>
             {data.subtitle}
           </p>
@@ -117,14 +117,14 @@ export function GradScrapbook({ data, c }: LayoutProps) {
       {/* Message card */}
       <div className="relative z-10 mx-6 mt-3.5 rounded-2xl px-4 py-3"
         style={{ background: 'rgba(255,255,255,0.68)', border: '1.5px dashed rgba(0,0,0,0.13)', boxShadow: '0 2px 10px rgba(0,0,0,0.06)' }}>
-        <p className="text-center text-[7.5px] leading-[1.78]"
+        <p className="text-center text-[9.5px] leading-[1.78]"
           style={{ color: c.primary, opacity: 0.62 }}>
           {data.description || 'Congratulations! Wishing you all the best in your next adventure. 🎉'}
         </p>
       </div>
 
       {data.date && (
-        <p className="relative z-10 mt-3 text-center text-[7px] font-semibold tracking-[0.22em] uppercase"
+        <p className="relative z-10 mt-3 text-center text-[9px] font-semibold tracking-[0.22em] uppercase"
           style={{ color: c.primary, opacity: 0.38 }}>
           {fmt(data.date)}
         </p>

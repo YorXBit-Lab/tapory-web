@@ -1,4 +1,4 @@
-import { fmt } from '@/shared/utils/fmt';
+﻿import { fmt } from '@/shared/utils/fmt';
 import { getFontFamily, getImageFilter, getTitleFontSize } from '@/shared/utils/styleHelpers';
 import type { LayoutProps } from '@/templates/types';
 
@@ -79,19 +79,19 @@ export function GradBold({ data, c }: LayoutProps) {
       </p>
 
       {data.subtitle && (
-        <p className="relative z-10 mt-1 px-6 text-center text-[7px] tracking-[0.2em] uppercase"
+        <p className="relative z-10 mt-1 px-6 text-center text-[9px] tracking-[0.2em] uppercase"
           style={{ color: 'rgba(255,255,255,0.7)' }}>
           {data.subtitle}
         </p>
       )}
 
-      <p className="relative z-10 mt-3 px-7 text-center text-[7.5px] leading-[1.78]"
+      <p className="relative z-10 mt-3 px-7 text-center text-[9.5px] leading-[1.78]"
         style={{ color: 'rgba(255,255,255,0.72)' }}>
         {data.description || 'Happy Graduation. Your dedication and hard work have brought you to this proud moment — may your future be filled with success.'}
       </p>
 
       {data.date && (
-        <p className="relative z-10 mt-3 text-[7px] font-semibold tracking-[0.22em] uppercase"
+        <p className="relative z-10 mt-3 text-[9px] font-semibold tracking-[0.22em] uppercase"
           style={{ color: 'rgba(255,255,255,0.6)' }}>
           {fmt(data.date)}
         </p>

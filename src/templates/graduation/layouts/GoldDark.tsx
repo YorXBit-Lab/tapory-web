@@ -1,4 +1,4 @@
-import { fmt } from '@/shared/utils/fmt';
+﻿import { fmt } from '@/shared/utils/fmt';
 import { getFontFamily, getImageFilter, getTitleFontSize } from '@/shared/utils/styleHelpers';
 import type { LayoutProps } from '@/templates/types';
 
@@ -68,7 +68,7 @@ export function GradGoldDark({ data, c }: LayoutProps) {
       <div className="relative z-10 w-full flex-shrink-0 flex items-center px-5 py-2.5"
         style={{ background: `linear-gradient(90deg, transparent, ${c.secondary}44, ${c.secondary}88, ${c.secondary}44, transparent)` }}>
         <div className="h-px flex-1 opacity-50" style={{ backgroundColor: c.secondary }} />
-        <p className="mx-3 text-[9.5px] font-bold tracking-[0.2em] uppercase"
+        <p className="mx-3 text-[11.5px] font-bold tracking-[0.2em] uppercase"
           style={{ color: c.secondary }}>
           {data.title || 'Tên người nhận'}
         </p>
@@ -76,7 +76,7 @@ export function GradGoldDark({ data, c }: LayoutProps) {
       </div>
 
       {data.subtitle && (
-        <p className="relative z-10 mt-1.5 self-center text-center text-[7px] font-semibold tracking-[0.28em] uppercase"
+        <p className="relative z-10 mt-1.5 self-center text-center text-[9px] font-semibold tracking-[0.28em] uppercase"
           style={{ color: c.secondary, opacity: 0.6 }}>
           {data.subtitle}
         </p>
@@ -95,12 +95,12 @@ export function GradGoldDark({ data, c }: LayoutProps) {
       {/* Gold ornament divider */}
       <div className="relative z-10 mt-2.5 flex items-center gap-2 px-8 flex-shrink-0">
         <div className="h-px flex-1" style={{ background: `linear-gradient(to right, transparent, ${c.secondary}70)` }} />
-        <span style={{ color: c.secondary, fontSize: 8 }}>✦</span>
+        <span style={{ color: c.secondary, fontSize: 10 }}>✦</span>
         <div className="h-px flex-1" style={{ background: `linear-gradient(to left, transparent, ${c.secondary}70)` }} />
       </div>
 
       {/* Description */}
-      <p className="relative z-10 mt-3 px-7 text-center text-[7.5px] leading-[1.88] italic"
+      <p className="relative z-10 mt-3 px-7 text-center text-[9.5px] leading-[1.88] italic"
         style={{ color: c.primary, opacity: 0.55 }}>
         {data.description || '"This is a huge milestone, and we\'re so incredibly proud of everything you\'ve accomplished!"'}
       </p>
@@ -109,11 +109,11 @@ export function GradGoldDark({ data, c }: LayoutProps) {
       <div className="relative z-10 mt-auto flex items-center justify-center gap-3 pb-5 pt-3 flex-shrink-0">
         <span className="text-[18px]">🎈</span>
         {data.date
-          ? <p className="text-[6.5px] font-bold tracking-[0.34em] uppercase"
+          ? <p className="text-[8px] font-bold tracking-[0.34em] uppercase"
               style={{ color: c.secondary, opacity: 0.55 }}>
               {fmt(data.date)}
             </p>
-          : <span style={{ color: c.secondary, fontSize: 9, opacity: 0.5 }}>✦</span>}
+          : <span style={{ color: c.secondary, fontSize: 11, opacity: 0.5 }}>✦</span>}
         <span className="text-[18px]">🎈</span>
       </div>
     </div>

@@ -35,21 +35,27 @@ interface SpotifyMusicButtonProps {
 // ─── Holder style ──────────────────────────────────────────────────────────────
 //
 // Rules:
-//   - opacity:0          → invisible but keeps iframe fully active (iOS Safari-safe)
-//   - position:fixed     → removed from document flow, no layout shift
-//   - pointer-events:none → can't be accidentally clicked
+//   - clip-path:inset(100%) → clips all rendering; iOS Safari keeps iframe active
+//   - position:fixed         → removed from document flow, no layout shift
+//   - pointer-events:none    → can't be accidentally clicked
 //
-// Do NOT use visibility:hidden or display:none — iOS Safari suspends audio context
-// in hidden/display:none iframes, silently breaking playback.
+// Do NOT use opacity:0 — cross-origin iframes render in a separate GPU layer on
+// iOS Safari and do not inherit parent opacity, so the Spotify player stays visible.
+// Do NOT use visibility:hidden or display:none — those suspend JS/audio in the iframe.
 
-const HOLDER_STYLE: CSSProperties = {
+const WRAPPER_STYLE: CSSProperties = {
   position: 'fixed',
   bottom: 0,
   right: 0,
-  width: 1,
-  height: 1,
-  opacity: 0,
+  width: 0,
+  height: 0,
+  overflow: 'hidden',
   pointerEvents: 'none',
+};
+
+const HOLDER_STYLE: CSSProperties = {
+  width: 300,
+  height: 80,
 };
 
 // ─── Component ─────────────────────────────────────────────────────────────────
@@ -118,7 +124,9 @@ export function SpotifyMusicButton({
         </button>
       )}
 
-      <div ref={holderRef} aria-hidden="true" style={HOLDER_STYLE} />
+      <div aria-hidden="true" style={WRAPPER_STYLE}>
+        <div ref={holderRef} style={HOLDER_STYLE} />
+      </div>
     </>
   );
 }

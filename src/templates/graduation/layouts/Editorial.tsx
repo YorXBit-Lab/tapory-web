@@ -1,4 +1,4 @@
-import { fmt } from '@/shared/utils/fmt';
+﻿import { fmt } from '@/shared/utils/fmt';
 import { getFontFamily, getImageFilter, getTitleFontSize } from '@/shared/utils/styleHelpers';
 import type { LayoutProps } from '@/templates/types';
 
@@ -30,7 +30,7 @@ export function GradEditorial({ data, c }: LayoutProps) {
             style={{ background: `linear-gradient(to bottom right, ${c.secondary}18 0%, transparent 55%)` }} />
           <div className="absolute left-4 top-[54px] flex items-center gap-1.5">
             <div className="h-[1.5px] w-3" style={{ backgroundColor: c.secondary }} />
-            <p className="text-[5.5px] font-black tracking-[0.55em] uppercase text-white" style={{ opacity: 0.82 }}>
+            <p className="text-[7px] font-black tracking-[0.55em] uppercase text-white" style={{ opacity: 0.82 }}>
               Graduation
             </p>
           </div>
@@ -43,7 +43,7 @@ export function GradEditorial({ data, c }: LayoutProps) {
           <div className="flex-shrink-0" style={{ height: 52 }} />
           <div className="flex items-center gap-1.5 px-5">
             <div className="h-[1.5px] w-3" style={{ backgroundColor: c.secondary }} />
-            <p className="text-[5.5px] font-black tracking-[0.55em] uppercase" style={{ color: c.primary, opacity: 0.55 }}>
+            <p className="text-[7px] font-black tracking-[0.55em] uppercase" style={{ color: c.primary, opacity: 0.55 }}>
               Graduation
             </p>
           </div>
@@ -68,7 +68,7 @@ export function GradEditorial({ data, c }: LayoutProps) {
           <div className="flex-shrink-0" style={{ height: 52 }} />
           <div className="flex items-center gap-1.5 px-5">
             <div className="h-[1.5px] w-3" style={{ backgroundColor: c.secondary }} />
-            <p className="text-[5.5px] font-black tracking-[0.55em] uppercase" style={{ color: c.primary, opacity: 0.55 }}>
+            <p className="text-[7px] font-black tracking-[0.55em] uppercase" style={{ color: c.primary, opacity: 0.55 }}>
               Graduation
             </p>
           </div>
@@ -97,7 +97,7 @@ export function GradEditorial({ data, c }: LayoutProps) {
         </p>
 
         {data.subtitle && (
-          <p className="mt-1.5 text-[7px] font-semibold tracking-[0.3em] uppercase"
+          <p className="mt-1.5 text-[9px] font-semibold tracking-[0.3em] uppercase"
             style={{ color: c.primary, opacity: 0.38 }}>
             {data.subtitle}
           </p>
@@ -108,14 +108,14 @@ export function GradEditorial({ data, c }: LayoutProps) {
           <div className="h-px flex-1" style={{ backgroundColor: c.primary, opacity: 0.1 }} />
         </div>
 
-        <p className="mt-2.5 text-[8px] leading-[1.88]"
+        <p className="mt-2.5 text-[10px] leading-[1.88]"
           style={{ color: c.primary, opacity: 0.5 }}>
           {data.description || 'Chúc mừng tốt nghiệp. Hành trình mới đang chờ bạn phía trước.'}
         </p>
 
         <div className="mt-auto pt-3">
           {data.date && (
-            <p className="text-[7px] font-bold tracking-[0.32em] uppercase"
+            <p className="text-[9px] font-bold tracking-[0.32em] uppercase"
               style={{ color: c.secondary }}>
               — {fmt(data.date)} —
             </p>
