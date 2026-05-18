@@ -1,7 +1,7 @@
 'use client';
 import type { LayoutProps } from '@/templates/types';
 import { toSpotifyUri } from '../utils';
-import { useSpotifyEmbed } from '@/hooks/useSpotifyEmbed';
+import { useSpotifyPlayer } from '@/hooks/useSpotifyPlayer';
 
 const BARS: [number,number,number,number][] = [
   [4,14,500,0],[6,22,420,80],[3,28,560,40],[8,18,380,120],
@@ -15,7 +15,7 @@ const BARS: [number,number,number,number][] = [
 export function SpotWave({ data, c, autoPlay }: LayoutProps) {
   const hasUrl = !!data.spotifyUrl;
   const uri = toSpotifyUri(data.spotifyUrl);
-  const { holderRef, isPlaying: playing, isLoading, isReady, error, toggle } = useSpotifyEmbed(uri, autoPlay);
+  const { holderRef, isPlaying: playing, isLoading, isReady, isBlocked, error, toggle } = useSpotifyPlayer(uri);
 
   const keyframes = BARS.map((_,i) => `
     @keyframes _bar${i}{0%,100%{height:${BARS[i][0]}px}50%{height:${BARS[i][1]}px}}
@@ -106,7 +106,7 @@ export function SpotWave({ data, c, autoPlay }: LayoutProps) {
         </span>
         <span style={{ fontSize:9, fontWeight:800, letterSpacing:'.12em', textTransform:'uppercase',
           color: playing ? 'rgba(255,255,255,0.85)' : (hasUrl ? '#000' : 'rgba(255,255,255,0.2)') }}>
-          {!hasUrl ? 'Chưa có link' : playing ? 'Dừng lại' : 'Phát nhạc'}
+          {!hasUrl ? 'Chưa có link' : isBlocked ? 'Chạm lại để phát 🎵' : playing ? 'Dừng lại' : 'Phát nhạc'}
         </span>
       </button>
       {hasUrl && (
@@ -117,7 +117,7 @@ export function SpotWave({ data, c, autoPlay }: LayoutProps) {
           <span style={{ fontSize: 7.5, fontWeight: 700, color: c.primary, letterSpacing: '.12em', textTransform: 'uppercase' }}>Mở trên Spotify</span>
         </a>
       )}
-      {hasUrl && <div ref={holderRef} aria-hidden style={{ position: 'fixed', bottom: 0, right: 0, width: 1, height: 1, pointerEvents: 'none', visibility: 'hidden' }} />}
+      <div ref={holderRef} aria-hidden style={{ position: 'fixed', bottom: 0, right: 0, width: 1, height: 1, opacity: 0, pointerEvents: 'none' }} />
 
       {data.description && (
         <div className="relative z-10 mx-5 mt-4 mb-4 rounded-2xl px-5 pt-5 pb-4"

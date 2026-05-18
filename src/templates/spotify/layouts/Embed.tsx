@@ -1,7 +1,7 @@
 'use client';
 import type { LayoutProps } from '@/templates/types';
 import { toSpotifyUri } from '../utils';
-import { useSpotifyEmbed } from '@/hooks/useSpotifyEmbed';
+import { useSpotifyPlayer } from '@/hooks/useSpotifyPlayer';
 
 const SpotifyLogo = ({ size = 14, color = '#000' }: { size?: number; color?: string }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill={color}>
@@ -12,7 +12,7 @@ const SpotifyLogo = ({ size = 14, color = '#000' }: { size?: number; color?: str
 export function SpotEmbed({ data, c, autoPlay }: LayoutProps) {
   const hasUrl = !!data.spotifyUrl;
   const uri = toSpotifyUri(data.spotifyUrl);
-  const { holderRef, isPlaying: playing, isLoading, isReady, error, toggle } = useSpotifyEmbed(uri, autoPlay);
+  const { holderRef, isPlaying: playing, isLoading, isReady, isBlocked, error, toggle } = useSpotifyPlayer(uri);
 
   return (
     <div className="relative flex min-h-full w-full flex-col items-center overflow-hidden"
@@ -91,7 +91,7 @@ export function SpotEmbed({ data, c, autoPlay }: LayoutProps) {
           fontSize: 9, fontWeight: 800, letterSpacing: '.12em', textTransform: 'uppercase',
           color: playing ? 'rgba(255,255,255,0.85)' : (hasUrl ? '#000' : 'rgba(255,255,255,0.25)'),
         }}>
-          {!hasUrl ? 'Chưa có link' : playing ? 'Dừng lại' : 'Phát nhạc'}
+          {!hasUrl ? 'Chưa có link' : isBlocked ? 'Chạm lại để phát 🎵' : playing ? 'Dừng lại' : 'Phát nhạc'}
         </span>
       </button>
 
@@ -111,7 +111,7 @@ export function SpotEmbed({ data, c, autoPlay }: LayoutProps) {
         </a>
       )}
 
-      {hasUrl && <div ref={holderRef} aria-hidden style={{ position: 'fixed', bottom: 0, right: 0, width: 1, height: 1, pointerEvents: 'none', visibility: 'hidden' }} />}
+      <div ref={holderRef} aria-hidden style={{ position: 'fixed', bottom: 0, right: 0, width: 1, height: 1, opacity: 0, pointerEvents: 'none' }} />
 
       {data.description && (
         <div className="relative z-10 mx-5 mt-4 mb-4 rounded-2xl px-5 pt-5 pb-4"
