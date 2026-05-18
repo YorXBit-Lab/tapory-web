@@ -1,4 +1,4 @@
-import { fmt } from '@/shared/utils/fmt';
+﻿import { fmt } from '@/shared/utils/fmt';
 import { getFontFamily, getImageFilter, getTitleFontSize } from '@/shared/utils/styleHelpers';
 import type { LayoutProps } from '@/templates/types';
 
@@ -14,7 +14,7 @@ export function WedElegant({ data, c }: LayoutProps) {
 
       <div className="mb-4 flex w-full flex-col items-center gap-1.5">
         <div className="h-px w-24 opacity-55" style={{ backgroundColor: c.secondary }} />
-        <p className="text-[7px] font-bold tracking-[0.5em] uppercase" style={{ color: c.secondary }}>— Wedding —</p>
+        <p className="text-[9px] font-bold tracking-[0.5em] uppercase" style={{ color: c.secondary }}>— Wedding —</p>
         <div className="h-px w-24 opacity-55" style={{ backgroundColor: c.secondary }} />
       </div>
 
@@ -53,11 +53,11 @@ export function WedElegant({ data, c }: LayoutProps) {
         {data.title || 'Tên đôi'}
       </p>
       {data.date && (
-        <p className="mt-1.5 text-[8px] font-bold tracking-[0.3em] uppercase"
+        <p className="mt-1.5 text-[10px] font-bold tracking-[0.3em] uppercase"
           style={{ color: c.secondary }}>{fmt(data.date)}</p>
       )}
       <div className="my-4 h-px w-16 opacity-35" style={{ backgroundColor: c.secondary }} />
-      <p className="text-center text-[8.5px] leading-[1.75] opacity-52" style={{ color: c.primary }}>
+      <p className="text-center text-[10.5px] leading-[1.75] opacity-52" style={{ color: c.primary }}>
         {data.description || 'Chúc hai bạn trăm năm hạnh phúc, mãi mãi yêu thương và gắn bó bên nhau.'}
       </p>
     </div>

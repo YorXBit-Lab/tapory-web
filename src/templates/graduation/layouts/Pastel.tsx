@@ -1,4 +1,4 @@
-import { fmt } from '@/shared/utils/fmt';
+﻿import { fmt } from '@/shared/utils/fmt';
 import { getFontFamily, getImageFilter, getTitleFontSize } from '@/shared/utils/styleHelpers';
 import type { LayoutProps } from '@/templates/types';
 
@@ -96,7 +96,7 @@ export function GradPastel({ data, c }: LayoutProps) {
       </p>
 
       {data.subtitle && (
-        <p className="relative z-10 mt-1 px-6 text-center text-[7.5px] tracking-[0.18em]"
+        <p className="relative z-10 mt-1 px-6 text-center text-[9.5px] tracking-[0.18em]"
           style={{ color: c.primary, opacity: 0.48 }}>
           {data.subtitle}
         </p>
@@ -113,14 +113,14 @@ export function GradPastel({ data, c }: LayoutProps) {
         }}>
         <div className="mb-2.5 h-[1.5px] w-full rounded-full"
           style={{ background: 'linear-gradient(to right, #f9a8d4, #c4b5fd, #93c5fd)' }} />
-        <p className="text-center text-[7.5px] leading-[1.82]"
+        <p className="text-center text-[9.5px] leading-[1.82]"
           style={{ color: c.primary, opacity: 0.68 }}>
           {data.description || 'Chúc mừng tốt nghiệp! Wishing you a future as bright and beautiful as you are. ✨'}
         </p>
       </div>
 
       {data.date && (
-        <p className="relative z-10 mt-3.5 text-[7px] font-semibold tracking-[0.24em] uppercase"
+        <p className="relative z-10 mt-3.5 text-[9px] font-semibold tracking-[0.24em] uppercase"
           style={{ color: c.primary, opacity: 0.4 }}>
           {fmt(data.date)}
         </p>

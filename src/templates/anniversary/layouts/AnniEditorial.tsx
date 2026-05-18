@@ -1,4 +1,4 @@
-import { fmt } from '@/shared/utils/fmt';
+﻿import { fmt } from '@/shared/utils/fmt';
 import { getFontFamily, getImageFilter, getTitleFontSize } from '@/shared/utils/styleHelpers';
 import type { LayoutProps } from '@/templates/types';
 
@@ -30,7 +30,7 @@ export function AnniEditorial({ data, c }: LayoutProps) {
             style={{ background: `linear-gradient(to bottom right, ${c.secondary}18 0%, transparent 55%)` }} />
           <div className="absolute left-4 top-[54px] flex items-center gap-1.5">
             <div className="h-[1.5px] w-3" style={{ backgroundColor: c.secondary }} />
-            <p className="text-[5.5px] font-black tracking-[0.55em] uppercase"
+            <p className="text-[7px] font-black tracking-[0.55em] uppercase"
               style={{ color: c.secondary, opacity: 0.88 }}>Anniversary</p>
           </div>
           <div className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-[52px] font-bold leading-none select-none"
@@ -53,14 +53,14 @@ export function AnniEditorial({ data, c }: LayoutProps) {
             </div>
             <div className="flex flex-1 flex-col gap-1.5">
               <div className="h-[1.5px] w-8" style={{ backgroundColor: c.secondary }} />
-              <p className="text-[5.5px] font-black tracking-[0.55em] uppercase"
+              <p className="text-[7px] font-black tracking-[0.55em] uppercase"
                 style={{ color: c.secondary, opacity: 0.88 }}>Anniversary</p>
               <p className="mt-1 font-bold leading-tight"
                 style={{ fontFamily: font, fontSize: titleSize, color: c.primary, letterSpacing: '-0.01em' }}>
                 {data.title || 'Tên đôi'}
               </p>
               {data.date && (
-                <p className="mt-1 text-[6px] font-bold tracking-[0.3em] uppercase"
+                <p className="mt-1 text-[7.5px] font-bold tracking-[0.3em] uppercase"
                   style={{ color: c.secondary, opacity: 0.75 }}>
                   — {fmt(data.date)} —
                 </p>
@@ -75,7 +75,7 @@ export function AnniEditorial({ data, c }: LayoutProps) {
         <>
           <div className="flex-shrink-0" style={{ height: 48 }} />
           <div className="flex flex-col items-center">
-            <p className="text-[5.5px] font-black tracking-[0.55em] uppercase mb-3"
+            <p className="text-[7px] font-black tracking-[0.55em] uppercase mb-3"
               style={{ color: c.secondary, opacity: 0.88 }}>Anniversary</p>
             <div className="relative flex-shrink-0">
               <div className="absolute -inset-[4px] rounded-full opacity-60"
@@ -111,7 +111,7 @@ export function AnniEditorial({ data, c }: LayoutProps) {
         {mode === 'full' && (
           <div className="mt-2.5 flex items-center gap-2">
             <div className="h-[2px] w-7 rounded-full" style={{ backgroundColor: c.secondary }} />
-            <span className="text-[8px] leading-none" style={{ color: c.secondary }}>♥</span>
+            <span className="text-[10px] leading-none" style={{ color: c.secondary }}>♥</span>
             <div className="h-px flex-1" style={{ backgroundColor: c.primary, opacity: 0.08 }} />
           </div>
         )}
@@ -119,25 +119,25 @@ export function AnniEditorial({ data, c }: LayoutProps) {
         {mode !== 'full' && (
           <div className="flex items-center gap-2">
             <div className="h-[2px] w-7 rounded-full" style={{ backgroundColor: c.secondary }} />
-            <span className="text-[8px] leading-none" style={{ color: c.secondary }}>♥</span>
+            <span className="text-[10px] leading-none" style={{ color: c.secondary }}>♥</span>
             <div className="h-px flex-1" style={{ backgroundColor: c.primary, opacity: 0.08 }} />
           </div>
         )}
 
-        <p className="mt-2.5 text-[8px] leading-[1.9] italic"
+        <p className="mt-2.5 text-[10px] leading-[1.9] italic"
           style={{ color: c.primary, opacity: 0.48 }}>
           {data.description || 'Cảm ơn bạn đã ở bên tôi trong những năm tháng tuyệt vời nhất của cuộc đời.'}
         </p>
 
         <div className="mt-auto pt-3">
           {mode === 'full' && data.date && (
-            <p className="text-[7px] font-bold tracking-[0.35em] uppercase"
+            <p className="text-[9px] font-bold tracking-[0.35em] uppercase"
               style={{ color: c.secondary, opacity: 0.8 }}>
               — {fmt(data.date)} —
             </p>
           )}
           {mode !== 'full' && data.date && (
-            <p className="text-[7px] font-bold tracking-[0.35em] uppercase"
+            <p className="text-[9px] font-bold tracking-[0.35em] uppercase"
               style={{ color: c.secondary, opacity: 0.8 }}>
               — {fmt(data.date)} —
             </p>

@@ -1,4 +1,4 @@
-import { getFontFamily, getImageFilter, getTitleFontSize } from '@/shared/utils/styleHelpers';
+﻿import { getFontFamily, getImageFilter, getTitleFontSize } from '@/shared/utils/styleHelpers';
 import type { LayoutProps } from '@/templates/types';
 import { SOCIAL_PLATFORMS } from '../SocialIcons';
 
@@ -123,7 +123,7 @@ export function ProfileCreative({ data, c }: LayoutProps) {
                 {data.title || 'Họ và tên'}
               </p>
               {data.subtitle && (
-                <p className="mt-0.5 text-[8px] font-semibold" style={{ color: c.secondary }}>
+                <p className="mt-0.5 text-[10px] font-semibold" style={{ color: c.secondary }}>
                   {data.subtitle}
                 </p>
               )}
@@ -138,7 +138,7 @@ export function ProfileCreative({ data, c }: LayoutProps) {
               {data.title || 'Họ và tên'}
             </p>
             {data.subtitle && (
-              <p className="mt-0.5 text-[8px] font-semibold" style={{ color: c.secondary }}>
+              <p className="mt-0.5 text-[10px] font-semibold" style={{ color: c.secondary }}>
                 {data.subtitle}
               </p>
             )}
@@ -153,16 +153,16 @@ export function ProfileCreative({ data, c }: LayoutProps) {
           <div className="space-y-1.5">
             {data.email && (
               <div className="flex items-center gap-2">
-                <span className="w-3.5 flex-shrink-0 text-[10px]">✉️</span>
-                <p className="truncate text-[8px]" style={{ color: c.primary, opacity: 0.6 }}>
+                <span className="w-3.5 flex-shrink-0 text-[12px]">✉️</span>
+                <p className="truncate text-[10px]" style={{ color: c.primary, opacity: 0.6 }}>
                   {data.email}
                 </p>
               </div>
             )}
             {data.phone && (
               <div className="flex items-center gap-2">
-                <span className="w-3.5 flex-shrink-0 text-[10px]">📞</span>
-                <p className="text-[8px]" style={{ color: c.primary, opacity: 0.6 }}>
+                <span className="w-3.5 flex-shrink-0 text-[12px]">📞</span>
+                <p className="text-[10px]" style={{ color: c.primary, opacity: 0.6 }}>
                   {data.phone}
                 </p>
               </div>
@@ -195,7 +195,7 @@ export function ProfileCreative({ data, c }: LayoutProps) {
         {data.description && (
           <>
             <div className="my-3 h-px w-full" style={{ backgroundColor: `${c.primary}0d` }} />
-            <p className="text-[8px] leading-[1.75]" style={{ color: c.primary, opacity: 0.45 }}>
+            <p className="text-[10px] leading-[1.75]" style={{ color: c.primary, opacity: 0.45 }}>
               {data.description}
             </p>
           </>

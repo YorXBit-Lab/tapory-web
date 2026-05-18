@@ -1,4 +1,4 @@
-import { fmt } from '@/shared/utils/fmt';
+﻿import { fmt } from '@/shared/utils/fmt';
 import { getFontFamily, getImageFilter, getTitleFontSize } from '@/shared/utils/styleHelpers';
 import type { LayoutProps } from '@/templates/types';
 
@@ -34,7 +34,7 @@ export function BdayParty({ data, c }: LayoutProps) {
             <div className="absolute inset-0"
               style={{ background: 'linear-gradient(to bottom, transparent 50%, rgba(0,0,0,0.28) 100%)' }} />
             <div className="absolute top-5 left-0 right-0 flex justify-center">
-              <p className="text-[8px] font-black tracking-[0.3em] uppercase"
+              <p className="text-[10px] font-black tracking-[0.3em] uppercase"
                 style={{ color: 'rgba(255,255,255,0.9)', textShadow: '0 1px 8px rgba(0,0,0,0.3)' }}>🎉 Happy Birthday! 🎉</p>
             </div>
           </div>
@@ -43,14 +43,14 @@ export function BdayParty({ data, c }: LayoutProps) {
               {data.title || 'Tên người nhận'}
             </p>
             {data.date && (
-              <p className="mt-0.5 text-[8.5px] font-semibold" style={{ color: c.secondary }}>{fmt(data.date)}</p>
+              <p className="mt-0.5 text-[10.5px] font-semibold" style={{ color: c.secondary }}>{fmt(data.date)}</p>
             )}
             <div className="my-3 flex items-center gap-2">
               <span className="text-[12px]">🎉</span>
               <div className="h-px w-10 rounded opacity-20" style={{ backgroundColor: c.primary }} />
               <span className="text-[12px]">🎊</span>
             </div>
-            <p className="text-[8.5px] leading-[1.75] opacity-55" style={{ color: c.primary }}>
+            <p className="text-[10.5px] leading-[1.75] opacity-55" style={{ color: c.primary }}>
               {data.description || 'Happy Birthday! Chúc bạn luôn hạnh phúc và đạt được mọi ước mơ.'}
             </p>
           </div>
@@ -62,7 +62,7 @@ export function BdayParty({ data, c }: LayoutProps) {
         <>
           <div className="flex flex-col items-center pt-[52px]">
             <span className="relative z-10 text-[34px]">🎂</span>
-            <p className="relative z-10 mt-1 text-[11px] font-black tracking-[0.15em] uppercase"
+            <p className="relative z-10 mt-1 text-[13px] font-black tracking-[0.15em] uppercase"
               style={{ color: c.primary }}>Happy Birthday!</p>
             <div className="relative z-10 mt-4 flex-shrink-0 overflow-hidden rounded-full shadow-2xl"
               style={{ width: 110, height: 110, border: `4px solid ${c.secondary}` }}>
@@ -77,14 +77,14 @@ export function BdayParty({ data, c }: LayoutProps) {
               {data.title || 'Tên người nhận'}
             </p>
             {data.date && (
-              <p className="mt-0.5 text-[8.5px] font-semibold" style={{ color: c.secondary }}>{fmt(data.date)}</p>
+              <p className="mt-0.5 text-[10.5px] font-semibold" style={{ color: c.secondary }}>{fmt(data.date)}</p>
             )}
             <div className="my-3 flex items-center gap-2">
               <span className="text-[12px]">🎉</span>
               <div className="h-px w-10 rounded opacity-20" style={{ backgroundColor: c.primary }} />
               <span className="text-[12px]">🎊</span>
             </div>
-            <p className="text-[8.5px] leading-[1.75] opacity-55" style={{ color: c.primary }}>
+            <p className="text-[10.5px] leading-[1.75] opacity-55" style={{ color: c.primary }}>
               {data.description || 'Happy Birthday! Chúc bạn luôn hạnh phúc và đạt được mọi ước mơ.'}
             </p>
           </div>
@@ -96,7 +96,7 @@ export function BdayParty({ data, c }: LayoutProps) {
         <>
           <div className="flex flex-col items-center pt-[42px]">
             <span className="relative z-10 text-[28px]">🎂</span>
-            <p className="relative z-10 mt-1 text-[11px] font-black tracking-[0.15em] uppercase"
+            <p className="relative z-10 mt-1 text-[13px] font-black tracking-[0.15em] uppercase"
               style={{ color: c.primary }}>Happy Birthday!</p>
             <div className="relative z-10 mt-4 flex-shrink-0"
               style={{ padding: 3, border: `2.5px solid ${c.secondary}` }}>
@@ -113,14 +113,14 @@ export function BdayParty({ data, c }: LayoutProps) {
               {data.title || 'Tên người nhận'}
             </p>
             {data.date && (
-              <p className="mt-0.5 text-[8.5px] font-semibold" style={{ color: c.secondary }}>{fmt(data.date)}</p>
+              <p className="mt-0.5 text-[10.5px] font-semibold" style={{ color: c.secondary }}>{fmt(data.date)}</p>
             )}
             <div className="my-3 flex items-center gap-2">
               <span className="text-[12px]">🎉</span>
               <div className="h-px w-10 rounded opacity-20" style={{ backgroundColor: c.primary }} />
               <span className="text-[12px]">🎊</span>
             </div>
-            <p className="text-[8.5px] leading-[1.75] opacity-55" style={{ color: c.primary }}>
+            <p className="text-[10.5px] leading-[1.75] opacity-55" style={{ color: c.primary }}>
               {data.description || 'Happy Birthday! Chúc bạn luôn hạnh phúc và đạt được mọi ước mơ.'}
             </p>
           </div>

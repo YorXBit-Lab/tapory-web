@@ -1,4 +1,4 @@
-import { getFontFamily, getImageFilter, getTitleFontSize } from '@/shared/utils/styleHelpers';
+﻿import { getFontFamily, getImageFilter, getTitleFontSize } from '@/shared/utils/styleHelpers';
 import type { LayoutProps } from '@/templates/types';
 
 const PLATFORMS = [
@@ -38,7 +38,7 @@ export function SocDark({ data, c }: LayoutProps) {
         <p className="font-bold" style={{ fontFamily: font, fontSize: titleSize, color: c.primary }}>
           {data.title || 'Tên của bạn'}
         </p>
-        <p className="mt-0.5 text-[8.5px] opacity-60" style={{ color: c.secondary }}>
+        <p className="mt-0.5 text-[10.5px] opacity-60" style={{ color: c.secondary }}>
           {data.subtitle || 'Bio / Tagline'}
         </p>
       </div>
@@ -62,7 +62,7 @@ export function SocDark({ data, c }: LayoutProps) {
                 }}>
                 {icon}
               </div>
-              <span className="text-[6.5px] font-medium" style={{ color: c.secondary, opacity: hasLink ? 0.7 : 0.3 }}>{label}</span>
+              <span className="text-[8px] font-medium" style={{ color: c.secondary, opacity: hasLink ? 0.7 : 0.3 }}>{label}</span>
             </Tag>
           );
         })}
@@ -71,7 +71,7 @@ export function SocDark({ data, c }: LayoutProps) {
       <div className="h-px w-20 rounded opacity-[0.12]" style={{ backgroundColor: c.primary }} />
 
       {data.description && (
-        <p className="text-center text-[8px] leading-[1.75] opacity-40" style={{ color: '#ffffff' }}>
+        <p className="text-center text-[10px] leading-[1.75] opacity-40" style={{ color: '#ffffff' }}>
           {data.description}
         </p>
       )}

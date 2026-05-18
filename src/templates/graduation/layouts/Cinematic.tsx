@@ -1,4 +1,4 @@
-import { fmt } from '@/shared/utils/fmt';
+﻿import { fmt } from '@/shared/utils/fmt';
 import { getFontFamily, getImageFilter, getTitleFontSize } from '@/shared/utils/styleHelpers';
 import type { LayoutProps } from '@/templates/types';
 
@@ -84,7 +84,7 @@ export function GradCinematic({ data, c }: LayoutProps) {
       <div className={`${mode === 'full' ? 'absolute inset-x-0 bottom-6' : 'relative z-10 mt-auto mb-6'} flex flex-col px-6`}>
         <div className="mb-3 flex items-center gap-2.5">
           <div className="h-px w-6" style={{ background: `linear-gradient(to right, transparent, ${c.secondary}80)` }} />
-          <p className="text-[6.5px] font-bold tracking-[0.5em] uppercase"
+          <p className="text-[8px] font-bold tracking-[0.5em] uppercase"
             style={{ color: c.secondary, opacity: 0.78 }}>
             ✦ Graduation 2026 ✦
           </p>
@@ -103,7 +103,7 @@ export function GradCinematic({ data, c }: LayoutProps) {
         </p>
 
         {data.subtitle && (
-          <p className="mt-1.5 text-[7.5px] tracking-[0.22em] uppercase"
+          <p className="mt-1.5 text-[9.5px] tracking-[0.22em] uppercase"
             style={{ color: c.secondary, opacity: 0.62 }}>
             {data.subtitle}
           </p>
@@ -112,13 +112,13 @@ export function GradCinematic({ data, c }: LayoutProps) {
         <div className="my-3 h-px w-14 rounded-full"
           style={{ backgroundColor: c.secondary, opacity: 0.55 }} />
 
-        <p className="text-[8px] leading-[1.88] italic"
+        <p className="text-[10px] leading-[1.88] italic"
           style={{ color: c.secondary, opacity: 0.68 }}>
           {data.description || '"Cuối cùng cũng đến ngày này. Chúc mừng bạn đã hoàn thành hành trình."'}
         </p>
 
         {data.date && (
-          <p className="mt-3.5 text-[7px] font-semibold tracking-[0.35em] uppercase"
+          <p className="mt-3.5 text-[9px] font-semibold tracking-[0.35em] uppercase"
             style={{ color: '#555' }}>
             {fmt(data.date)}
           </p>

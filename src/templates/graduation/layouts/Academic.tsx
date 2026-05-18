@@ -1,4 +1,4 @@
-import { fmt } from '@/shared/utils/fmt';
+﻿import { fmt } from '@/shared/utils/fmt';
 import { getFontFamily, getImageFilter, getTitleFontSize } from '@/shared/utils/styleHelpers';
 import type { LayoutProps } from '@/templates/types';
 
@@ -25,7 +25,7 @@ export function GradAcademic({ data, c }: LayoutProps) {
 
       {/* Corner ornaments */}
       {(['top-[9px] left-[9px]', 'top-[9px] right-[9px]', 'bottom-[9px] left-[9px]', 'bottom-[9px] right-[9px]'] as const).map((pos, i) => (
-        <span key={i} className={`pointer-events-none absolute ${pos} text-[10px] leading-none`}
+        <span key={i} className={`pointer-events-none absolute ${pos} text-[12px] leading-none`}
           style={{ color: c.secondary, opacity: 0.75 }}>✦</span>
       ))}
 
@@ -69,7 +69,7 @@ export function GradAcademic({ data, c }: LayoutProps) {
       {/* Certificate label */}
       <div className="relative z-10 mt-2.5 flex items-center gap-2">
         <div className="h-px w-9" style={{ background: `linear-gradient(to right, transparent, ${c.secondary}68)` }} />
-        <p className="text-[6px] font-bold tracking-[0.38em] uppercase" style={{ color: c.secondary, opacity: 0.82 }}>
+        <p className="text-[7.5px] font-bold tracking-[0.38em] uppercase" style={{ color: c.secondary, opacity: 0.82 }}>
           Certificate of Graduation
         </p>
         <div className="h-px w-9" style={{ background: `linear-gradient(to left, transparent, ${c.secondary}68)` }} />
@@ -124,7 +124,7 @@ export function GradAcademic({ data, c }: LayoutProps) {
       </p>
 
       {data.subtitle && (
-        <p className="relative z-10 mt-1.5 px-6 text-center text-[7px] font-semibold tracking-[0.32em] uppercase"
+        <p className="relative z-10 mt-1.5 px-6 text-center text-[9px] font-semibold tracking-[0.32em] uppercase"
           style={{ color: c.secondary, opacity: 0.84 }}>
           {data.subtitle}
         </p>
@@ -138,7 +138,7 @@ export function GradAcademic({ data, c }: LayoutProps) {
       </div>
 
       {/* Description */}
-      <p className="relative z-10 mt-3 mx-9 text-center text-[7.5px] leading-[1.88]"
+      <p className="relative z-10 mt-3 mx-9 text-center text-[9.5px] leading-[1.88]"
         style={{ color: c.primary, opacity: 0.5 }}>
         {data.description || 'Chúc mừng tốt nghiệp! Chúc bạn luôn thành công và hạnh phúc trên mọi con đường phía trước.'}
       </p>
@@ -147,7 +147,7 @@ export function GradAcademic({ data, c }: LayoutProps) {
         <div className="relative z-10 mt-4">
           <div className="px-3.5 py-1.5"
             style={{ border: `0.5px solid ${c.secondary}52`, background: `${c.secondary}0d`, borderRadius: 2 }}>
-            <p className="text-[6.5px] font-bold tracking-[0.44em] uppercase" style={{ color: c.secondary }}>
+            <p className="text-[8px] font-bold tracking-[0.44em] uppercase" style={{ color: c.secondary }}>
               {fmt(data.date)}
             </p>
           </div>

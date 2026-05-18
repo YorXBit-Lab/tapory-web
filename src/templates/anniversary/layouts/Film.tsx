@@ -1,4 +1,4 @@
-import { fmt } from '@/shared/utils/fmt';
+﻿import { fmt } from '@/shared/utils/fmt';
 import { getFontFamily, getImageFilter, getTitleFontSize } from '@/shared/utils/styleHelpers';
 import type { LayoutProps } from '@/templates/types';
 
@@ -40,7 +40,7 @@ export function AnniFilm({ data, c }: LayoutProps) {
         {/* "ANNIVERSARY" header */}
         <div className="flex items-center gap-2 px-3">
           <div className="h-px flex-1" style={{ background: `linear-gradient(to right, transparent, ${c.secondary}88)` }} />
-          <p className="text-[5.5px] font-bold tracking-[0.6em] uppercase" style={{ color: c.secondary, opacity: 0.7 }}>
+          <p className="text-[7px] font-bold tracking-[0.6em] uppercase" style={{ color: c.secondary, opacity: 0.7 }}>
             Anniversary
           </p>
           <div className="h-px flex-1" style={{ background: `linear-gradient(to left, transparent, ${c.secondary}88)` }} />
@@ -67,7 +67,7 @@ export function AnniFilm({ data, c }: LayoutProps) {
                 backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 200 200\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'n\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.9\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23n)\' opacity=\'0.045\'/%3E%3C/svg%3E")',
                 backgroundSize: '180px 180px',
               }} />
-            <p className="absolute bottom-2 left-3 text-[6px] font-mono font-bold tracking-wider"
+            <p className="absolute bottom-2 left-3 text-[7.5px] font-mono font-bold tracking-wider"
               style={{ color: c.secondary, opacity: 0.5 }}>♥ 01A</p>
           </div>
         )}
@@ -89,7 +89,7 @@ export function AnniFilm({ data, c }: LayoutProps) {
                   backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 200 200\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'n\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.9\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23n)\' opacity=\'0.04\'/%3E%3C/svg%3E")',
                   backgroundSize: '180px 180px',
                 }} />
-              <p className="absolute bottom-2 left-3 text-[6px] font-mono font-bold tracking-wider"
+              <p className="absolute bottom-2 left-3 text-[7.5px] font-mono font-bold tracking-wider"
                 style={{ color: c.secondary, opacity: 0.5 }}>♥ 01A</p>
             </div>
           </div>
@@ -121,19 +121,19 @@ export function AnniFilm({ data, c }: LayoutProps) {
         <div className="mt-3 flex items-center gap-2 px-5">
           <div className="h-px flex-1"
             style={{ background: `linear-gradient(to right, transparent, ${c.secondary}88)` }} />
-          <span className="text-[10px] leading-none" style={{ color: c.secondary }}>♥</span>
+          <span className="text-[12px] leading-none" style={{ color: c.secondary }}>♥</span>
           <div className="h-px flex-1"
             style={{ background: `linear-gradient(to left, transparent, ${c.secondary}88)` }} />
         </div>
 
         {data.date && (
-          <p className="mt-2.5 text-center text-[6.5px] font-bold tracking-[0.5em] uppercase"
+          <p className="mt-2.5 text-center text-[8px] font-bold tracking-[0.5em] uppercase"
             style={{ color: c.secondary, opacity: 0.7 }}>
             {fmt(data.date)}
           </p>
         )}
 
-        <p className="mt-3 px-4 text-center text-[7.5px] leading-[1.85] italic"
+        <p className="mt-3 px-4 text-center text-[9.5px] leading-[1.85] italic"
           style={{ color: c.primary, opacity: 0.38 }}>
           {data.description || '"Những khoảnh khắc đẹp nhất luôn là những khoảnh khắc bên nhau."'}
         </p>

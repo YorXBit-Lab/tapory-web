@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 import type { LayoutProps } from '@/templates/types';
 import { toSpotifyUri } from '../utils';
 import { useSpotifyPlayer } from '@/hooks/useSpotifyPlayer';
@@ -12,7 +12,7 @@ const EQ_ANIMS = [
 export function SpotNeon({ data, c, autoPlay }: LayoutProps) {
   const hasUrl = !!data.spotifyUrl;
   const uri = toSpotifyUri(data.spotifyUrl);
-  const { holderRef, isPlaying: playing, isLoading, isReady, isBlocked, error, toggle } = useSpotifyPlayer(uri);
+  const { holderRef, isPlaying: playing, isLoading, isReady, isBlocked, error, toggle } = useSpotifyPlayer(uri, autoPlay);
 
   return (
     <div className="relative flex min-h-full w-full flex-col overflow-hidden"
@@ -48,7 +48,7 @@ export function SpotNeon({ data, c, autoPlay }: LayoutProps) {
       {/* Header */}
       <div className="relative z-10 flex items-center gap-0 px-5">
         <div className="h-px flex-1" style={{ background:`linear-gradient(to right,transparent,${c.primary}55)` }} />
-        <p className="mx-3 text-[5.5px] font-bold tracking-[0.62em] uppercase"
+        <p className="mx-3 text-[7px] font-bold tracking-[0.62em] uppercase"
           style={{ color:c.primary, textShadow:`0 0 12px ${c.primary}` }}>Now Playing</p>
         <div className="h-px flex-1" style={{ background:`linear-gradient(to left,transparent,${c.primary}55)` }} />
       </div>
@@ -69,8 +69,8 @@ export function SpotNeon({ data, c, autoPlay }: LayoutProps) {
               </div>}
           <div className="pointer-events-none absolute inset-0 rounded-[18px]"
             style={{ boxShadow:`inset 0 0 0 1.5px ${c.primary}55, inset 0 0 28px ${c.primary}14` }} />
-          <span className="pointer-events-none absolute left-2 top-2 text-[8px]" style={{ color:c.secondary, opacity:.55 }}>◈</span>
-          <span className="pointer-events-none absolute bottom-2 right-2 text-[8px]" style={{ color:c.primary, opacity:.55 }}>◈</span>
+          <span className="pointer-events-none absolute left-2 top-2 text-[10px]" style={{ color:c.secondary, opacity:.55 }}>◈</span>
+          <span className="pointer-events-none absolute bottom-2 right-2 text-[10px]" style={{ color:c.primary, opacity:.55 }}>◈</span>
         </div>
       </div>
 
@@ -79,7 +79,7 @@ export function SpotNeon({ data, c, autoPlay }: LayoutProps) {
         style={{ color:c.secondary, letterSpacing:'.02em', textShadow:`0 0 20px ${c.secondary}55`, fontFamily:'monospace' }}>
         {data.title || 'Tên bài hát'}
       </p>
-      <p className="relative z-10 mt-1 text-center text-[7px] font-bold tracking-[0.36em] uppercase"
+      <p className="relative z-10 mt-1 text-center text-[9px] font-bold tracking-[0.36em] uppercase"
         style={{ color:c.primary, textShadow:`0 0 10px ${c.primary}` }}>
         {data.subtitle || 'Nghệ sĩ'}
       </p>
@@ -111,7 +111,7 @@ export function SpotNeon({ data, c, autoPlay }: LayoutProps) {
         <span style={{ fontSize:13, color: hasUrl ? c.primary : c.primary+'44', textShadow: hasUrl ? `0 0 10px ${c.primary}` : undefined }}>
           {playing ? '⏸' : '▶'}
         </span>
-        <span style={{ fontSize:8, fontWeight:800, letterSpacing:'.14em', textTransform:'uppercase', fontFamily:'monospace',
+        <span style={{ fontSize:10, fontWeight:800, letterSpacing:'.14em', textTransform:'uppercase', fontFamily:'monospace',
           color: hasUrl ? c.primary : c.primary+'44', textShadow: hasUrl ? `0 0 8px ${c.primary}` : undefined }}>
           {!hasUrl ? 'NO_LINK_SET' : isBlocked ? 'TOUCH_TO_PLAY' : playing ? 'STOP' : 'PLAY'}
         </span>
@@ -121,17 +121,19 @@ export function SpotNeon({ data, c, autoPlay }: LayoutProps) {
           className="relative z-10 mt-2 flex items-center justify-center gap-1.5"
           style={{ textDecoration: 'none', opacity: .55 }}>
           <svg width="10" height="10" viewBox="0 0 24 24" fill={c.primary}><path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm4.586 14.424a.622.622 0 01-.857.207c-2.348-1.435-5.304-1.76-8.785-.964a.622.622 0 11-.277-1.215c3.809-.87 7.077-.496 9.712 1.115a.623.623 0 01.207.857zm1.223-2.722a.78.78 0 01-1.072.257c-2.687-1.652-6.786-2.13-9.965-1.166a.779.779 0 01-.519-.973.78.78 0 01.972-.519c3.632-1.102 8.147-.568 11.234 1.328a.78.78 0 01.257 1.072zm.105-2.835C14.692 8.95 9.375 8.775 6.297 9.71a.937.937 0 11-.543-1.794c3.532-1.072 9.404-.865 13.115 1.338a.937.937 0 01-.955 1.613z"/></svg>
-          <span style={{ fontSize: 7.5, fontWeight: 700, color: c.primary, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'monospace' }}>OPEN_SPOTIFY</span>
+          <span style={{ fontSize: 9.5, fontWeight: 700, color: c.primary, letterSpacing: '.12em', textTransform: 'uppercase', fontFamily: 'monospace' }}>OPEN_SPOTIFY</span>
         </a>
       )}
-      <div ref={holderRef} aria-hidden style={{ position: 'fixed', bottom: 0, right: 0, width: 1, height: 1, opacity: 0, pointerEvents: 'none' }} />
+      <div aria-hidden style={{ position: 'fixed', bottom: 0, right: 0, width: 0, height: 0, overflow: 'hidden', pointerEvents: 'none' }}>
+        <div ref={holderRef} style={{ width: 300, height: 80 }} />
+      </div>
 
       {data.description && (
         <div className="relative z-10 mx-5 mt-4 mb-4 rounded px-5 pt-5 pb-4"
           style={{ background:`${c.primary}0e`, border:`1px solid ${c.primary}33`, backdropFilter:'blur(12px)', WebkitBackdropFilter:'blur(12px)', boxShadow:`0 0 12px ${c.primary}0a` }}>
           <span className="pointer-events-none absolute -top-[14px] left-3 text-[32px] leading-none"
             style={{ color:c.primary, opacity:.55, fontFamily:'Georgia, serif', textShadow:`0 0 8px ${c.primary}` }}>❝</span>
-          <p className="text-center text-[8.5px] italic leading-[1.9]"
+          <p className="text-center text-[10.5px] italic leading-[1.9]"
             style={{ color:c.secondary, opacity:.8, fontFamily:'monospace' }}>
             {data.description}
           </p>

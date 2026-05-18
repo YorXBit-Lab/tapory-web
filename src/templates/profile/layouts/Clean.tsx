@@ -1,4 +1,4 @@
-import { getFontFamily, getImageFilter, getTitleFontSize } from '@/shared/utils/styleHelpers';
+﻿import { getFontFamily, getImageFilter, getTitleFontSize } from '@/shared/utils/styleHelpers';
 import type { LayoutProps } from '@/templates/types';
 import { SOCIAL_PLATFORMS } from '../SocialIcons';
 
@@ -55,7 +55,7 @@ export function ProfileClean({ data, c }: LayoutProps) {
         {data.subtitle && (
           <div className="mt-1 flex items-center gap-1.5">
             <div className="h-1.5 w-1.5 flex-shrink-0 rounded-full" style={{ backgroundColor: c.secondary }} />
-            <p className="text-[8.5px] font-semibold" style={{ color: c.secondary }}>{data.subtitle}</p>
+            <p className="text-[10.5px] font-semibold" style={{ color: c.secondary }}>{data.subtitle}</p>
           </div>
         )}
 
@@ -64,22 +64,22 @@ export function ProfileClean({ data, c }: LayoutProps) {
           <>
             <div className="my-3 flex w-full items-center gap-2">
               <div className="h-px flex-1 opacity-[0.08]" style={{ backgroundColor: c.primary }} />
-              <p className="text-[6.5px] font-bold tracking-[0.3em] uppercase" style={{ color: c.primary, opacity: 0.3 }}>Liên hệ</p>
+              <p className="text-[8px] font-bold tracking-[0.3em] uppercase" style={{ color: c.primary, opacity: 0.3 }}>Liên hệ</p>
               <div className="h-px flex-1 opacity-[0.08]" style={{ backgroundColor: c.primary }} />
             </div>
             <div className="w-full space-y-2">
               {data.email && (
                 <div className="flex items-center gap-2.5">
-                  <div className="flex h-[18px] w-[18px] flex-shrink-0 items-center justify-center rounded-full text-[9px]"
+                  <div className="flex h-[18px] w-[18px] flex-shrink-0 items-center justify-center rounded-full text-[11px]"
                     style={{ backgroundColor: `${c.secondary}14` }}>✉️</div>
-                  <p className="truncate text-[8px] opacity-60" style={{ color: c.primary }}>{data.email}</p>
+                  <p className="truncate text-[10px] opacity-60" style={{ color: c.primary }}>{data.email}</p>
                 </div>
               )}
               {data.phone && (
                 <div className="flex items-center gap-2.5">
-                  <div className="flex h-[18px] w-[18px] flex-shrink-0 items-center justify-center rounded-full text-[9px]"
+                  <div className="flex h-[18px] w-[18px] flex-shrink-0 items-center justify-center rounded-full text-[11px]"
                     style={{ backgroundColor: `${c.secondary}14` }}>📞</div>
-                  <p className="text-[8px] opacity-60" style={{ color: c.primary }}>{data.phone}</p>
+                  <p className="text-[10px] opacity-60" style={{ color: c.primary }}>{data.phone}</p>
                 </div>
               )}
             </div>
@@ -104,7 +104,7 @@ export function ProfileClean({ data, c }: LayoutProps) {
 
         {/* ── Bio ── */}
         {data.description && (
-          <p className="mt-3 text-center text-[7.5px] leading-[1.75] opacity-40" style={{ color: c.primary }}>
+          <p className="mt-3 text-center text-[9.5px] leading-[1.75] opacity-40" style={{ color: c.primary }}>
             {data.description}
           </p>
         )}

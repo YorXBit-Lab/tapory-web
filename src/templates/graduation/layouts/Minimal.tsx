@@ -1,4 +1,4 @@
-import { fmt } from '@/shared/utils/fmt';
+﻿import { fmt } from '@/shared/utils/fmt';
 import { getFontFamily, getImageFilter, getTitleFontSize } from '@/shared/utils/styleHelpers';
 import type { LayoutProps } from '@/templates/types';
 
@@ -33,7 +33,7 @@ export function GradMinimal({ data, c }: LayoutProps) {
           <div className="pointer-events-none absolute inset-x-0 bottom-0"
             style={{ height: 56, background: `linear-gradient(to top, ${c.accent}, transparent)` }} />
           <div className="absolute left-8 top-[58px]">
-            <p className="text-[6.5px] font-bold tracking-[0.52em] uppercase" style={{ color: c.secondary, opacity: 0.72 }}>
+            <p className="text-[8px] font-bold tracking-[0.52em] uppercase" style={{ color: c.secondary, opacity: 0.72 }}>
               Graduation
             </p>
           </div>
@@ -43,7 +43,7 @@ export function GradMinimal({ data, c }: LayoutProps) {
       {mode !== 'full' && (
         <>
           <div className="flex-shrink-0" style={{ height: 58 }} />
-          <p className="relative z-10 px-8 text-[6.5px] font-bold tracking-[0.52em] uppercase"
+          <p className="relative z-10 px-8 text-[8px] font-bold tracking-[0.52em] uppercase"
             style={{ color: c.secondary, opacity: 0.72 }}>
             Graduation
           </p>
@@ -87,7 +87,7 @@ export function GradMinimal({ data, c }: LayoutProps) {
           {data.title || 'Tên người nhận'}
         </p>
         {data.subtitle && (
-          <p className="mt-1.5 text-[8px] tracking-[0.2em] uppercase"
+          <p className="mt-1.5 text-[10px] tracking-[0.2em] uppercase"
             style={{ color: c.primary, opacity: 0.36 }}>
             {data.subtitle}
           </p>
@@ -101,7 +101,7 @@ export function GradMinimal({ data, c }: LayoutProps) {
 
       {/* Description */}
       <div className="relative z-10 mt-5 flex-1 px-7">
-        <p className="text-[8px] leading-[1.92]"
+        <p className="text-[10px] leading-[1.92]"
           style={{ color: c.primary, opacity: 0.4 }}>
           {data.description || 'Chúc mừng tốt nghiệp. Hành trình mới đang chờ bạn.'}
         </p>
@@ -111,7 +111,7 @@ export function GradMinimal({ data, c }: LayoutProps) {
       <div className="relative z-10 px-7 pb-10">
         <div className="mb-5 h-px" style={{ backgroundColor: c.primary, opacity: 0.06 }} />
         {data.date
-          ? <p className="text-[7px] font-medium tracking-[0.28em] uppercase"
+          ? <p className="text-[9px] font-medium tracking-[0.28em] uppercase"
               style={{ color: c.primary, opacity: 0.28 }}>
               {fmt(data.date)}
             </p>

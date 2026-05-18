@@ -1,4 +1,4 @@
-import { getFontFamily, getImageFilter, getTitleFontSize } from '@/shared/utils/styleHelpers';
+﻿import { getFontFamily, getImageFilter, getTitleFontSize } from '@/shared/utils/styleHelpers';
 import type { LayoutProps } from '@/templates/types';
 import { SOCIAL_PLATFORMS } from '../SocialIcons';
 
@@ -31,7 +31,7 @@ export function ProfileDark({ data, c }: LayoutProps) {
               {data.title || 'Họ và tên'}
             </p>
             {data.subtitle && (
-              <p className="mt-0.5 text-[8.5px] font-medium" style={{ color: c.secondary }}>{data.subtitle}</p>
+              <p className="mt-0.5 text-[10.5px] font-medium" style={{ color: c.secondary }}>{data.subtitle}</p>
             )}
           </div>
         </div>
@@ -62,7 +62,7 @@ export function ProfileDark({ data, c }: LayoutProps) {
             {data.title || 'Họ và tên'}
           </p>
           {data.subtitle && (
-            <p className="mt-0.5 text-[8.5px] font-medium" style={{ color: c.secondary }}>{data.subtitle}</p>
+            <p className="mt-0.5 text-[10.5px] font-medium" style={{ color: c.secondary }}>{data.subtitle}</p>
           )}
         </div>
       )}
@@ -80,13 +80,13 @@ export function ProfileDark({ data, c }: LayoutProps) {
           {data.email && (
             <div className="flex items-center gap-2.5">
               <div className="h-1.5 w-1.5 flex-shrink-0 rounded-full" style={{ backgroundColor: c.secondary }} />
-              <p className="truncate text-[8px]" style={{ color: 'rgba(255,255,255,0.48)' }}>{data.email}</p>
+              <p className="truncate text-[10px]" style={{ color: 'rgba(255,255,255,0.48)' }}>{data.email}</p>
             </div>
           )}
           {data.phone && (
             <div className="flex items-center gap-2.5">
               <div className="h-1.5 w-1.5 flex-shrink-0 rounded-full" style={{ backgroundColor: c.secondary }} />
-              <p className="text-[8px]" style={{ color: 'rgba(255,255,255,0.48)' }}>{data.phone}</p>
+              <p className="text-[10px]" style={{ color: 'rgba(255,255,255,0.48)' }}>{data.phone}</p>
             </div>
           )}
         </div>
@@ -107,7 +107,7 @@ export function ProfileDark({ data, c }: LayoutProps) {
 
       {/* ── Bio ── */}
       {data.description && (
-        <p className="relative z-10 mx-6 mt-3 text-[7.5px] leading-[1.75]"
+        <p className="relative z-10 mx-6 mt-3 text-[9.5px] leading-[1.75]"
           style={{ color: 'rgba(255,255,255,0.3)' }}>
           {data.description}
         </p>
