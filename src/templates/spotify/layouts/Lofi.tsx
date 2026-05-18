@@ -1,7 +1,7 @@
 'use client';
 import type { LayoutProps } from '@/templates/types';
 import { toSpotifyUri } from '../utils';
-import { useSpotifyEmbed } from '@/hooks/useSpotifyEmbed';
+import { useSpotifyPlayer } from '@/hooks/useSpotifyPlayer';
 
 const DUST = [
   {top:'6%', left:'9%', size:2,dur:'8s', del:'0s'},
@@ -15,7 +15,7 @@ const DUST = [
 export function SpotLofi({ data, c, autoPlay }: LayoutProps) {
   const hasUrl = !!data.spotifyUrl;
   const uri = toSpotifyUri(data.spotifyUrl);
-  const { holderRef, isPlaying: playing, isLoading, isReady, error, toggle } = useSpotifyEmbed(uri, autoPlay);
+  const { holderRef, isPlaying: playing, isLoading, isReady, isBlocked, error, toggle } = useSpotifyPlayer(uri);
 
   return (
     <div className="relative flex min-h-full w-full flex-col overflow-hidden"
@@ -114,7 +114,7 @@ export function SpotLofi({ data, c, autoPlay }: LayoutProps) {
         <span style={{ fontSize:13, color: hasUrl ? c.primary : c.primary+'55' }}>{playing ? '⏸' : '▶'}</span>
         <span style={{ fontSize:8.5, fontWeight:700, letterSpacing:'.1em', textTransform:'uppercase',
           color: hasUrl ? c.secondary : c.secondary+'55', fontFamily:'Georgia, serif' }}>
-          {!hasUrl ? 'Chưa có link' : playing ? 'Dừng lại' : 'Phát nhạc'}
+          {!hasUrl ? 'Chưa có link' : isBlocked ? 'Chạm lại để phát 🎵' : playing ? 'Dừng lại' : 'Phát nhạc'}
         </span>
       </button>
       {hasUrl && (
@@ -125,7 +125,7 @@ export function SpotLofi({ data, c, autoPlay }: LayoutProps) {
           <span style={{ fontSize: 7.5, fontWeight: 700, color: c.primary, letterSpacing: '.1em', textTransform: 'uppercase', fontFamily: 'Georgia, serif' }}>Mở trên Spotify</span>
         </a>
       )}
-      {hasUrl && <div ref={holderRef} aria-hidden style={{ position: 'fixed', bottom: 0, right: 0, width: 1, height: 1, pointerEvents: 'none', visibility: 'hidden' }} />}
+      <div ref={holderRef} aria-hidden style={{ position: 'fixed', bottom: 0, right: 0, width: 1, height: 1, opacity: 0, pointerEvents: 'none' }} />
 
       {data.description && (
         <div className="relative z-10 mx-5 mt-4 rounded-2xl px-5 pt-5 pb-4"

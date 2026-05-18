@@ -1,7 +1,7 @@
 'use client';
 
 import type { CSSProperties, ReactNode } from 'react';
-import { useSpotifyEmbed } from '@/hooks/useSpotifyEmbed';
+import { useSpotifyPlayer } from '@/hooks/useSpotifyPlayer';
 import { toSpotifyUri, validateSpotifyUrl } from '@/utils/spotify';
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
@@ -10,6 +10,7 @@ interface ButtonState {
   isPlaying: boolean;
   isLoading: boolean;
   isReady: boolean;
+  isBlocked: boolean;
   error: string | null;
   toggle: () => void;
   play: () => void;
@@ -34,12 +35,12 @@ interface SpotifyMusicButtonProps {
 // ─── Holder style ──────────────────────────────────────────────────────────────
 //
 // Rules:
-//   - visibility:hidden  → hides all visual Spotify UI; iframe stays fully active
+//   - opacity:0          → invisible but keeps iframe fully active (iOS Safari-safe)
 //   - position:fixed     → removed from document flow, no layout shift
 //   - pointer-events:none → can't be accidentally clicked
 //
-// Do NOT use display:none — browsers suspend iframes in display:none containers,
-// which breaks playback and postMessage communication.
+// Do NOT use visibility:hidden or display:none — iOS Safari suspends audio context
+// in hidden/display:none iframes, silently breaking playback.
 
 const HOLDER_STYLE: CSSProperties = {
   position: 'fixed',
@@ -47,7 +48,7 @@ const HOLDER_STYLE: CSSProperties = {
   right: 0,
   width: 1,
   height: 1,
-  visibility: 'hidden',
+  opacity: 0,
   pointerEvents: 'none',
 };
 
@@ -82,8 +83,8 @@ export function SpotifyMusicButton({
   const uri = validation?.valid ? toSpotifyUri(spotifyUrl) : null;
   const validationError = validation && !validation.valid ? validation.error : null;
 
-  const { holderRef, isReady, isPlaying, isLoading, error, play, pause, toggle } =
-    useSpotifyEmbed(uri);
+  const { holderRef, isReady, isPlaying, isLoading, isBlocked, error, play, pause, toggle } =
+    useSpotifyPlayer(uri);
 
   const displayError = validationError ?? error;
   const isDisabled = !uri || isLoading || !isReady || !!displayError;
@@ -92,6 +93,7 @@ export function SpotifyMusicButton({
     isPlaying,
     isLoading,
     isReady,
+    isBlocked,
     error: displayError,
     toggle,
     play,
@@ -116,9 +118,7 @@ export function SpotifyMusicButton({
         </button>
       )}
 
-      {uri && (
-        <div ref={holderRef} aria-hidden="true" style={HOLDER_STYLE} />
-      )}
+      <div ref={holderRef} aria-hidden="true" style={HOLDER_STYLE} />
     </>
   );
 }

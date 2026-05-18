@@ -1,7 +1,7 @@
 'use client';
 import type { LayoutProps } from '@/templates/types';
 import { toSpotifyUri } from '../utils';
-import { useSpotifyEmbed } from '@/hooks/useSpotifyEmbed';
+import { useSpotifyPlayer } from '@/hooks/useSpotifyPlayer';
 
 const SpotifyLogo = ({ size = 10, color = '#1db954' }: { size?: number; color?: string }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill={color}>
@@ -12,7 +12,7 @@ const SpotifyLogo = ({ size = 10, color = '#1db954' }: { size?: number; color?: 
 export function SpotPlayer({ data, c, autoPlay }: LayoutProps) {
   const hasUrl = !!data.spotifyUrl;
   const uri = toSpotifyUri(data.spotifyUrl);
-  const { holderRef, isPlaying: playing, isLoading, isReady, error, toggle } = useSpotifyEmbed(uri, autoPlay);
+  const { holderRef, isPlaying: playing, isLoading, isReady, error, toggle } = useSpotifyPlayer(uri);
 
   return (
     <div className="relative flex min-h-full w-full flex-col overflow-hidden"
@@ -140,7 +140,7 @@ export function SpotPlayer({ data, c, autoPlay }: LayoutProps) {
         </a>
       )}
 
-      {hasUrl && <div ref={holderRef} aria-hidden style={{ position: 'fixed', bottom: 0, right: 0, width: 1, height: 1, pointerEvents: 'none', visibility: 'hidden' }} />}
+      <div ref={holderRef} aria-hidden style={{ position: 'fixed', bottom: 0, right: 0, width: 1, height: 1, opacity: 0, pointerEvents: 'none' }} />
 
       {data.description && (
         <div className="relative z-10 mx-5 mt-4 mb-4 rounded-2xl px-5 pt-5 pb-4"
