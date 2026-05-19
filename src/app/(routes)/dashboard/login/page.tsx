@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Alert, Button, Form, Input } from 'antd';
 import { useAdminAuth } from '@/contexts/AdminAuthContext';
@@ -30,10 +31,9 @@ function LoginForm() {
       <div className="w-full max-w-sm rounded-2xl bg-white p-8 shadow-lg">
         {/* Logo */}
         <div className="mb-8 text-center">
-          <div className="mx-auto mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-600">
-            <div className="h-3 w-3 rounded-full bg-white" />
+          <div className="flex justify-center mb-4">
+            <Image src="/logo.png" alt="Góc Chạm" width={160} height={48} style={{ height: 48, width: 'auto', objectFit: 'contain' }} priority />
           </div>
-          <h1 className="text-xl font-bold text-gray-900">Góc Chạm Admin</h1>
           <p className="mt-1 text-sm text-gray-400">Đăng nhập để quản lý hệ thống</p>
         </div>
 

@@ -393,9 +393,8 @@ export default function HomePage() {
       {/* ────────── NAV ────────── */}
       <nav className="border-border bg-background/85 sticky top-0 z-[1020] border-b backdrop-blur-lg">
         <div className="mx-auto flex h-[60px] max-w-[1240px] items-center justify-between px-4 sm:px-6">
-          <Link href="/" className="text-primary flex items-center gap-2 text-xl font-bold sm:text-2xl">
-            <span className="bg-primary inline-block h-2 w-2 rounded-full" />
-            Góc Chạm
+          <Link href="/" className="flex items-center">
+            <Image src="/logo.png" alt="Góc Chạm" width={120} height={36} style={{ height: 36, width: 'auto', objectFit: 'contain' }} priority />
           </Link>
 
           <div className="hidden gap-6 md:flex">

@@ -1,12 +1,13 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 
 export function Header() {
   return (
     <header className="z-sticky bg-background/80 border-border sticky top-0 border-b backdrop-blur-md">
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
-        <Link href="/" className="text-primary text-xl font-semibold tracking-tight">
-          Góc Chạm
+        <Link href="/" className="flex items-center">
+          <Image src="/logo.png" alt="Góc Chạm" width={120} height={36} style={{ height: 36, width: 'auto', objectFit: 'contain' }} priority />
         </Link>
         <div className="flex items-center gap-2">
           <Link
