@@ -155,6 +155,11 @@ export function ViewClient({ orderId }: { orderId: string }) {
 
   const memorial = result?.data as IMemorial | null | undefined;
 
+  useEffect(() => {
+    if (!memorial) return;
+    CardAPI.trackView(orderId).catch(() => {});
+  }, [memorial, orderId]);
+
   const styles      = memorial ? getTemplateStyles(memorial.templateId) : [];
   const activeStyle = styles.find(s => s.id === memorial?.styleId) ?? styles[0];
   const activeFrame = FRAMES.find(f => f.id === (memorial?.frameId  ?? 'none')) ?? FRAMES[0];

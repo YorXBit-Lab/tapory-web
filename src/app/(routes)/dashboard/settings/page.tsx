@@ -244,7 +244,6 @@ export default function SettingsPage() {
 
   return (
     <div className="grid max-w-4xl grid-cols-1 gap-5 md:grid-cols-2">
-      <TiktokCard />
       <Card title="Cửa hàng">
         <SettingRow
           name="Tên cửa hàng"

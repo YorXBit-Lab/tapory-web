@@ -42,7 +42,7 @@ export default function DashboardOverviewPage() {
     const thisMonth = new Date().toISOString().slice(0, 7);
     const todayOrders    = orders.filter(o => o.createdAt && new Date(o.createdAt).toDateString() === today).length;
     const monthRevenue   = orders.filter(o => o.createdAt?.startsWith(thisMonth)).reduce((s, o) => s + o.price, 0);
-    const totalCustomers = new Set(orders.map(o => o.phone)).size;
+    const totalCustomers = new Set(orders.filter(o => o.phone).map(o => o.phone)).size;
     const totalChips     = cards.length;
     const unwrittenChips = cards.filter(c => !c.nfcWritten).length;
     return { todayOrders, monthRevenue, totalCustomers, totalChips, unwrittenChips };
@@ -65,7 +65,11 @@ export default function DashboardOverviewPage() {
 
   const templateStats = useMemo(() => {
     const counts: Record<string, number> = {};
-    for (const o of orders) counts[o.templateId] = (counts[o.templateId] ?? 0) + 1;
+    for (const o of orders) {
+      for (const item of o.items) {
+        if (item.templateId) counts[item.templateId] = (counts[item.templateId] ?? 0) + 1;
+      }
+    }
     return Object.entries(TEMPLATES)
       .map(([id, t]) => ({ id, label: `${t.icon} ${t.name}`, count: counts[id] ?? 0, color: t.colors.primary }))
       .sort((a, b) => b.count - a.count)
@@ -123,8 +127,12 @@ export default function DashboardOverviewPage() {
     { title: 'Khách hàng', dataIndex: 'customerName' },
     {
       title: 'Template',
-      dataIndex: 'templateId',
-      render: (id: string) => { const t = TEMPLATES[id as keyof typeof TEMPLATES]; return t ? `${t.icon} ${t.name}` : id; },
+      render: (_: unknown, o: IOrder) => {
+        const nfcItem = o.items.find(i => i.isNfc && i.templateId);
+        const tId = nfcItem?.templateId ?? o.templateId;
+        const t = tId ? TEMPLATES[tId as keyof typeof TEMPLATES] : undefined;
+        return t ? `${t.icon} ${t.name}` : (tId ?? '—');
+      },
     },
     {
       title: 'Giá trị',
