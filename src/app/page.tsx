@@ -523,7 +523,7 @@ export default function HomePage() {
                   shape="round"
                   href="#pricing"
                   icon={<ArrowRight />}
-                  iconPosition="end"
+                  iconPlacement="end"
                 >
                   Đặt móc khóa
                 </Button>
