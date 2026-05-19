@@ -150,7 +150,7 @@ function DashboardInner({ children }: { children: React.ReactNode }) {
               />
             </div>
           ) : (
-            <Image src="/logo.png" alt="Góc Chạm" width={110} height={32} style={{ height: 32, width: 'auto', objectFit: 'contain' }} priority />
+            <Image src="/logo.png" alt="Góc Chạm" width={110} height={32} className="[mix-blend-mode:multiply]" style={{ height: 32, width: 'auto', objectFit: 'contain' }} priority />
           )}
           <button
             onClick={() => setCollapsed(!collapsed)}

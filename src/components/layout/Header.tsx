@@ -7,7 +7,7 @@ export function Header() {
     <header className="z-sticky bg-background/80 border-border sticky top-0 border-b backdrop-blur-md">
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
         <Link href="/" className="flex items-center">
-          <Image src="/logo.png" alt="Góc Chạm" width={120} height={36} style={{ height: 36, width: 'auto', objectFit: 'contain' }} priority />
+          <Image src="/logo.png" alt="Góc Chạm" width={120} height={36} className="[mix-blend-mode:multiply] dark:invert dark:[mix-blend-mode:screen]" style={{ height: 36, width: 'auto', objectFit: 'contain' }} priority />
         </Link>
         <div className="flex items-center gap-2">
           <Link

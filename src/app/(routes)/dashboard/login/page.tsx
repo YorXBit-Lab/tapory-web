@@ -32,7 +32,7 @@ function LoginForm() {
         {/* Logo */}
         <div className="mb-8 text-center">
           <div className="flex justify-center mb-4">
-            <Image src="/logo.png" alt="Góc Chạm" width={160} height={48} style={{ height: 48, width: 'auto', objectFit: 'contain' }} priority />
+            <Image src="/logo.png" alt="Góc Chạm" width={160} height={48} className="[mix-blend-mode:multiply]" style={{ height: 48, width: 'auto', objectFit: 'contain' }} priority />
           </div>
           <p className="mt-1 text-sm text-gray-400">Đăng nhập để quản lý hệ thống</p>
         </div>
