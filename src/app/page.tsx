@@ -2,8 +2,8 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
-import { Button, Tag, Typography, Divider } from 'antd';
+import NextImage from 'next/image';
+import { Button, Tag, Typography, Divider, Image, Dropdown } from 'antd';
 import { useProducts } from '@/hooks/product';
 import type { IProduct } from '@/configs/types';
 
@@ -55,9 +55,8 @@ const HamburgerIcon = ({ open }: { open: boolean }) => (
 const NAV_LINKS = [
   { href: '#products', label: 'Sản phẩm' },
   { href: '#how', label: 'Cách dùng' },
-  { href: '#templates', label: 'Mẫu thiết kế' },
+  { href: '/templates', label: 'Mẫu thiết kế' },
   { href: '#stories', label: 'Câu chuyện' },
-  { href: '#pricing', label: 'Bảng giá' },
 ];
 
 const MARQUEE_ITEMS = [
@@ -76,6 +75,12 @@ const HERO_STATS = [
   { num: '2s', lab: 'CHẠM LÀ XEM' },
 ];
 
+const CONTACT_LINKS = [
+  { key: 'zalo', label: 'Zalo', href: '#', color: '#0068FF' },
+  { key: 'facebook', label: 'Facebook', href: '#', color: '#1877F2' },
+  { key: 'tiktok', label: 'TikTok', href: '#', color: '#010101' },
+  { key: 'shopee', label: 'Shopee', href: '#', color: '#EE4D2D' },
+];
 
 const HOW_STEPS = [
   {
@@ -133,60 +138,36 @@ const HOW_STEPS = [
 
 const TEMPLATES = [
   {
-    name: 'Romance',
-    date: '— 30.04.2024 —',
-    title: 'Mãi mãi\nlà chúng ta',
-    from: '#f4c2c8',
-    to: '#c4456a',
+    name: 'Sinh Nhật',
+    imageUrl: 'https://pub-38354b71296248bba2cc5c4b1ca7af25.r2.dev/app/sinhnhat.png',
   },
   {
-    name: 'Vintage',
-    date: 'est. 2019',
-    title: 'Five years\nand counting',
-    from: '#fae5d3',
-    to: '#d6a47a',
+    name: 'Âm Nhạc',
+    imageUrl: 'https://pub-38354b71296248bba2cc5c4b1ca7af25.r2.dev/app/nhac.png',
   },
   {
-    name: 'Travel',
-    date: 'our travels',
-    title: 'Đà Lạt\nHội An\nSapa',
-    from: '#d4e3d8',
-    to: '#6b8a76',
+    name: 'Cá Nhân',
+    imageUrl: 'https://pub-38354b71296248bba2cc5c4b1ca7af25.r2.dev/app/canhan.png',
   },
   {
-    name: 'Birthday',
-    date: 'birthday no.25',
-    title: 'Chúc em\ntuổi mới\nrực rỡ',
-    from: '#f5e6cf',
-    to: '#c4456a',
+    name: 'Đám Cưới',
+    imageUrl: 'https://pub-38354b71296248bba2cc5c4b1ca7af25.r2.dev/app/damcuoii.png',
   },
   {
-    name: 'Letter',
-    date: 'a private letter',
-    title: '"Anh sẽ\nkhông bao giờ\nquên—"',
-    from: '#2a1a1f',
-    to: '#6b3a48',
+    name: 'Kỷ Niệm',
+    imageUrl: 'https://pub-38354b71296248bba2cc5c4b1ca7af25.r2.dev/app/kiniem.png',
   },
   {
-    name: 'Album',
-    date: 'a small album',
-    title: 'Một vài\nkhoảnh khắc.',
-    from: '#efd9da',
-    to: '#b48b9a',
+    name: 'Chuyển Hướng',
+    imageUrl: 'https://pub-38354b71296248bba2cc5c4b1ca7af25.r2.dev/app/redicrect.png',
   },
   {
-    name: 'Friends',
-    date: 'friendship',
-    title: 'Tình bạn\n10 năm.',
-    from: '#fdf2e9',
-    to: '#ec9aaa',
+    name: 'Tốt Nghiệp',
+    imageUrl: 'https://pub-38354b71296248bba2cc5c4b1ca7af25.r2.dev/app/totnghiep.png',
   },
   {
-    name: 'Family',
-    date: '— 12.06.1968 —',
-    title: 'Cảm ơn ba\nvà mẹ.',
-    from: '#1a2a2a',
-    to: '#6b8a8e',
+    name: 'Mạng Xã Hội',
+    imageUrl: 'https://pub-38354b71296248bba2cc5c4b1ca7af25.r2.dev/app/mxh.png',
   },
 ];
 
@@ -205,7 +186,7 @@ const STORIES: {
     title: 'Cho người ở rất xa.',
     body: 'Mua một cặp Góc Chạm — một móc cho mình, một móc cho người ấy, cả hai cùng chỉ về một trang. Mỗi lần chạm là một lần nhớ.',
     quote: '"Em ở Hà Nội, anh ở Sài Gòn. Đêm nào cũng chạm vào nó như chào nhau ngủ ngon."',
-    author: 'Hằng & Quân — Khách hàng tháng 03',
+    author: '',
   },
   {
     type: 'plain',
@@ -299,12 +280,31 @@ const PRICING = [
 ];
 
 const FOOTER_COLS = [
-  { h: 'Sản phẩm', links: ['Móc trái tim', 'Móc thẻ tag', 'Móc đĩa tròn', 'Bộ cặp đôi'] },
+  {
+    h: 'Sản phẩm',
+    links: [
+      { label: 'Móc hình chữ nhật', href: '#products' },
+      { label: 'Móc hình vuông', href: '#products' },
+      { label: 'Móc hình tròn', href: '#products' },
+      { label: 'Bộ cặp đôi', href: '#products' },
+    ],
+  },
   {
     h: 'Hỗ trợ',
-    links: ['Hướng dẫn sử dụng', 'Câu hỏi thường gặp', 'Bảo hành đổi trả', 'Liên hệ'],
+    links: [
+      { label: 'Hướng dẫn sử dụng', href: '#how' },
+      { label: 'Chính sách không bảo hành', href: '#no-warranty' },
+    ],
   },
-  { h: 'Kết nối', links: ['Instagram', 'TikTok', 'Facebook', 'hello@tapory.vn'] },
+  {
+    h: 'Kết nối',
+    links: [
+      // { label: 'Instagram', href: '#' },
+      // { label: 'TikTok', href: '#' },
+      // { label: 'Facebook', href: '#' },
+      { label: 'yorxbit@gmail.com', href: 'mailto:yorxbit@gmail.com' },
+    ],
+  },
 ];
 
 /* ─── Heart SVG keychain ─── */
@@ -393,7 +393,10 @@ export default function HomePage() {
       {/* ────────── NAV ────────── */}
       <nav className="border-border bg-background/85 sticky top-0 z-[1020] border-b backdrop-blur-lg">
         <div className="mx-auto flex h-[60px] max-w-[1240px] items-center justify-between px-4 sm:px-6">
-          <Link href="/" className="text-primary flex items-center gap-2 text-xl font-bold sm:text-2xl">
+          <Link
+            href="/"
+            className="text-primary flex items-center gap-2 text-xl font-bold sm:text-2xl"
+          >
             <span className="bg-primary inline-block h-2 w-2 rounded-full" />
             Góc Chạm
           </Link>
@@ -415,9 +418,39 @@ export default function HomePage() {
             <button className="border-border text-content2 hover:border-primary hover:text-primary hidden h-9 w-9 cursor-pointer items-center justify-center rounded-full border bg-transparent transition-colors md:flex">
               <MoonIcon />
             </button>
-            <Button type="primary" href="#pricing" shape="round" className="hidden md:inline-flex">
-              Mua ngay
-            </Button>
+            <Dropdown
+              trigger={['click']}
+              placement="bottomLeft"
+              menu={{
+                items: CONTACT_LINKS.map(({ key, label, href, color }) => ({
+                  key,
+                  label: (
+                    <a
+                      href={href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2.5 py-0.5"
+                    >
+                      <span
+                        className="inline-block h-2.5 w-2.5 flex-shrink-0 rounded-full"
+                        style={{ background: color }}
+                      />
+                      {label}
+                    </a>
+                  ),
+                })),
+              }}
+            >
+              <Button
+                type="primary"
+                size="large"
+                shape="round"
+                icon={<ArrowRight />}
+                iconPosition="end"
+              >
+                Liên hệ
+              </Button>
+            </Dropdown>
             {/* Mobile: hamburger */}
             <button
               onClick={() => setMobileNavOpen(!mobileNavOpen)}
@@ -480,7 +513,7 @@ export default function HomePage() {
             size: '18px',
           },
           {
-            style: { top: '16%', right: '4%', transform: 'rotate(8deg)' },
+            style: { top: '6%', right: '4%', transform: 'rotate(8deg)' },
             text: 'tap to remember',
             size: '15px',
           },
@@ -500,7 +533,7 @@ export default function HomePage() {
         ))}
 
         <div className="mx-auto max-w-[1240px] px-4 sm:px-6">
-          <div className="grid items-center gap-10 md:gap-16 md:grid-cols-2">
+          <div className="grid items-center gap-10 md:grid-cols-2 md:gap-16">
             {/* left */}
             <div>
               <Eyebrow>Móc khóa NFC kỷ niệm</Eyebrow>
@@ -517,17 +550,40 @@ export default function HomePage() {
               </Paragraph>
 
               <div className="flex flex-wrap gap-3">
-                <Button
-                  type="primary"
-                  size="large"
-                  shape="round"
-                  href="#pricing"
-                  icon={<ArrowRight />}
-                  iconPosition="end"
+                <Dropdown
+                  trigger={['click']}
+                  placement="bottomLeft"
+                  menu={{
+                    items: CONTACT_LINKS.map(({ key, label, href, color }) => ({
+                      key,
+                      label: (
+                        <a
+                          href={href}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-2.5 py-0.5"
+                        >
+                          <span
+                            className="inline-block h-2.5 w-2.5 flex-shrink-0 rounded-full"
+                            style={{ background: color }}
+                          />
+                          {label}
+                        </a>
+                      ),
+                    })),
+                  }}
                 >
-                  Đặt móc khóa
-                </Button>
-                <Button size="large" shape="round" href="#templates">
+                  <Button
+                    type="primary"
+                    size="large"
+                    shape="round"
+                    icon={<ArrowRight />}
+                    iconPosition="end"
+                  >
+                    Liên hệ
+                  </Button>
+                </Dropdown>
+                <Button size="large" shape="round" href="/templates">
                   Xem mẫu thiết kế
                 </Button>
               </div>
@@ -546,75 +602,25 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* right – phone + NFC + heart */}
+            {/* right – product photo */}
             <div className="relative hidden aspect-square items-center justify-center md:flex">
-              {/* phone mockup */}
-              <div
-                className="relative z-10"
-                style={{ transform: 'rotate(-8deg) translateY(-20px)' }}
-              >
-                <div
-                  className="h-[440px] w-[220px] rounded-[36px]"
-                  style={{
-                    background: 'linear-gradient(160deg,#261A0E,#1A1208)',
-                    boxShadow:
-                      '0 28px 56px -18px rgba(139,107,82,.32),inset 0 0 0 2px #3D2810,inset 0 0 0 7px #1A1208',
-                  }}
-                >
-                  <div
-                    className="absolute inset-[14px] overflow-hidden rounded-[26px]"
-                    style={{ background: 'linear-gradient(170deg,#FFFDF9,#F6F0E8)' }}
-                  >
-                    <div
-                      className="mx-auto h-4 w-20 rounded-b-xl"
-                      style={{ background: '#1A1208' }}
-                    />
-                    <div
-                      className="mx-3 mt-4 flex flex-col gap-2.5 rounded-2xl bg-background p-3.5"
-                      style={{ boxShadow: '0 4px 16px rgba(139,107,82,.12)' }}
-                    >
-                      <div className="text-primary text-base font-bold">Mai &amp; Long</div>
-                      <div
-                        className="h-[96px] rounded-xl"
-                        style={{
-                          background: 'radial-gradient(circle at 30% 30%,#E9DDCF,#8B6B52 70%)',
-                        }}
-                      />
-                      <div className="bg-elevated h-2 rounded-full" />
-                      <div className="bg-elevated h-2 w-[70%] rounded-full" />
-                      <div className="text-content3 mt-0.5 flex items-center gap-2 text-[11px]">
-                        <div className="bg-primary/60 h-5 w-5 flex-shrink-0 rounded-full" />
-                        30.04.2024 · Đà Lạt
-                      </div>
-                    </div>
-                  </div>
-                </div>
+              <div className="relative w-full overflow-hidden rounded-3xl shadow-2xl">
+                <NextImage
+                  src="https://pub-38354b71296248bba2cc5c4b1ca7af25.r2.dev/app/anh_general.jpg"
+                  alt="Góc Chạm móc khóa NFC kỷ niệm"
+                  width={600}
+                  height={600}
+                  className="h-auto w-full object-cover"
+                  priority
+                />
               </div>
 
-              {/* NFC pulse waves */}
+              {/* keychain overlay */}
               <div
-                className="pointer-events-none absolute top-[38%] right-[24%] h-56 w-56"
-                aria-hidden
-              >
-                {[0, 1, 2].map((i) => (
-                  <div
-                    key={i}
-                    className="border-primary absolute inset-0 rounded-full border-2"
-                    style={{
-                      animation: 'wavePulse 2.4s ease-out infinite',
-                      animationDelay: `${i * 0.8}s`,
-                      opacity: 0,
-                    }}
-                  />
-                ))}
-              </div>
-
-              {/* keychain */}
-              <div
-                className="absolute right-[6%] bottom-[10%] z-20"
+                className="absolute right-[-2%] bottom-[-2%] z-20"
                 style={{
                   transform: 'rotate(14deg)',
-                  filter: 'drop-shadow(0 16px 32px rgba(139,107,82,.28))',
+                  filter: 'drop-shadow(0 16px 32px rgba(139,107,82,.36))',
                 }}
               >
                 <HeartKey size={170} />
@@ -670,51 +676,61 @@ export default function HomePage() {
               <Text className="!text-content3">Chưa có sản phẩm nào.</Text>
             </div>
           ) : (
-            <div className="grid gap-6 md:grid-cols-3">
-              {(products as IProduct[]).map((p) => (
-                <div
-                  key={p.id}
-                  className="bg-background border-border relative rounded-2xl border px-5 py-8 text-center transition-all duration-200 hover:-translate-y-1 hover:shadow-xl md:px-7 md:py-12"
-                >
-                  {p.isNfc && (
-                    <Tag
-                      color="#8B6B52"
-                      className="!absolute !top-4 !right-4 !text-[10px] !font-bold !tracking-widest !uppercase"
-                    >
-                      NFC
-                    </Tag>
-                  )}
-                  <div className="relative mx-auto mb-7 h-36 w-36 overflow-hidden rounded-full shadow-lg">
-                    {p.imageUrl ? (
-                      <Image
-                        src={p.imageUrl}
-                        alt={p.name}
-                        fill
-                        sizes="144px"
-                        className="object-cover"
-                        unoptimized
-                      />
-                    ) : (
-                      <div
-                        className="h-full w-full"
-                        style={{
-                          background: 'radial-gradient(circle at 35% 30%,#F6F0E8,#8B6B52)',
-                        }}
-                      />
+            <Image.PreviewGroup>
+              <div className="grid gap-6 md:grid-cols-3">
+                {(products as IProduct[]).map((p) => (
+                  <div
+                    key={p.id}
+                    className="bg-background border-border relative rounded-2xl border px-5 py-8 text-center transition-all duration-200 hover:-translate-y-1 hover:shadow-xl md:px-7 md:py-12"
+                  >
+                    {p.isNfc && (
+                      <Tag
+                        color="#8B6B52"
+                        className="!absolute !top-4 !right-4 !text-[10px] !font-bold !tracking-widest !uppercase"
+                      >
+                        NFC
+                      </Tag>
+                    )}
+                    <div className="mx-auto mb-7 h-36 w-36">
+                      {p.imageUrl ? (
+                        <Image
+                          src={p.imageUrl}
+                          alt={p.name}
+                          width={144}
+                          height={144}
+                          style={{ objectFit: 'cover' }}
+                          wrapperStyle={{
+                            borderRadius: '50%',
+                            overflow: 'hidden',
+                            boxShadow:
+                              '0 10px 15px -3px rgba(0,0,0,.1),0 4px 6px -4px rgba(0,0,0,.1)',
+                            cursor: 'pointer',
+                          }}
+                        />
+                      ) : (
+                        <div
+                          className="h-36 w-36 rounded-full shadow-lg"
+                          style={{
+                            background: 'radial-gradient(circle at 35% 30%,#F6F0E8,#8B6B52)',
+                          }}
+                        />
+                      )}
+                    </div>
+                    <Title level={4} className="!text-content1 !mb-1">
+                      {p.name}
+                    </Title>
+                    <Text className="!text-primary mb-3 block text-sm font-semibold tracking-wide">
+                      {p.price.toLocaleString('vi-VN')}đ
+                    </Text>
+                    {p.description && (
+                      <Paragraph className="!text-content3 !mb-0 !text-sm">
+                        {p.description}
+                      </Paragraph>
                     )}
                   </div>
-                  <Title level={4} className="!text-content1 !mb-1">
-                    {p.name}
-                  </Title>
-                  <Text className="!text-primary mb-3 block text-sm font-semibold tracking-wide">
-                    {p.price.toLocaleString('vi-VN')}đ
-                  </Text>
-                  {p.description && (
-                    <Paragraph className="!text-content3 !mb-0 !text-sm">{p.description}</Paragraph>
-                  )}
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            </Image.PreviewGroup>
           )}
         </div>
       </section>
@@ -769,37 +785,29 @@ export default function HomePage() {
             }
             sub="Từ ngọt ngào đến tối giản, từ điện ảnh đến nhật ký — chọn mẫu hợp với câu chuyện của bạn."
           />
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-            {TEMPLATES.map((t) => (
-              <div
-                key={t.name}
-                className="relative aspect-[9/16] cursor-pointer overflow-hidden rounded-2xl shadow-md transition-transform duration-200 hover:-translate-y-1.5 hover:scale-[1.02]"
-                style={{ background: `linear-gradient(160deg,${t.from},${t.to})` }}
-              >
-                <div className="absolute inset-0 z-10 p-4">
-                  <div className="text-[14px] leading-none font-semibold text-white/90">
-                    {t.date}
-                  </div>
-                  <div
-                    className="mt-2.5 text-[18px] leading-[1.15] font-bold whitespace-pre-line text-white"
-                    style={{ textShadow: '0 2px 8px rgba(0,0,0,.2)' }}
-                  >
-                    {t.title}
-                  </div>
-                  <div className="mt-3 flex aspect-square items-center justify-center rounded-xl border border-white/30 bg-white/20 text-[11px] font-medium text-white/70">
-                    photo
-                  </div>
-                </div>
-                <div className="absolute inset-0 z-20 bg-gradient-to-t from-black/50 to-transparent" />
+          <Image.PreviewGroup>
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+              {TEMPLATES.map((t) => (
                 <div
-                  className="absolute right-3.5 bottom-3.5 left-3.5 z-30 text-[13px] font-bold text-white"
-                  style={{ textShadow: '0 2px 8px rgba(0,0,0,.4)' }}
+                  key={t.name}
+                  className="relative aspect-[9/16] overflow-hidden rounded-2xl shadow-md transition-transform duration-200 hover:-translate-y-1.5 hover:scale-[1.02]"
                 >
-                  {t.name}
+                  <Image
+                    src={t.imageUrl}
+                    alt={t.name}
+                    wrapperStyle={{ position: 'absolute', inset: 0 }}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                  />
+                  <div
+                    className="pointer-events-none absolute right-3 bottom-3 left-3 text-[13px] font-bold text-white"
+                    style={{ textShadow: '0 2px 8px rgba(0,0,0,.8)' }}
+                  >
+                    {t.name}
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          </Image.PreviewGroup>
         </div>
       </section>
 
@@ -866,7 +874,7 @@ export default function HomePage() {
       {/* ────────── NFC DEMO ────────── */}
       <section className="bg-elevated overflow-hidden py-16 md:py-28">
         <div className="mx-auto max-w-[1240px] px-4 sm:px-6">
-          <div className="grid items-center gap-10 md:gap-20 md:grid-cols-2">
+          <div className="grid items-center gap-10 md:grid-cols-2 md:gap-20">
             <div>
               <Eyebrow>Công nghệ NFC</Eyebrow>
               <h2 className="text-content1 mb-6 text-[clamp(30px,4vw,46px)] leading-[1.1] font-bold">
@@ -938,81 +946,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ────────── PRICING ────────── */}
-      <section id="pricing" className="bg-background py-14 md:py-24">
-        <div className="mx-auto max-w-[1240px] px-4 sm:px-6">
-          <SectionHead
-            eyebrow="Bảng giá"
-            title={
-              <>
-                Gọn gàng, <span className="text-primary">không phụ phí</span>.
-              </>
-            }
-            sub="Đã bao gồm chip NFC, vỏ resin, móc kim loại, ship toàn quốc và quyền chỉnh sửa nội dung trọn đời."
-          />
-          <div className="grid items-start gap-6 md:grid-cols-3">
-            {PRICING.map((p) => (
-              <div
-                key={p.name}
-                className={`relative flex flex-col rounded-2xl border p-9 transition-shadow ${
-                  p.popular
-                    ? 'bg-content1 border-content1 text-background scale-[1.03] shadow-2xl'
-                    : 'bg-background border-border hover:shadow-md'
-                }`}
-              >
-                {p.popular && (
-                  <span className="bg-secondary absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-full px-4 py-1.5 text-[11px] font-bold tracking-widest whitespace-nowrap text-content1 uppercase">
-                    Phổ biến nhất
-                  </span>
-                )}
-                <Title
-                  level={3}
-                  className={`!mb-1 ${p.popular ? '!text-background' : '!text-content1'}`}
-                >
-                  {p.name}
-                </Title>
-                <Text
-                  className={`mb-4 block min-h-[44px] text-sm ${p.popular ? '!text-background/70' : '!text-content3'}`}
-                >
-                  {p.desc}
-                </Text>
-                <div className="mb-6 flex items-baseline gap-1">
-                  <span
-                    className={`text-5xl leading-none font-bold ${p.popular ? 'text-secondary' : 'text-content1'}`}
-                  >
-                    {p.price}
-                  </span>
-                  <span className={`text-base ${p.popular ? 'text-secondary/60' : 'text-content3'}`}>
-                    {p.unit}
-                  </span>
-                </div>
-                <Divider className={p.popular ? '!border-white/15' : '!border-border'} />
-                <ul className="m-0 mb-7 flex flex-1 list-none flex-col gap-3 p-0">
-                  {p.items.map((item) => (
-                    <li key={item} className="flex items-start gap-2 text-sm">
-                      <span className={`mt-0.5 flex-shrink-0 font-bold ${p.popular ? 'text-secondary' : 'text-primary'}`}>✓</span>
-                      <span className={p.popular ? 'text-background/85' : 'text-content2'}>{item}</span>
-                    </li>
-                  ))}
-                </ul>
-                {/* AntD Button */}
-                <Button
-                  type={p.popular ? 'default' : 'default'}
-                  ghost={p.popular}
-                  size="large"
-                  shape="round"
-                  block
-                  href="#"
-                  className={p.popular ? '!border-secondary/60 !text-secondary hover:!border-secondary hover:!text-secondary' : ''}
-                >
-                  {p.cta}
-                </Button>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* ────────── FINAL CTA ────────── */}
       <section className="bg-content1 relative overflow-hidden py-20 text-center md:py-32">
         <div
@@ -1032,15 +965,39 @@ export default function HomePage() {
           <Paragraph className="text-background/55 mx-auto mb-10 max-w-[500px] text-lg">
             Góc Chạm đang mở đặt hàng lứa đầu — giao trong 5 ngày làm việc.
           </Paragraph>
-          <Button
-            type="primary"
-            size="large"
-            shape="round"
-            href="#pricing"
-            className="!h-14 !px-10 !text-base"
+          <Dropdown
+            trigger={['click']}
+            placement="bottomLeft"
+            menu={{
+              items: CONTACT_LINKS.map(({ key, label, href, color }) => ({
+                key,
+                label: (
+                  <a
+                    href={href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2.5 py-0.5"
+                  >
+                    <span
+                      className="inline-block h-2.5 w-2.5 flex-shrink-0 rounded-full"
+                      style={{ background: color }}
+                    />
+                    {label}
+                  </a>
+                ),
+              })),
+            }}
           >
-            Đặt móc khóa của bạn →
-          </Button>
+            <Button
+              type="primary"
+              size="large"
+              shape="round"
+              icon={<ArrowRight />}
+              iconPosition="end"
+            >
+              Liên hệ
+            </Button>
+          </Dropdown>
         </div>
       </section>
 
@@ -1064,12 +1021,12 @@ export default function HomePage() {
                 </Text>
                 <ul className="m-0 flex list-none flex-col gap-2.5 p-0">
                   {col.links.map((l) => (
-                    <li key={l}>
+                    <li key={l.label}>
                       <a
-                        href="#"
+                        href={l.href}
                         className="text-content2 hover:text-primary text-sm transition-colors"
                       >
-                        {l}
+                        {l.label}
                       </a>
                     </li>
                   ))}
