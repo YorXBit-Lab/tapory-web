@@ -2,6 +2,7 @@ import {
   collection,
   doc,
   deleteDoc,
+  deleteField,
   getDoc,
   getDocs,
   orderBy,
@@ -15,6 +16,7 @@ import { db } from '@/libs/firebase';
 import { FIRESTORE_COLLECTIONS } from '@/configs/constants';
 import { CardAPI } from '@/services/CardAPI';
 import type { StatusKey } from '@/components/dashboard';
+import type { IPrintConfig, IPrintPhotoSlot } from '@/configs/types';
 
 export type OrderSource = 'local' | 'tiktok' | 'shopee';
 
@@ -24,6 +26,7 @@ export interface IOrderItem {
   unitPrice: number;
   isNfc: boolean;
   templateId?: string;
+  printConfig?: IPrintConfig;
 }
 
 export interface IOrder {
@@ -37,6 +40,8 @@ export interface IOrder {
   items: IOrderItem[];
   notes?: string;
   customized: boolean;
+  printPhotos?: IPrintPhotoSlot[];
+  printedAt?: string;
   createdAt?: string;
   updatedAt?: string;
   /** @deprecated dùng items thay thế */
@@ -66,6 +71,8 @@ function toOrder(id: string, d: Record<string, unknown>): IOrder {
     items,
     notes: d.notes as string | undefined,
     customized: (d.customized as boolean) ?? false,
+    printPhotos: Array.isArray(d.printPhotos) ? (d.printPhotos as IPrintPhotoSlot[]) : [],
+    printedAt: (d.printedAt as Timestamp)?.toDate?.()?.toISOString() ?? (d.printedAt as string | undefined),
     templateId: d.templateId as string | undefined,
     quantity: d.quantity as number | undefined,
     createdAt: (d.createdAt as Timestamp)?.toDate?.()?.toISOString(),
@@ -82,9 +89,14 @@ export const OrderAPI = {
 
   update: async (
     orderId: string,
-    fields: Partial<Pick<IOrder, 'customerName' | 'phone' | 'address' | 'price' | 'notes' | 'status' | 'items'>>,
+    fields: Partial<Pick<IOrder, 'customerName' | 'phone' | 'address' | 'price' | 'notes' | 'status' | 'items' | 'printedAt'>>,
   ): Promise<void> => {
-    await updateDoc(doc(db, COL, orderId), { ...fields, updatedAt: serverTimestamp() });
+    const payload: Record<string, unknown> = { ...fields, updatedAt: serverTimestamp() };
+    // null means "delete the field" — use Firestore's deleteField sentinel
+    if ('printedAt' in fields && fields.printedAt == null) {
+      payload.printedAt = deleteField();
+    }
+    await updateDoc(doc(db, COL, orderId), payload);
   },
 
   delete: async (orderId: string): Promise<void> => {

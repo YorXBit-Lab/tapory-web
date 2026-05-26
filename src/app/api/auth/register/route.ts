@@ -21,6 +21,13 @@ export async function POST(req: NextRequest) {
     }
 
     const adminDb = getAdminDb();
+
+    // Only allow registration for cards created by admin
+    const cardSnap = await adminDb.doc(`cards/${cardId}`).get();
+    if (!cardSnap.exists) {
+      return NextResponse.json({ message: 'Thẻ không tồn tại' }, { status: 404 });
+    }
+
     const snap = await adminDb.doc(`cardAuth/${cardId}`).get();
 
     if (snap.exists) {
@@ -38,19 +45,6 @@ export async function POST(req: NextRequest) {
       createdAt: now,
       updatedAt: now,
     });
-
-    // Tạo cards record nếu chưa có (self-service flow)
-    const cardSnap = await adminDb.doc(`cards/${cardId}`).get();
-    if (!cardSnap.exists) {
-      await adminDb.doc(`cards/${cardId}`).set({
-        orderId: cardId,
-        status: 'assigned',
-        hasContent: false,
-        stats: { totalViews: 0 },
-        createdAt: now,
-        updatedAt: now,
-      });
-    }
 
     const token = await getAdminAuth().createCustomToken(`card_${cardId}`, {
       cardId,

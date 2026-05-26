@@ -3,21 +3,12 @@
 import { useRouter } from 'next/navigation';
 import type { ITemplate } from '@/configs/types';
 
-function generateCardId(): string {
-  const now = new Date();
-  const y = now.getFullYear().toString().slice(2);
-  const m = String(now.getMonth() + 1).padStart(2, '0');
-  const d = String(now.getDate()).padStart(2, '0');
-  const rand = Math.random().toString(36).slice(2, 6).toUpperCase();
-  return `USR${y}${m}${d}${rand}`;
-}
-
 export function TemplateCard({ tpl }: { tpl: ITemplate }) {
   const router = useRouter();
 
   return (
     <div
-      onClick={() => router.push(`/edit/${generateCardId()}?template=${tpl.id}`)}
+      onClick={() => router.push(`/edit/demo?template=${tpl.id}`)}
       className="group relative flex cursor-pointer flex-col overflow-hidden rounded-3xl border border-border bg-elevated transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl"
     >
       {/* Preview area */}

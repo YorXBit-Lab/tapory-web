@@ -1,4 +1,4 @@
-import { doc, getDoc, getDocs, collection, setDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, getDocs, deleteDoc, collection, setDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/libs/firebase';
 import { FIRESTORE_COLLECTIONS } from '@/configs/constants';
 import type { IMemorial } from '@/configs/types';
@@ -48,6 +48,10 @@ export const MemorialAPI = {
       await setDoc(ref, { ...clean, createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
     }
     return { data: { orderId: data.orderId } };
+  },
+
+  deleteOne: async (orderId: string) => {
+    await deleteDoc(doc(db, COL, orderId));
   },
 
   // kept for backward compat

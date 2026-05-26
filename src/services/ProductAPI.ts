@@ -13,14 +13,31 @@ import {
 } from 'firebase/firestore';
 import { db } from '@/libs/firebase';
 import { FIRESTORE_COLLECTIONS } from '@/configs/constants';
-import type { IProduct } from '@/configs/types';
+import type { IProduct, IPrintConfig } from '@/configs/types';
 
 const COL = FIRESTORE_COLLECTIONS.PRODUCTS;
 
 function clean<T extends object>(obj: T): Partial<T> {
   return Object.fromEntries(
-    Object.entries(obj).filter(([, v]) => v !== undefined && v !== ''),
+    Object.entries(obj).filter(([k, v]) => {
+      if (v === undefined || v === '') return false;
+      // nfcExtraPrice = 0 có nghĩa là "để trống" — không lưu để fallback về global
+      if (k === 'nfcExtraPrice' && v === 0) return false;
+      return true;
+    }),
   ) as Partial<T>;
+}
+
+function toPrintConfig(raw: unknown): IPrintConfig | undefined {
+  if (!raw || typeof raw !== 'object') return undefined;
+  const r = raw as Record<string, unknown>;
+  return {
+    enabled: (r.enabled as boolean) ?? false,
+    shape: r.shape as IPrintConfig['shape'] | undefined,
+    width: r.width as number | undefined,
+    height: r.height as number | undefined,
+    diameter: r.diameter as number | undefined,
+  };
 }
 
 function toProduct(id: string, d: Record<string, unknown>): IProduct {
@@ -28,10 +45,12 @@ function toProduct(id: string, d: Record<string, unknown>): IProduct {
     id,
     name: (d.name as string) ?? '',
     price: (d.price as number) ?? 0,
-    isNfc: (d.isNfc as boolean) ?? false,
+    canBeNfc: (d.canBeNfc as boolean) ?? (d.isNfc as boolean) ?? false,
+    nfcExtraPrice: d.nfcExtraPrice as number | undefined,
     templateId: d.templateId as IProduct['templateId'] | undefined,
     description: d.description as string | undefined,
     imageUrl: d.imageUrl as string | undefined,
+    printConfig: toPrintConfig(d.printConfig),
     createdAt: (d.createdAt as Timestamp)?.toDate?.()?.toISOString(),
     updatedAt: (d.updatedAt as Timestamp)?.toDate?.()?.toISOString(),
   };

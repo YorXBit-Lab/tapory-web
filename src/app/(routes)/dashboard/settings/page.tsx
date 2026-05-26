@@ -3,7 +3,10 @@
 import { Button, Card, Divider, Form, Input, InputNumber, Switch, Tag, Typography, notification } from 'antd';
 import { CheckCircleFilled, ClockCircleOutlined } from '@ant-design/icons';
 import { useEffect, useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAdminAuth } from '@/contexts/AdminAuthContext';
+import { SettingsAPI, type IGlobalSettings } from '@/services/SettingsAPI';
+import { DEFAULT_NFC_EXTRA_PRICE } from '@/configs/constants';
 
 const { Text, Title } = Typography;
 
@@ -233,6 +236,75 @@ function NotifRow({ label, desc, checked, onChange }: { label: string; desc: str
 }
 
 /* ─────────────────────────────────────────────
+   Pricing card
+───────────────────────────────────────────── */
+function PricingCard() {
+  const { user } = useAdminAuth();
+  const queryClient = useQueryClient();
+  const [saving, setSaving] = useState(false);
+  const [form] = Form.useForm<IGlobalSettings>();
+
+  const { data: settings, isLoading } = useQuery({
+    queryKey: ['settings'],
+    queryFn: () => SettingsAPI.get(),
+    staleTime: 60_000,
+  });
+
+  useEffect(() => {
+    if (settings) form.setFieldsValue(settings);
+  }, [settings, form]);
+
+  const handleSave = async (values: IGlobalSettings) => {
+    if (!user) return;
+    setSaving(true);
+    try {
+      const idToken = await user.getIdToken();
+      await SettingsAPI.update(idToken, values);
+      await queryClient.invalidateQueries({ queryKey: ['settings'] });
+      notification.success({ message: 'Đã lưu cài đặt' });
+    } catch (err) {
+      notification.error({
+        message: 'Lưu thất bại',
+        description: err instanceof Error ? err.message : 'Thử lại sau',
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Card title="Định giá" loading={isLoading}>
+      <Form
+        form={form}
+        layout="vertical"
+        initialValues={{ nfcExtraPrice: DEFAULT_NFC_EXTRA_PRICE }}
+        onFinish={handleSave}
+      >
+        <Form.Item
+          label="Phụ phí NFC mặc định"
+          name="nfcExtraPrice"
+          rules={[{ required: true, message: 'Nhập giá' }, { type: 'number', min: 0 }]}
+          extra="Áp dụng cho sản phẩm không có phụ phí NFC riêng. Tự động cộng vào đơn giá khi staff bật NFC lúc tạo đơn."
+        >
+          <InputNumber
+            min={0}
+            step={1000}
+            style={{ width: '100%' }}
+            formatter={(v) => `${v ?? ''}`.replace(/\B(?=(\d{3})+(?!\d))/g, '.')}
+            parser={(v) => Number((v ?? '').replace(/\./g, '')) as 0}
+            addonAfter="đ"
+          />
+        </Form.Item>
+
+        <div className="flex justify-end">
+          <Button type="primary" htmlType="submit" loading={saving}>Lưu</Button>
+        </div>
+      </Form>
+    </Card>
+  );
+}
+
+/* ─────────────────────────────────────────────
    Page
 ───────────────────────────────────────────── */
 export default function SettingsPage() {
@@ -244,6 +316,7 @@ export default function SettingsPage() {
 
   return (
     <div className="grid max-w-4xl grid-cols-1 gap-5 md:grid-cols-2">
+      <PricingCard />
       <TiktokCard />
       <Card title="Cửa hàng">
         <SettingRow

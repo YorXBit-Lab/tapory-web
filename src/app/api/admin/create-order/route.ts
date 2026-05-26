@@ -52,6 +52,26 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Cần số điện thoại cho đơn có móc khóa NFC' }, { status: 400 });
     }
 
+    // Strip undefined from printConfig to avoid Firestore serialisation errors
+    const cleanedItems = items.map(item => {
+      const base: Record<string, unknown> = {
+        productName: item.productName,
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
+        isNfc: item.isNfc,
+      };
+      if (item.templateId) base.templateId = item.templateId;
+      if (item.printConfig?.enabled) {
+        const cfg: Record<string, unknown> = { enabled: true };
+        if (item.printConfig.shape) cfg.shape = item.printConfig.shape;
+        if (item.printConfig.width != null) cfg.width = item.printConfig.width;
+        if (item.printConfig.height != null) cfg.height = item.printConfig.height;
+        if (item.printConfig.diameter != null) cfg.diameter = item.printConfig.diameter;
+        base.printConfig = cfg;
+      }
+      return base;
+    });
+
     const totalPrice = items.reduce((s, item) => s + item.unitPrice * item.quantity, 0);
     const orderId = generateOrderId();
     const now = new Date();
@@ -78,7 +98,7 @@ export async function POST(req: NextRequest) {
       price: totalPrice,
       status: 'new',
       source: 'local',
-      items,
+      items: cleanedItems,
       notes: (notes ?? '').trim(),
       customized: false,
       createdAt: now,

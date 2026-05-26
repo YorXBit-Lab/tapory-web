@@ -22,6 +22,7 @@ interface Props {
 export function CardAuthGate({ cardId, children }: Props) {
   const [mode, setMode] = useState<Mode>('checking');
   const [showModal, setShowModal] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const pendingCb = useRef<(() => void) | null>(null);
 
   // Check existing session + memorial existence.
@@ -30,8 +31,10 @@ export function CardAuthGate({ cardId, children }: Props) {
     const unsub = onAuthStateChanged(auth, (user) => {
       unsub(); // only need the first emission
 
-      // Already signed in (admin session or previous card token) → skip gate
+      // Already signed in → skip gate
       if (user) {
+        // Admin users sign in with email/password (uid doesn't start with 'card_')
+        if (!user.uid.startsWith('card_')) setIsAdmin(true);
         setMode('verified');
         return;
       }
@@ -52,14 +55,14 @@ export function CardAuthGate({ cardId, children }: Props) {
 
   const requireAuth = useCallback(
     (onSuccess: () => void) => {
-      if (mode === 'verified') {
+      if (isAdmin) {
         onSuccess();
         return;
       }
       pendingCb.current = onSuccess;
       setShowModal(true);
     },
-    [mode],
+    [isAdmin],
   );
 
   const onVerified = useCallback(
@@ -86,13 +89,14 @@ export function CardAuthGate({ cardId, children }: Props) {
 
   // New memorial OR already verified: render editor with context
   return (
-    <CardAuthCtx.Provider value={{ isVerified: mode === 'verified', requireAuth }}>
+    <CardAuthCtx.Provider value={{ isReady: true, isVerified: mode === 'verified', requireAuth }}>
       {children}
       <PhoneGate
         cardId={cardId}
         fullScreen={false}
         asModal
         register
+        saveMode
         open={showModal}
         onVerified={onVerified}
         onCancel={() => {
@@ -110,6 +114,7 @@ interface PhoneGateProps {
   fullScreen: boolean;
   asModal?: boolean;
   register?: boolean; // true = đặt SĐT lần đầu, false = xác minh SĐT đã có
+  saveMode?: boolean; // true = modal xác nhận trước khi lưu
   open?: boolean;
   onVerified: (phone: string) => void;
   onCancel?: () => void;
@@ -120,6 +125,7 @@ function PhoneGate({
   fullScreen,
   asModal,
   register,
+  saveMode,
   open,
   onVerified,
   onCancel,
@@ -195,7 +201,7 @@ function PhoneGate({
       </Form.Item>
       {error && <Alert type="error" message={error} className="mb-4" showIcon />}
       <Button type="primary" htmlType="submit" loading={loading} block size="large">
-        {register ? 'Đặt mật khẩu & Lưu' : 'Xác nhận'}
+        {saveMode ? 'Lưu' : register ? 'Đặt mật khẩu & Lưu' : 'Xác nhận'}
       </Button>
       {onCancel && (
         <Button onClick={onCancel} block className="mt-2">
@@ -206,19 +212,25 @@ function PhoneGate({
   );
 
   if (asModal) {
+    const modalTitle = saveMode
+      ? 'Xác nhận để lưu'
+      : register
+        ? 'Đặt mật khẩu cho trang của bạn'
+        : 'Xác nhận số điện thoại';
+    const modalDesc = saveMode
+      ? 'Nhập mật khẩu (mặc định: số điện thoại) để lưu thay đổi.'
+      : register
+        ? 'Nhập mật khẩu để bảo vệ trang. Mật khẩu mặc định là số điện thoại này.'
+        : 'Nhập mật khẩu đã dùng khi đặt hàng. Mật khẩu mặc định là số điện thoại.';
     return (
       <Modal
-        title={register ? 'Đặt mật khẩu cho trang của bạn' : 'Xác nhận số điện thoại'}
+        title={modalTitle}
         open={open}
         onCancel={onCancel}
         footer={null}
         width={380}
       >
-        <p className="mb-4 text-sm text-gray-400">
-          {register
-            ? 'Nhập mật khẩu để bảo vệ trang. Mật khẩu mặc định là số điện thoại này.'
-            : 'Nhập mật khẩu đã dùng khi đặt hàng. Mật khẩu mặc định là số điện thoại.'}
-        </p>
+        <p className="mb-4 text-sm text-gray-400">{modalDesc}</p>
         {formContent}
       </Modal>
     );

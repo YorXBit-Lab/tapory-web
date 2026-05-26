@@ -1,11 +1,12 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { Input, Segmented, Table, Tag, Typography } from 'antd';
+import { Input, Popconfirm, Segmented, Table, Tag, Typography } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import Link from 'next/link';
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import { StatCard } from '@/components/dashboard';
 import { OrderAPI } from '@/services/OrderAPI';
 import { CardAPI } from '@/services/CardAPI';
@@ -35,7 +36,18 @@ export default function MemoriesPage() {
   const [contentFilter, setContentFilter] = useState('all');
   const [pageSize, setPageSize]   = useState(10);
 
+  const queryClient = useQueryClient();
+
   const { data: memorials = [] } = useQuery({ queryKey: ['memorials'], queryFn: () => MemorialAPI.list(), staleTime: 60_000 });
+
+  const deleteMutation = useMutation({
+    mutationFn: (orderId: string) => MemorialAPI.deleteOne(orderId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['memorials'] });
+      toast.success('Đã xóa kỷ niệm');
+    },
+    onError: () => toast.error('Xóa thất bại, vui lòng thử lại'),
+  });
   const { data: orders = [] }    = useQuery({ queryKey: ['orders'],    queryFn: () => OrderAPI.list(),   staleTime: 60_000 });
   const { data: cards = [] }     = useQuery({ queryKey: ['cards-all'], queryFn: () => CardAPI.listAll(), staleTime: 60_000 });
 
@@ -142,6 +154,16 @@ export default function MemoriesPage() {
         <span className="flex gap-2 text-xs">
           <Link href={`/view/${r.id}`} target="_blank" className="text-primary hover:opacity-70">Xem</Link>
           <Link href={`/edit/${r.id}`} target="_blank" className="text-primary hover:opacity-70">Sửa</Link>
+          <Popconfirm
+            title="Xóa kỷ niệm này?"
+            description="Hành động không thể hoàn tác."
+            okText="Xóa"
+            cancelText="Hủy"
+            okButtonProps={{ danger: true, loading: deleteMutation.isPending }}
+            onConfirm={() => deleteMutation.mutate(r.id)}
+          >
+            <button className="text-red-400 hover:text-red-600">Xóa</button>
+          </Popconfirm>
         </span>
       ),
     },

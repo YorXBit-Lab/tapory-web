@@ -10,15 +10,15 @@ import {
   Descriptions,
   InputNumber,
   Modal,
-  notification,
   Popconfirm,
   Spin,
   Table,
   Tag,
   Tooltip,
   Typography,
+  notification,
 } from 'antd';
-import { ArrowLeftOutlined, PlusOutlined, WifiOutlined } from '@ant-design/icons';
+import { ArrowLeftOutlined, CopyOutlined, PlusOutlined, WifiOutlined } from '@ant-design/icons';
 import Link from 'next/link';
 import type { ColumnsType } from 'antd/es/table';
 import { OrderAPI, type OrderSource, type IOrderItem } from '@/services/OrderAPI';
@@ -268,6 +268,8 @@ export default function OrderDetailPage() {
   const statusTag = STATUS_TAG[order.status];
   const isLocal = (order.source as OrderSource | undefined ?? 'local') === 'local';
   const hasNfcItems = order.items.some(i => i.isNfc);
+  const hasPrintItems = order.items.some(i => i.printConfig?.enabled);
+  const printUploadUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/upload/${orderId}`;
 
   const SOURCE_LABEL: Record<OrderSource, { label: string; color: string }> = {
     local:  { label: 'Local',  color: 'blue'   },
@@ -296,6 +298,12 @@ export default function OrderDetailPage() {
     {
       title: 'Sản phẩm',
       dataIndex: 'productName',
+      render: (name: string, r: IOrderItem) => (
+        <span className="flex items-center gap-1.5">
+          {name}
+          {r.isNfc && <Tag color="purple" className="m-0 text-[11px]">NFC</Tag>}
+        </span>
+      ),
     },
     {
       title: 'SL',
@@ -363,11 +371,28 @@ export default function OrderDetailPage() {
           <Descriptions.Item label="SĐT">{order.phone || '—'}</Descriptions.Item>
           <Descriptions.Item label="Ngày đặt">{formatDate(order.createdAt)}</Descriptions.Item>
           <Descriptions.Item label="Địa chỉ">{order.address || '—'}</Descriptions.Item>
-          <Descriptions.Item label="Tổng giá trị">
+          <Descriptions.Item label="Tổng giá trị" span={2}>
             <Text strong>{order.price.toLocaleString('vi-VN')}đ</Text>
           </Descriptions.Item>
           {isLocal && hasNfcItems && (
-            <Descriptions.Item label="Chip NFC">{chips.length} chip</Descriptions.Item>
+            <Descriptions.Item label="Chip NFC" span={3}>{chips.length} chip</Descriptions.Item>
+          )}
+          {hasPrintItems && (
+            <Descriptions.Item label="Link upload ảnh in" span={3}>
+              <div className="flex items-center gap-2">
+                <Text copyable={false} className="font-mono text-xs text-blue-600">{printUploadUrl}</Text>
+                <Button
+                  size="small"
+                  icon={<CopyOutlined />}
+                  onClick={() => {
+                    navigator.clipboard.writeText(printUploadUrl);
+                    notification.success({ message: 'Đã copy link', duration: 2 });
+                  }}
+                >
+                  Copy
+                </Button>
+              </div>
+            </Descriptions.Item>
           )}
           {order.notes && <Descriptions.Item label="Ghi chú" span={3}>{order.notes}</Descriptions.Item>}
         </Descriptions>

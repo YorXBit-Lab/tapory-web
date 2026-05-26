@@ -129,6 +129,9 @@ export const EFFECTS: IEffect[] = [
   { id: 'party',     name: 'Bữa tiệc',  icon: '🎉' },
 ];
 
+/** Phụ phí NFC mặc định (VND) — dùng khi sản phẩm không set nfcExtraPrice riêng */
+export const DEFAULT_NFC_EXTRA_PRICE = 50_000;
+
 export const FIRESTORE_COLLECTIONS = {
   MEMORIALS: 'memorials',
   CARDS: 'cards',

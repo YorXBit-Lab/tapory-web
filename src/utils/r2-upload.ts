@@ -48,6 +48,26 @@ export async function uploadProductImage(
   return { url: json.url!, key: json.key! };
 }
 
+export async function uploadPrintPhoto(
+  file: File,
+  orderId: string,
+  itemIndex: number,
+  slotIndex: number,
+  side?: 'a' | 'b',
+): Promise<{ url: string; key: string }> {
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('orderId', orderId);
+  formData.append('itemIndex', String(itemIndex));
+  formData.append('slotIndex', String(slotIndex));
+  if (side) formData.append('side', side);
+
+  const res = await fetch('/api/upload/print-photo', { method: 'POST', body: formData });
+  const json = (await res.json()) as { url?: string; key?: string; error?: string };
+  if (!res.ok) throw new Error(json.error ?? 'Upload thất bại');
+  return { url: json.url!, key: json.key! };
+}
+
 /** Best-effort — không throw, chỉ log nếu lỗi */
 export async function deleteProductImage(key: string, idToken: string): Promise<void> {
   try {

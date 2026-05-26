@@ -2,17 +2,19 @@
 
 import { useRef, useState } from 'react';
 import {
-  App, Button, Card, Form, Input, InputNumber, Modal,
-  Popconfirm, Select, Table, Tag, Typography,
+  App, Button, Card, Divider, Form, Input, InputNumber, Modal,
+  Popconfirm, Select, Switch, Table, Tag, Typography,
 } from 'antd';
 import { DeleteOutlined, EditOutlined, PlusOutlined, UploadOutlined } from '@ant-design/icons';
 import Image from 'next/image';
 import type { ColumnsType } from 'antd/es/table';
+import { useQuery } from '@tanstack/react-query';
 import { useAdminAuth } from '@/contexts/AdminAuthContext';
 import { useProducts, useCreateProduct, useUpdateProduct, useDeleteProduct } from '@/hooks/product';
-import { TEMPLATE_LIST } from '@/configs/constants';
+import { DEFAULT_NFC_EXTRA_PRICE, TEMPLATE_LIST } from '@/configs/constants';
+import { SettingsAPI } from '@/services/SettingsAPI';
 import { uploadProductImage, deleteProductImage } from '@/utils/r2-upload';
-import type { IProduct } from '@/configs/types';
+import type { IProduct, PrintShape } from '@/configs/types';
 
 const { Text } = Typography;
 
@@ -105,6 +107,8 @@ function ProductModal({
   const [form] = Form.useForm<ProductFormValues>();
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const { data: settings } = useQuery({ queryKey: ['settings'], queryFn: () => SettingsAPI.get(), staleTime: 60_000 });
+  const globalNfcPrice = settings?.nfcExtraPrice ?? DEFAULT_NFC_EXTRA_PRICE;
   const [uploadedKey, setUploadedKey] = useState<string | null>(null);
   const imageUrl: string = Form.useWatch('imageUrl', form) ?? '';
 
@@ -194,10 +198,12 @@ function ProductModal({
           form.setFieldsValue({
             name: initial.name,
             price: initial.price,
-            isNfc: initial.isNfc,
+            canBeNfc: initial.canBeNfc,
+            nfcExtraPrice: initial.nfcExtraPrice,
             templateId: initial.templateId,
             description: initial.description,
             imageUrl: initial.imageUrl ?? '',
+            printConfig: initial.printConfig ?? { enabled: false },
           });
         }
       }}
@@ -205,7 +211,7 @@ function ProductModal({
       <Form
         form={form}
         layout="vertical"
-        initialValues={{ isNfc: false, price: 0, imageUrl: '' }}
+        initialValues={{ canBeNfc: false, price: 0, imageUrl: '', printConfig: { enabled: false } }}
         onFinish={handleFinish}
         className="pt-2"
       >
@@ -233,34 +239,153 @@ function ProductModal({
             />
           </Form.Item>
 
-          <Form.Item label="Loại" name="isNfc">
+          <Form.Item label="Tùy chọn NFC" name="canBeNfc" extra="Cho phép chọn thêm NFC khi tạo đơn hàng">
             <Select
               options={[
-                { value: false, label: 'Sản phẩm thường' },
-                { value: true, label: '📡 Có chip NFC' },
+                { value: false, label: 'Không có NFC' },
+                { value: true, label: '📡 Có thể thêm NFC' },
               ]}
             />
           </Form.Item>
         </div>
 
-        <Form.Item noStyle shouldUpdate={(prev, cur) => prev.isNfc !== cur.isNfc}>
+        <Form.Item noStyle shouldUpdate={(prev, cur) => prev.canBeNfc !== cur.canBeNfc}>
           {() =>
-            form.getFieldValue('isNfc') ? (
-              <Form.Item label="Template NFC mặc định (tuỳ chọn)" name="templateId">
-                <Select placeholder="Chọn template">
-                  {TEMPLATE_LIST.map((tpl) => (
-                    <Select.Option key={tpl.id} value={tpl.id}>
-                      {tpl.icon} {tpl.name}
-                    </Select.Option>
-                  ))}
-                </Select>
-              </Form.Item>
+            form.getFieldValue('canBeNfc') ? (
+              <div className="grid grid-cols-2 gap-x-3">
+                <Form.Item
+                  label="Phụ phí NFC"
+                  name="nfcExtraPrice"
+                  extra={`Để trống để dùng mặc định (${globalNfcPrice.toLocaleString('vi-VN')}đ)`}
+                >
+                  <InputNumber
+                    min={0}
+                    style={{ width: '100%' }}
+                    placeholder={DEFAULT_NFC_EXTRA_PRICE.toLocaleString('vi-VN')}
+                    formatter={(v) => `${v ?? ''}`.replace(/\B(?=(\d{3})+(?!\d))/g, '.')}
+                    parser={(v) => Number((v ?? '').replace(/\./g, '')) as 0}
+                    addonAfter="đ"
+                  />
+                </Form.Item>
+
+                <Form.Item label="Template NFC gợi ý" name="templateId" extra="Tự động chọn khi staff bật NFC lúc tạo đơn">
+                  <Select placeholder="Chọn template" allowClear>
+                    {TEMPLATE_LIST.map((tpl) => (
+                      <Select.Option key={tpl.id} value={tpl.id}>
+                        {tpl.icon} {tpl.name}
+                      </Select.Option>
+                    ))}
+                  </Select>
+                </Form.Item>
+              </div>
             ) : null
           }
         </Form.Item>
 
         <Form.Item label="Mô tả" name="description">
           <Input.TextArea rows={2} placeholder="Mô tả ngắn..." />
+        </Form.Item>
+
+        <Divider orientation="left" orientationMargin={0} className="!mb-3 !mt-1 !text-xs !text-gray-400">
+          In ảnh
+        </Divider>
+
+        <Form.Item name={['printConfig', 'enabled']} valuePropName="checked" label="Có in ảnh">
+          <Switch />
+        </Form.Item>
+
+        <Form.Item noStyle shouldUpdate={(prev, cur) => prev.printConfig?.enabled !== cur.printConfig?.enabled}>
+          {() =>
+            form.getFieldValue(['printConfig', 'enabled']) ? (
+              <>
+                <Form.Item label="Hình dạng" name={['printConfig', 'shape']} rules={[{ required: true, message: 'Chọn hình dạng' }]}>
+                  <Select
+                    placeholder="Chọn hình dạng"
+                    onChange={() => {
+                      form.setFieldValue(['printConfig', 'width'], undefined);
+                      form.setFieldValue(['printConfig', 'height'], undefined);
+                      form.setFieldValue(['printConfig', 'diameter'], undefined);
+                    }}
+                    options={[
+                      { value: 'rectangle' as PrintShape, label: '▭  Chữ nhật' },
+                      { value: 'square' as PrintShape, label: '▢  Hình vuông' },
+                      { value: 'circle' as PrintShape, label: '○  Hình tròn' },
+                    ]}
+                  />
+                </Form.Item>
+
+                <Form.Item noStyle shouldUpdate={(prev, cur) =>
+                  prev.printConfig?.shape !== cur.printConfig?.shape ||
+                  prev.printConfig?.width !== cur.printConfig?.width ||
+                  prev.printConfig?.height !== cur.printConfig?.height
+                }>
+                  {() => {
+                    const shape: PrintShape | undefined = form.getFieldValue(['printConfig', 'shape']);
+                    if (shape === 'rectangle') {
+                      const w: number | undefined = form.getFieldValue(['printConfig', 'width']);
+                      const h: number | undefined = form.getFieldValue(['printConfig', 'height']);
+                      const isPortrait = !w || !h || h >= w;
+                      const MAX = 48;
+                      const ratio = (w && h) ? w / h : 0.6;
+                      const previewW = isPortrait ? Math.round(MAX * ratio) : MAX;
+                      const previewH = isPortrait ? MAX : Math.round(MAX / ratio);
+
+                      const swap = () => {
+                        const curW = form.getFieldValue(['printConfig', 'width']);
+                        const curH = form.getFieldValue(['printConfig', 'height']);
+                        form.setFieldValue(['printConfig', 'width'], curH);
+                        form.setFieldValue(['printConfig', 'height'], curW);
+                      };
+
+                      return (
+                        <>
+                          <div className="grid grid-cols-2 gap-x-3">
+                            <Form.Item label="Chiều rộng — ngang (cm)" name={['printConfig', 'width']} rules={[{ required: true, message: 'Nhập chiều rộng' }]}>
+                              <InputNumber min={0.1} step={0.1} style={{ width: '100%' }} placeholder="3.4" addonAfter="cm" />
+                            </Form.Item>
+                            <Form.Item label="Chiều cao — dọc (cm)" name={['printConfig', 'height']} rules={[{ required: true, message: 'Nhập chiều cao' }]}>
+                              <InputNumber min={0.1} step={0.1} style={{ width: '100%' }} placeholder="5.0" addonAfter="cm" />
+                            </Form.Item>
+                          </div>
+                          <div className="mb-3 flex items-center gap-3">
+                            <div
+                              className="flex-shrink-0 rounded border-2 border-blue-400 bg-blue-50"
+                              style={{ width: previewW, height: previewH }}
+                            />
+                            <div className="flex flex-col gap-1">
+                              <span className={`text-xs font-medium ${isPortrait ? 'text-green-600' : 'text-orange-500'}`}>
+                                {isPortrait ? '↕  Dọc (portrait)' : '↔  Ngang (landscape)'}
+                              </span>
+                              {w && h && (
+                                <span className="text-xs text-gray-400">{w} × {h} cm</span>
+                              )}
+                            </div>
+                            <Button size="small" onClick={swap} title="Đổi dọc/ngang">⇄ Đổi chiều</Button>
+                          </div>
+                        </>
+                      );
+                    }
+                    if (shape === 'square') {
+                      return (
+                        <Form.Item label="Cạnh (cm)" name={['printConfig', 'width']} rules={[{ required: true, message: 'Nhập độ dài cạnh' }]}>
+                          <InputNumber min={0.1} step={0.1} style={{ width: '100%' }} placeholder="5.0" addonAfter="cm" />
+                        </Form.Item>
+                      );
+                    }
+                    if (shape === 'circle') {
+                      return (
+                        <Form.Item label="Đường kính (cm)" name={['printConfig', 'diameter']} rules={[{ required: true, message: 'Nhập đường kính' }]}>
+                          <InputNumber min={0.1} step={0.1} style={{ width: '100%' }} placeholder="5.0" addonAfter="cm" />
+                        </Form.Item>
+                      );
+                    }
+                    return null;
+                  }}
+                </Form.Item>
+
+              </>
+            ) : null
+          }
         </Form.Item>
 
         <div className="flex justify-end gap-2 pt-2">
@@ -360,15 +485,34 @@ export default function ProductsPage() {
       render: (price: number) => <Text strong>{price.toLocaleString('vi-VN')}đ</Text>,
     },
     {
+      title: 'In ảnh',
+      dataIndex: 'printConfig',
+      width: 140,
+      render: (cfg: IProduct['printConfig']) => {
+        if (!cfg?.enabled) return <Text type="secondary" className="text-xs">—</Text>;
+        const shapeLabel: Record<string, string> = { rectangle: 'Chữ nhật', square: 'Vuông', circle: 'Tròn' };
+        let sizeStr = '';
+        if (cfg.shape === 'circle') sizeStr = cfg.diameter ? `⌀${cfg.diameter}cm` : '';
+        else if (cfg.shape === 'square') sizeStr = cfg.width ? `${cfg.width}×${cfg.width}cm` : '';
+        else if (cfg.shape === 'rectangle') sizeStr = (cfg.width && cfg.height) ? `${cfg.width}×${cfg.height}cm` : '';
+        return (
+          <div className="flex flex-col gap-0.5">
+            <Tag color="green" className="w-fit text-xs">{shapeLabel[cfg.shape ?? ''] ?? cfg.shape}</Tag>
+            {sizeStr && <Text type="secondary" className="text-xs">{sizeStr}</Text>}
+          </div>
+        );
+      },
+    },
+    {
       title: 'Loại',
-      dataIndex: 'isNfc',
+      dataIndex: 'canBeNfc',
       width: 110,
       filters: [
-        { text: 'Có NFC', value: true },
+        { text: 'Có thể NFC', value: true },
         { text: 'Thường', value: false },
       ],
-      onFilter: (value, record) => record.isNfc === value,
-      render: (isNfc: boolean) => isNfc ? <Tag color="blue">📡 NFC</Tag> : <Tag>Thường</Tag>,
+      onFilter: (value, record) => record.canBeNfc === value,
+      render: (canBeNfc: boolean) => canBeNfc ? <Tag color="blue">📡 Có thể NFC</Tag> : <Tag>Thường</Tag>,
     },
     {
       title: 'Template',

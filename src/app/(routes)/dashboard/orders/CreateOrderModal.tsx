@@ -3,16 +3,18 @@
 import { useState } from 'react';
 import {
   App, Button, Checkbox, Form, Input, InputNumber,
-  Modal, Select, Tag, Typography,
+  Modal, Select, Switch, Tag, Tooltip, Typography,
 } from 'antd';
+import { CopyOutlined } from '@ant-design/icons';
 import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
 import { useAdminAuth } from '@/contexts/AdminAuthContext';
-import { TEMPLATE_LIST } from '@/configs/constants';
+import { DEFAULT_NFC_EXTRA_PRICE, TEMPLATE_LIST } from '@/configs/constants';
+import { SettingsAPI } from '@/services/SettingsAPI';
 import { OrderAPI } from '@/services/OrderAPI';
 import { useProducts } from '@/hooks/product';
 import type { IOrderItem } from '@/services/OrderAPI';
-import type { IProduct } from '@/configs/types';
+import type { IProduct, IPrintConfig } from '@/configs/types';
 
 const { Text } = Typography;
 
@@ -46,6 +48,14 @@ export function CreateOrderModal({ onCreated }: Props) {
   const { data: products = [] } = useProducts();
   const productList = products as IProduct[];
 
+  const { data: settings } = useQuery({
+    queryKey: ['settings'],
+    queryFn: () => SettingsAPI.get(),
+    staleTime: 60_000,
+    enabled: open,
+  });
+  const globalNfcPrice = settings?.nfcExtraPrice ?? DEFAULT_NFC_EXTRA_PRICE;
+
   // Derive khách cũ từ orders history — lookup khi nhập SĐT
   const { data: pastOrders = [] } = useQuery({
     queryKey: ['orders'],
@@ -72,6 +82,10 @@ export function CreateOrderModal({ onCreated }: Props) {
 
   // Track item index → product ID (để biết item nào đã chọn từ catalog)
   const [itemProductMap, setItemProductMap] = useState<Record<number, string>>({});
+  // Track item index → printConfig (từ catalog)
+  const [itemPrintConfigMap, setItemPrintConfigMap] = useState<Record<number, IPrintConfig | undefined>>({});
+  // Link upload ảnh in sau khi tạo đơn thành công
+  const [printUploadLink, setPrintUploadLink] = useState<string | null>(null);
 
   const totalPrice = items.reduce((s, item) => {
     return s + Number(item?.quantity ?? 0) * Number(item?.unitPrice ?? 0);
@@ -84,20 +98,34 @@ export function CreateOrderModal({ onCreated }: Props) {
     setLoading(true);
     try {
       const idToken = await user.getIdToken();
+
+      // Merge printConfig từ catalog vào items
+      const itemsWithPrint = values.items.map((item, idx) => ({
+        ...item,
+        ...(itemPrintConfigMap[idx]?.enabled ? { printConfig: itemPrintConfigMap[idx] } : {}),
+      }));
+
       const res = await fetch('/api/admin/create-order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${idToken}` },
-        body: JSON.stringify(values),
+        body: JSON.stringify({ ...values, items: itemsWithPrint }),
       });
 
       const json = (await res.json()) as { orderId?: string; error?: string };
       if (!res.ok) throw new Error(json.error ?? 'Tạo đơn thất bại');
 
-      notification.success({ message: 'Tạo đơn thành công', description: `Mã đơn: ${json.orderId}` });
+      const hasPrintItems = itemsWithPrint.some(i => i.printConfig?.enabled);
       form.resetFields();
       setItemProductMap({});
+      setItemPrintConfigMap({});
       setOpen(false);
       onCreated(json.orderId ?? '');
+
+      if (hasPrintItems && json.orderId) {
+        setPrintUploadLink(`${window.location.origin}/upload/${json.orderId}`);
+      } else {
+        notification.success({ message: 'Tạo đơn thành công', description: `Mã đơn: ${json.orderId}` });
+      }
     } catch (err) {
       notification.error({
         message: 'Lỗi',
@@ -116,9 +144,30 @@ export function CreateOrderModal({ onCreated }: Props) {
     if (!product) return;
     form.setFieldValue(['items', fieldName, 'productName'], product.name);
     form.setFieldValue(['items', fieldName, 'unitPrice'], product.price);
-    form.setFieldValue(['items', fieldName, 'isNfc'], product.isNfc);
-    form.setFieldValue(['items', fieldName, 'templateId'], product.templateId ?? null);
+    // isNfc mặc định false — staff tự chọn lúc tạo đơn nếu sản phẩm canBeNfc
+    form.setFieldValue(['items', fieldName, 'isNfc'], false);
+    form.setFieldValue(['items', fieldName, 'templateId'], null);
     setItemProductMap(prev => ({ ...prev, [fieldName]: productId }));
+    setItemPrintConfigMap(prev => ({ ...prev, [fieldName]: product.printConfig }));
+  };
+
+  /* Khi staff bật/tắt NFC → điều chỉnh giá và template */
+  const handleNfcToggle = (fieldName: number, checked: boolean) => {
+    form.setFieldValue(['items', fieldName, 'isNfc'], checked);
+    const productId = itemProductMap[fieldName];
+    const product = productId ? productList.find(p => p.id === productId) : null;
+    const nfcExtra = product?.nfcExtraPrice || globalNfcPrice;
+    const basePrice = product?.price ?? (form.getFieldValue(['items', fieldName, 'unitPrice']) as number) ?? 0;
+
+    if (checked) {
+      form.setFieldValue(['items', fieldName, 'unitPrice'], basePrice + nfcExtra);
+      if (product?.templateId) {
+        form.setFieldValue(['items', fieldName, 'templateId'], product.templateId);
+      }
+    } else {
+      form.setFieldValue(['items', fieldName, 'unitPrice'], basePrice - nfcExtra);
+      form.setFieldValue(['items', fieldName, 'templateId'], null);
+    }
   };
 
   /* Xóa chọn catalog → về manual mode */
@@ -128,15 +177,44 @@ export function CreateOrderModal({ onCreated }: Props) {
     form.setFieldValue(['items', fieldName, 'isNfc'], false);
     form.setFieldValue(['items', fieldName, 'templateId'], null);
     setItemProductMap(prev => { const n = { ...prev }; delete n[fieldName]; return n; });
+    setItemPrintConfigMap(prev => { const n = { ...prev }; delete n[fieldName]; return n; });
   };
 
-  const handleClose = () => { setOpen(false); form.resetFields(); setItemProductMap({}); };
+  const handleClose = () => { setOpen(false); form.resetFields(); setItemProductMap({}); setItemPrintConfigMap({}); };
 
   return (
     <>
       <Button type="primary" icon={<PlusOutlined />} onClick={() => setOpen(true)}>
         Tạo đơn hàng
       </Button>
+
+      {/* Modal link upload ảnh in */}
+      <Modal
+        title="Đơn hàng đã được tạo"
+        open={!!printUploadLink}
+        onCancel={() => setPrintUploadLink(null)}
+        footer={<Button type="primary" onClick={() => setPrintUploadLink(null)}>Đóng</Button>}
+        width={480}
+      >
+        <div className="space-y-3 py-2">
+          <Text>Đơn có sản phẩm cần in ảnh. Gửi link sau cho khách hàng để họ upload ảnh:</Text>
+          <div className="flex items-center gap-2 rounded-lg border border-dashed border-blue-300 bg-blue-50 p-3">
+            <Text className="flex-1 break-all font-mono text-xs text-blue-700">{printUploadLink}</Text>
+            <Button
+              size="small"
+              icon={<CopyOutlined />}
+              onClick={() => {
+                if (printUploadLink) {
+                  navigator.clipboard.writeText(printUploadLink);
+                  notification.success({ message: 'Đã copy link', duration: 2 });
+                }
+              }}
+            >
+              Copy
+            </Button>
+          </div>
+        </div>
+      </Modal>
 
       <Modal
         title="Tạo đơn hàng mới"
@@ -228,7 +306,7 @@ export function CreateOrderModal({ onCreated }: Props) {
                                     <span style={{ fontSize: 18, lineHeight: 1 }}>📦</span>
                                   )}
                                   <span style={{ flex: 1, minWidth: 0 }}>
-                                    {p.isNfc ? '📡 ' : ''}{p.name}
+                                    {p.canBeNfc ? '📡 ' : ''}{p.name}
                                     <span style={{ color: '#888', marginLeft: 6, fontSize: 12 }}>
                                       {p.price.toLocaleString('vi-VN')}đ
                                     </span>
@@ -278,17 +356,47 @@ export function CreateOrderModal({ onCreated }: Props) {
                           />
                         </Form.Item>
 
-                        {/* NFC badge (catalog) hoặc Checkbox (manual) + Xóa */}
+                        {/* NFC toggle + Xóa */}
                         <div className="col-span-2 flex items-center justify-end gap-1">
-                          {/* Always keep isNfc registered so onFinish includes it */}
-                          <Form.Item name={[name, 'isNfc']} valuePropName="checked" className="mb-0" hidden={fromCatalog}>
-                            <Checkbox>NFC</Checkbox>
+                          {/* Hidden field để giữ giá trị isNfc trong form */}
+                          <Form.Item name={[name, 'isNfc']} valuePropName="checked" className="mb-0 hidden">
+                            <Checkbox />
                           </Form.Item>
-                          {fromCatalog && (
-                            catalogProduct?.isNfc
-                              ? <Tag color="blue" className="text-[10px]">📡 NFC</Tag>
-                              : <Tag className="text-[10px]">Thường</Tag>
+
+                          {fromCatalog ? (
+                            catalogProduct?.canBeNfc ? (
+                              /* Sản phẩm có thể NFC → cho chọn */
+                              <Form.Item noStyle shouldUpdate>
+                                {() => {
+                                  const extra = catalogProduct.nfcExtraPrice || globalNfcPrice;
+                                  const isOn = !!form.getFieldValue(['items', name, 'isNfc']);
+                                  return (
+                                    <Tooltip title={isOn ? `Đã cộng +${extra.toLocaleString('vi-VN')}đ` : `+${extra.toLocaleString('vi-VN')}đ khi bật`}>
+                                      <Switch
+                                        size="small"
+                                        checked={isOn}
+                                        onChange={(checked) => handleNfcToggle(name, checked)}
+                                        checkedChildren="📡 NFC"
+                                        unCheckedChildren="NFC"
+                                      />
+                                    </Tooltip>
+                                  );
+                                }}
+                              </Form.Item>
+                            ) : (
+                              /* Sản phẩm không có NFC → ẩn hẳn */
+                              null
+                            )
+                          ) : (
+                            /* Manual mode → checkbox như cũ */
+                            <Checkbox
+                              checked={!!form.getFieldValue(['items', name, 'isNfc'])}
+                              onChange={(e) => handleNfcToggle(name, e.target.checked)}
+                            >
+                              <span className="text-xs">NFC</span>
+                            </Checkbox>
                           )}
+
                           {fields.length > 1 && (
                             <Button
                               type="text"
