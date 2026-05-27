@@ -7,6 +7,7 @@ const initialState: IEditDraft = {
   styleId: 'grad-classic',
   frameId: 'none',
   effectId: 'none',
+  introId: 'none',
   bgColor: '',
   bgImageUrl: '',
   title: '',
@@ -52,6 +53,10 @@ const editSlice = createSlice({
       state.effectId = action.payload;
       state.isDirty = true;
     },
+    setIntro: (state, action: PayloadAction<string>) => {
+      state.introId = action.payload;
+      state.isDirty = true;
+    },
     updateField: (state, action: PayloadAction<Partial<Omit<IEditDraft, 'isDirty'>>>) => {
       Object.assign(state, action.payload);
       state.isDirty = true;
@@ -63,5 +68,5 @@ const editSlice = createSlice({
   },
 });
 
-export const { setOrderId, setTemplate, setStyle, setFrame, setEffect, updateField, resetDraft, markSaved } = editSlice.actions;
+export const { setOrderId, setTemplate, setStyle, setFrame, setEffect, setIntro, updateField, resetDraft, markSaved } = editSlice.actions;
 export default editSlice.reducer;

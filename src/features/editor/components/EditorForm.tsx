@@ -10,6 +10,7 @@ import { ImageModePicker } from './pickers/ImageModePicker';
 import { ImageFilterPicker } from './pickers/ImageFilterPicker';
 import { FramePicker } from './pickers/FramePicker';
 import { EffectPicker } from './pickers/EffectPicker';
+import { IntroPicker } from './pickers/IntroPicker';
 import { TemplatePicker } from './pickers/TemplatePicker';
 import { ImageField } from './fields/ImageField';
 import { TextField } from './fields/TextField';
@@ -51,6 +52,7 @@ export function EditorForm() {
                     label: 'Trang trí',
                     children: (
                       <div className="space-y-5 pt-1">
+                        <IntroPicker />
                         <FramePicker />
                         <EffectPicker />
                       </div>
@@ -82,6 +84,7 @@ export function EditorForm() {
                     label: 'Trang trí',
                     children: (
                       <div className="space-y-5 pt-1">
+                        <IntroPicker />
                         <FramePicker />
                         <EffectPicker />
                       </div>

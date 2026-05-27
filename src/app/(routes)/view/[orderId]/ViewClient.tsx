@@ -8,6 +8,7 @@ import { CardAPI } from '@/services/CardAPI';
 import { TemplateRenderer } from '@/features/preview/TemplateRenderer';
 import { FrameOverlay } from '@/features/preview/FrameOverlay';
 import { EffectOverlay } from '@/features/preview/EffectOverlay';
+import { IntroOverlay } from '@/features/preview/IntroOverlay';
 import { getScreenBackground } from '@/features/preview/screenBg';
 import { getTemplateStyles } from '@/templates/registry';
 import '@/templates/init';
@@ -129,6 +130,7 @@ const fullscreenCenter: React.CSSProperties = {
 
 export function ViewClient({ orderId }: { orderId: string }) {
   const [scale, setScale] = useState<number | null>(null);
+  const [introCompleted, setIntroCompleted] = useState(false);
 
   useEffect(() => {
     const update = () => {
@@ -160,6 +162,9 @@ export function ViewClient({ orderId }: { orderId: string }) {
   const activeFrame = FRAMES.find(f => f.id === (memorial?.frameId  ?? 'none')) ?? FRAMES[0];
   const activeEffect = EFFECTS.find(e => e.id === (memorial?.effectId ?? 'none')) ?? EFFECTS[0];
 
+  const introId = memorial?.introId ?? 'none';
+  const hasIntro = introId && introId !== 'none';
+
   if (!scale || isLoading) return <LoadingScreen />;
   if (isError) return <NoContentScreen cardId={orderId} />;
   if (!memorial) return <NoContentScreen cardId={orderId} />;
@@ -171,6 +176,18 @@ export function ViewClient({ orderId }: { orderId: string }) {
   return (
     <>
       <style>{`#tapory-screen::-webkit-scrollbar{display:none}`}</style>
+
+      {/* Intro overlay — blocks view until user interacts */}
+      {hasIntro && !introCompleted && (
+        <IntroOverlay
+          introId={introId}
+          onComplete={() => setIntroCompleted(true)}
+          primaryColor={activeStyle?.colors.primary}
+          accentColor={activeStyle?.colors.accent}
+          title={memorial.title}
+          imageUrl={memorial.imageUrl}
+        />
+      )}
 
       <div
         style={{

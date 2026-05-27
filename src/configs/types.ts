@@ -42,6 +42,13 @@ export interface IEffect {
   icon: string;
 }
 
+export interface IIntro {
+  id: string;
+  name: string;
+  icon: string;
+  hint: string;
+}
+
 export interface ITemplate {
   id: TemplateId;
   name: string;
@@ -92,6 +99,7 @@ export interface IMemorial {
   styleId: string;
   frameId: string;
   effectId: string;
+  introId?: string;
   bgColor: string;
   bgImageUrl: string;
   title: string;

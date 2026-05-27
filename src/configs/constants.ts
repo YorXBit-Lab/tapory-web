@@ -1,4 +1,4 @@
-import type { IEffect, IFrame, ITemplate, TemplateId } from './types';
+import type { IEffect, IFrame, IIntro, ITemplate, TemplateId } from './types';
 
 export const TEMPLATES: Record<TemplateId, ITemplate> = {
   graduation: {
@@ -127,6 +127,20 @@ export const EFFECTS: IEffect[] = [
   { id: 'poop',      name: 'Mưa bùn',   icon: '💩' },
   { id: 'money',     name: 'Tiền bay',  icon: '💸' },
   { id: 'party',     name: 'Bữa tiệc',  icon: '🎉' },
+];
+
+export const INTROS: IIntro[] = [
+  { id: 'none',       name: 'Không',        icon: '⬜', hint: 'Hiển thị thẳng nội dung' },
+  { id: 'letter',     name: 'Phong Bì',     icon: '📮', hint: 'Chạm mở phong bì' },
+  { id: 'curtain',    name: 'Màn Nhung',    icon: '🎭', hint: 'Kéo màn sân khấu' },
+  { id: 'polaroid',   name: 'Polaroid',     icon: '📸', hint: 'Lật ảnh polaroid' },
+  { id: 'countdown',  name: 'Điện Ảnh',    icon: '🎬', hint: 'Đếm ngược phim' },
+  { id: 'typewriter', name: 'Lời Nhắn',    icon: '✍️', hint: 'Lời nhắn bí mật' },
+  { id: 'rose',       name: 'Hoa Nở',      icon: '🌹', hint: 'Hoa hồng nở rộ' },
+  { id: 'lock',       name: 'Trái Tim',    icon: '🔐', hint: 'Mở khóa trái tim' },
+  { id: 'gate',       name: 'Cánh Cửa',   icon: '🚪', hint: 'Mở cánh cửa bí ẩn' },
+  { id: 'flip',       name: 'Lật Album',   icon: '📖', hint: 'Lật trang album' },
+  { id: 'scratch',    name: 'Cào May Mắn', icon: '🪙', hint: 'Cào để khám phá' },
 ];
 
 /** Phụ phí NFC mặc định (VND) — dùng khi sản phẩm không set nfcExtraPrice riêng */
