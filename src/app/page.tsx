@@ -6,6 +6,7 @@ import NextImage from 'next/image';
 import { Button, Tag, Typography, Divider, Image, Dropdown } from 'antd';
 import { useProducts } from '@/hooks/product';
 import type { IProduct } from '@/configs/types';
+import { ThemeToggle } from '@/components/ui/ThemeToggle';
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -393,12 +394,15 @@ export default function HomePage() {
       {/* ────────── NAV ────────── */}
       <nav className="border-border bg-background/85 sticky top-0 z-[1020] border-b backdrop-blur-lg">
         <div className="mx-auto flex h-[60px] max-w-[1240px] items-center justify-between px-4 sm:px-6">
-          <Link
-            href="/"
-            className="text-primary flex items-center gap-2 text-xl font-bold sm:text-2xl"
-          >
-            <span className="bg-primary inline-block h-2 w-2 rounded-full" />
-            Góc Chạm
+          <Link href="/" className="flex items-center">
+            <NextImage
+              src="/images/logo/logo_goccham_stransparent.png"
+              alt="Góc Chạm"
+              width={200}
+              height={64}
+              className="h-14 w-auto object-contain"
+              priority
+            />
           </Link>
 
           <div className="hidden gap-6 md:flex">
@@ -414,10 +418,10 @@ export default function HomePage() {
           </div>
 
           <div className="flex items-center gap-2">
-            {/* Desktop: moon + CTA */}
-            <button className="border-border text-content2 hover:border-primary hover:text-primary hidden h-9 w-9 cursor-pointer items-center justify-center rounded-full border bg-transparent transition-colors md:flex">
-              <MoonIcon />
-            </button>
+            {/* Desktop: theme toggle + CTA */}
+            <div className="hidden md:flex">
+              <ThemeToggle />
+            </div>
             <Dropdown
               trigger={['click']}
               placement="bottomLeft"
@@ -446,7 +450,7 @@ export default function HomePage() {
                 size="large"
                 shape="round"
                 icon={<ArrowRight />}
-                iconPosition="end"
+                iconPlacement="end"
               >
                 Liên hệ
               </Button>
@@ -477,9 +481,7 @@ export default function HomePage() {
                 </a>
               ))}
               <div className="border-border mt-2 flex items-center gap-2 border-t pt-3">
-                <button className="border-border text-content2 hover:border-primary hover:text-primary flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border bg-transparent transition-colors">
-                  <MoonIcon />
-                </button>
+                <ThemeToggle />
                 <Button
                   type="primary"
                   href="#pricing"
@@ -578,7 +580,7 @@ export default function HomePage() {
                     size="large"
                     shape="round"
                     icon={<ArrowRight />}
-                    iconPosition="end"
+                    iconPlacement="end"
                   >
                     Liên hệ
                   </Button>

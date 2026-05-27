@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 import { Avatar, Layout, Menu, Typography, theme } from 'antd';
+import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useState } from 'react';
@@ -137,22 +138,25 @@ function DashboardInner({ children }: { children: React.ReactNode }) {
       >
         {/* Logo */}
         <div
-          className="flex h-[52px] flex-shrink-0 items-center gap-2.5 px-4"
+          className="flex h-[52px] flex-shrink-0 items-center justify-center px-3"
           style={{ borderBottom: `1px solid ${token.colorBorderSecondary}` }}
         >
-          <div
-            className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg"
-            style={{ backgroundColor: token.colorPrimary }}
-          >
-            <div
-              className="h-2.5 w-2.5 rounded-full"
-              style={{ backgroundColor: token.colorBgContainer }}
+          {collapsed ? (
+            <Image
+              src="/images/logo/logo_goccham_stransparent.png"
+              alt="Góc Chạm"
+              width={32}
+              height={32}
+              className="h-8 w-8 object-contain"
             />
-          </div>
-          {!collapsed && (
-            <Text strong className="text-sm tracking-tight">
-              Góc Chạm
-            </Text>
+          ) : (
+            <Image
+              src="/images/logo/logo_goccham_stransparent.png"
+              alt="Góc Chạm"
+              width={120}
+              height={36}
+              className="h-8 w-auto object-contain"
+            />
           )}
           <button
             onClick={() => setCollapsed(!collapsed)}
