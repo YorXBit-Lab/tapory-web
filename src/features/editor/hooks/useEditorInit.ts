@@ -18,6 +18,21 @@ export function useEditorInit(orderId: string, initialTemplate: TemplateId) {
 
     dispatch(setOrderId(orderId));
 
+    // ── Demo mode: URL param is the source of truth, skip Firestore entirely ──
+    if (orderId === 'demo') {
+      dispatch(setTemplate(initialTemplate));
+      dispatch(updateField(TEMPLATE_DEFAULTS[initialTemplate]));
+      const demoStyles = getTemplateStyles(initialTemplate);
+      if (demoStyles[0]) dispatch(setStyle(demoStyles[0].id));
+      return;
+    }
+
+    // ── Real card: apply initialTemplate immediately (server already resolved it),
+    //    then async-load saved memorial to populate content fields. ──
+    dispatch(setTemplate(initialTemplate));
+    const initStyles = getTemplateStyles(initialTemplate);
+    if (initStyles[0]) dispatch(setStyle(initStyles[0].id));
+
     MemorialAPI.getOne(orderId).then(async ({ data }) => {
       if (data) {
         const memorial = data as Record<string, unknown>;
