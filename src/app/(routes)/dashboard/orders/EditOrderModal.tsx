@@ -3,7 +3,9 @@
 import { useEffect, useState } from 'react';
 import { App, AutoComplete, Button, Form, Input, InputNumber, Modal, Select, Switch } from 'antd';
 import { DeleteOutlined, EditOutlined, PlusOutlined } from '@ant-design/icons';
-import { OrderAPI, type IOrder, type IOrderItem } from '@/services/OrderAPI';
+import { useQueryClient } from '@tanstack/react-query';
+import { useAdminAuth } from '@/contexts/AdminAuthContext';
+import { type IOrder, type IOrderItem } from '@/services/OrderAPI';
 import { STATUS_TAG } from '@/components/dashboard';
 import { useProducts } from '@/hooks/product';
 import type { IProduct } from '@/configs/types';
@@ -36,6 +38,8 @@ export function EditOrderModal({ order, onUpdated, asButton = false }: Props) {
   const [loading, setLoading] = useState(false);
   const [form] = Form.useForm<FormValues>();
   const { notification } = App.useApp();
+  const { user } = useAdminAuth();
+  const queryClient = useQueryClient();
   const { data: products = [] } = useProducts();
   const watchedItems: IOrderItem[] = Form.useWatch('items', form) ?? [];
 
@@ -64,28 +68,35 @@ export function EditOrderModal({ order, onUpdated, asButton = false }: Props) {
   }, [open, order, form]);
 
   const handleSubmit = async (values: FormValues) => {
+    if (!user) return;
     setLoading(true);
     try {
-      await OrderAPI.update(order.id, {
-        customerName: values.customerName,
-        phone:        values.phone,
-        address:      values.address,
-        price:        values.price,
-        notes:        values.notes,
-        status:       values.status,
-        items:        values.items,
+      const idToken = await user.getIdToken();
+      const res = await fetch('/api/admin/update-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${idToken}` },
+        body: JSON.stringify({ orderId: order.id, fields: values }),
       });
+      const json = await res.json() as { error?: string };
+      if (!res.ok) throw new Error(json.error ?? 'Cập nhật thất bại');
+
       notification.success({ message: 'Đã cập nhật đơn hàng' });
       setOpen(false);
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+      queryClient.invalidateQueries({ queryKey: ['products'] });
       onUpdated();
-    } catch {
-      notification.error({ message: 'Cập nhật thất bại' });
+    } catch (err) {
+      notification.error({
+        message: 'Cập nhật thất bại',
+        description: err instanceof Error ? err.message : undefined,
+      });
     } finally {
       setLoading(false);
     }
   };
 
-  const productOptions = (products as IProduct[]).map(p => ({ value: p.name, label: p.name }));
+  const productList = products as IProduct[];
+  const productOptions = productList.map(p => ({ value: p.name, label: p.name }));
 
   const trigger = asButton ? (
     <Button icon={<EditOutlined />} size="small" onClick={() => setOpen(true)}>Sửa</Button>
@@ -152,6 +163,11 @@ export function EditOrderModal({ order, onUpdated, asButton = false }: Props) {
               <div className="mb-4 space-y-2">
                 {fields.map(({ key, name, ...restField }) => (
                   <div key={key} className="flex items-center gap-2">
+                    {/* productId ẩn — bảo toàn để server tính stock diff */}
+                    <Form.Item name={[name, 'productId']} hidden>
+                      <Input />
+                    </Form.Item>
+
                     {/* Tên */}
                     <Form.Item
                       {...restField}
@@ -166,11 +182,17 @@ export function EditOrderModal({ order, onUpdated, asButton = false }: Props) {
                         }
                         placeholder="Tên sản phẩm"
                         onSelect={(val) => {
-                          const p = (products as IProduct[]).find(p => p.name === val);
+                          const p = productList.find(p => p.name === val);
                           if (p) {
                             form.setFieldValue(['items', name, 'unitPrice'], p.price);
-                            form.setFieldValue(['items', name, 'isNfc'], p.isNfc);
+                            form.setFieldValue(['items', name, 'isNfc'], p.canBeNfc);
+                            form.setFieldValue(['items', name, 'productId'], p.id);
                           }
+                        }}
+                        onChange={(val) => {
+                          // Xóa productId nếu tên không khớp catalog — tránh stock sai
+                          const exact = productList.find(p => p.name === val);
+                          if (!exact) form.setFieldValue(['items', name, 'productId'], undefined);
                         }}
                       />
                     </Form.Item>

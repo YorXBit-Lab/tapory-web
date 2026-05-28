@@ -107,10 +107,26 @@ export default function OrdersPage() {
 
   const handleStatusChange = async (orderId: string, newStatus: StatusKey) => {
     try {
-      await OrderAPI.update(orderId, { status: newStatus });
+      const { auth } = await import('@/libs/firebase');
+      const currentUser = auth.currentUser;
+      if (!currentUser) throw new Error('Chưa đăng nhập');
+      const idToken = await currentUser.getIdToken();
+
+      const res = await fetch('/api/admin/update-order-status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${idToken}` },
+        body: JSON.stringify({ orderId, newStatus }),
+      });
+      const json = await res.json() as { error?: string };
+      if (!res.ok) throw new Error(json.error ?? 'Lỗi cập nhật');
+
       queryClient.invalidateQueries({ queryKey: ['orders'] });
-    } catch {
-      notification.error({ message: 'Cập nhật trạng thái thất bại' });
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+    } catch (err) {
+      notification.error({
+        message: 'Cập nhật trạng thái thất bại',
+        description: err instanceof Error ? err.message : undefined,
+      });
     }
   };
 

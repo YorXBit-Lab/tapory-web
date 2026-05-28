@@ -6,6 +6,7 @@ import {
   getDocs,
   updateDoc,
   deleteDoc,
+  deleteField,
   orderBy,
   query,
   serverTimestamp,
@@ -13,7 +14,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '@/libs/firebase';
 import { FIRESTORE_COLLECTIONS } from '@/configs/constants';
-import type { IProduct, IPrintConfig } from '@/configs/types';
+import type { IProduct, IProductVariant, IPrintConfig, ProductStatus } from '@/configs/types';
 
 const COL = FIRESTORE_COLLECTIONS.PRODUCTS;
 
@@ -21,7 +22,6 @@ function clean<T extends object>(obj: T): Partial<T> {
   return Object.fromEntries(
     Object.entries(obj).filter(([k, v]) => {
       if (v === undefined || v === '') return false;
-      // nfcExtraPrice = 0 có nghĩa là "để trống" — không lưu để fallback về global
       if (k === 'nfcExtraPrice' && v === 0) return false;
       return true;
     }),
@@ -40,17 +40,59 @@ function toPrintConfig(raw: unknown): IPrintConfig | undefined {
   };
 }
 
+function toVariants(raw: unknown): Record<string, IProductVariant> | undefined {
+  if (!raw || typeof raw !== 'object') return undefined;
+  const result: Record<string, IProductVariant> = {};
+  for (const [id, v] of Object.entries(raw as Record<string, unknown>)) {
+    if (!v || typeof v !== 'object') continue;
+    const r = v as Record<string, unknown>;
+    result[id] = {
+      name: (r.name as string) ?? '',
+      price: (r.price as number) ?? 0,
+      stock: r.stock as number | undefined,
+      imageUrl: r.imageUrl as string | undefined,
+      isNfc: r.isNfc as boolean | undefined,
+      printConfig: toPrintConfig(r.printConfig),
+    };
+  }
+  return Object.keys(result).length > 0 ? result : undefined;
+}
+
+/** Deep-clean variants trước khi lưu Firestore (loại undefined) */
+function serializeVariants(variants: Record<string, IProductVariant> | undefined): Record<string, unknown> | undefined {
+  if (!variants || Object.keys(variants).length === 0) return undefined;
+  const out: Record<string, unknown> = {};
+  for (const [id, v] of Object.entries(variants)) {
+    const entry: Record<string, unknown> = { name: v.name, price: v.price };
+    if (v.stock !== undefined) entry.stock = v.stock;
+    if (v.imageUrl) entry.imageUrl = v.imageUrl;
+    if (v.isNfc) entry.isNfc = true;
+    if (v.printConfig?.enabled && v.printConfig.shape) {
+      const pc: Record<string, unknown> = { enabled: true, shape: v.printConfig.shape };
+      if (v.printConfig.width != null) pc.width = v.printConfig.width;
+      if (v.printConfig.height != null) pc.height = v.printConfig.height;
+      if (v.printConfig.diameter != null) pc.diameter = v.printConfig.diameter;
+      entry.printConfig = pc;
+    }
+    out[id] = entry;
+  }
+  return out;
+}
+
 function toProduct(id: string, d: Record<string, unknown>): IProduct {
   return {
     id,
     name: (d.name as string) ?? '',
     price: (d.price as number) ?? 0,
+    status: (d.status as ProductStatus | undefined) ?? 'active',
+    stock: d.stock as number | undefined,
     canBeNfc: (d.canBeNfc as boolean) ?? (d.isNfc as boolean) ?? false,
     nfcExtraPrice: d.nfcExtraPrice as number | undefined,
     templateId: d.templateId as IProduct['templateId'] | undefined,
     description: d.description as string | undefined,
     imageUrl: d.imageUrl as string | undefined,
     printConfig: toPrintConfig(d.printConfig),
+    variants: toVariants(d.variants),
     createdAt: (d.createdAt as Timestamp)?.toDate?.()?.toISOString(),
     updatedAt: (d.updatedAt as Timestamp)?.toDate?.()?.toISOString(),
   };
@@ -70,8 +112,11 @@ export const ProductAPI = {
   },
 
   createOne: async (data: Omit<IProduct, 'id' | 'createdAt' | 'updatedAt'>): Promise<{ data: { id: string } }> => {
+    const { variants, ...rest } = data;
+    const serializedVariants = serializeVariants(variants);
     const ref = await addDoc(collection(db, COL), {
-      ...clean(data),
+      ...clean(rest),
+      ...(serializedVariants ? { variants: serializedVariants } : {}),
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     });
@@ -79,7 +124,19 @@ export const ProductAPI = {
   },
 
   updateOne: async (id: string, data: Partial<Omit<IProduct, 'id' | 'createdAt' | 'updatedAt'>>): Promise<{ data: { id: string } }> => {
-    await updateDoc(doc(db, COL, id), { ...clean(data), updatedAt: serverTimestamp() });
+    const { variants, ...rest } = data;
+    const payload: Record<string, unknown> = { ...clean(rest), updatedAt: serverTimestamp() };
+
+    // stock: undefined → xóa field (chuyển về không giới hạn)
+    if ('stock' in rest && rest.stock === undefined) payload.stock = deleteField();
+
+    // variants: luôn cập nhật nếu được truyền vào (kể cả khi rỗng → deleteField)
+    if ('variants' in data) {
+      const serialized = serializeVariants(variants);
+      payload.variants = serialized ?? deleteField();
+    }
+
+    await updateDoc(doc(db, COL, id), payload);
     return { data: { id } };
   },
 
