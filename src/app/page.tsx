@@ -797,7 +797,7 @@ export default function HomePage() {
                   <Image
                     src={t.imageUrl}
                     alt={t.name}
-                    wrapperStyle={{ position: 'absolute', inset: 0 }}
+                    styles={{ root: { position: 'absolute', inset: 0 } }}
                     style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
                   />
                   <div
@@ -995,7 +995,7 @@ export default function HomePage() {
               size="large"
               shape="round"
               icon={<ArrowRight />}
-              iconPosition="end"
+              iconPlacement="end"
             >
               Liên hệ
             </Button>

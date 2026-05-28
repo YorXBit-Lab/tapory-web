@@ -25,7 +25,9 @@
       "Bash(Out-Null)",
       "Bash(Write-Output \"ok\")",
       "Bash(Start-Sleep -Seconds 5)",
-      "Bash(Get-Content \"C:\\\\Users\\\\ADMIN\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\D--YORXBIT-tapory-web\\\\177731ee-8b61-49c9-b609-d2ad36a69998\\\\tasks\\\\b0xnxl0te.output\" -Tail 20)"
+      "Bash(Get-Content \"C:\\\\Users\\\\ADMIN\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\D--YORXBIT-tapory-web\\\\177731ee-8b61-49c9-b609-d2ad36a69998\\\\tasks\\\\b0xnxl0te.output\" -Tail 20)",
+      "Bash(Get-ChildItem *)",
+      "Bash(xargs ls -lh)"
     ]
   }
 }

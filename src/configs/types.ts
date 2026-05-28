@@ -61,6 +61,8 @@ export interface ITemplate {
   };
 }
 
+export type ProductStatus = 'draft' | 'active' | 'archived';
+
 export type PrintShape = 'rectangle' | 'square' | 'circle';
 
 export interface IPrintPhotoSlot {
@@ -79,16 +81,29 @@ export interface IPrintConfig {
   diameter?: number; // cm - cho circle
 }
 
+/** Một tổ hợp cấu hình + giá cố định của sản phẩm (VD: "NFC + In vuông 3×3cm") */
+export interface IProductVariant {
+  name: string;
+  price: number;
+  stock?: number;
+  imageUrl?: string;
+  isNfc?: boolean;           // variant này bao gồm NFC (không cần toggle thêm)
+  printConfig?: IPrintConfig; // override printConfig của sản phẩm cha
+}
+
 export interface IProduct {
   id: string;
   name: string;
-  price: number;
-  canBeNfc: boolean; // sản phẩm có thể thêm NFC — lựa chọn thực tế nằm ở lúc tạo đơn
-  nfcExtraPrice?: number; // phụ phí khi thêm NFC; nếu không set thì dùng DEFAULT_NFC_EXTRA_PRICE
-  templateId?: TemplateId; // template gợi ý mặc định khi chọn NFC
+  price: number;             // giá gốc / fallback khi không chọn variant
+  status: ProductStatus;
+  stock?: number;            // chỉ dùng khi không có variants
+  canBeNfc: boolean;         // chỉ dùng khi không có variants
+  nfcExtraPrice?: number;
+  templateId?: TemplateId;
   description?: string;
   imageUrl?: string;
-  printConfig?: IPrintConfig;
+  printConfig?: IPrintConfig; // chỉ dùng khi không có variants
+  variants?: Record<string, IProductVariant>; // variantId → variant
   createdAt?: string;
   updatedAt?: string;
 }

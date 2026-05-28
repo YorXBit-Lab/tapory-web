@@ -9,6 +9,7 @@ import { useQuery } from '@tanstack/react-query';
 import { StatCard, STATUS_TAG, type StatusKey } from '@/components/dashboard';
 import { OrderAPI, type IOrder } from '@/services/OrderAPI';
 import { CardAPI } from '@/services/CardAPI';
+import { ProductAPI } from '@/services/ProductAPI';
 import { TEMPLATES } from '@/configs/constants';
 import { useRouter } from 'next/navigation';
 
@@ -34,8 +35,9 @@ export default function DashboardOverviewPage() {
   const currentYear = new Date().getFullYear();
   const [selectedYear, setSelectedYear] = useState(currentYear);
 
-  const { data: orders = [] } = useQuery({ queryKey: ['orders'], queryFn: () => OrderAPI.list(), staleTime: 60_000 });
-  const { data: cards = [] }  = useQuery({ queryKey: ['cards-all'], queryFn: () => CardAPI.listAll(), staleTime: 60_000 });
+  const { data: orders = [] }   = useQuery({ queryKey: ['orders'],   queryFn: () => OrderAPI.list(),   staleTime: 60_000 });
+  const { data: cards = [] }    = useQuery({ queryKey: ['cards-all'], queryFn: () => CardAPI.listAll(), staleTime: 60_000 });
+  const { data: products = [] } = useQuery({ queryKey: ['products'],  queryFn: () => ProductAPI.getAll(), staleTime: 60_000 });
 
   const stats = useMemo(() => {
     const today = new Date().toDateString();
@@ -45,8 +47,9 @@ export default function DashboardOverviewPage() {
     const totalCustomers = new Set(orders.map(o => o.phone)).size;
     const totalChips     = cards.length;
     const unwrittenChips = cards.filter(c => !c.nfcWritten).length;
-    return { todayOrders, monthRevenue, totalCustomers, totalChips, unwrittenChips };
-  }, [orders, cards]);
+    const lowStockCount  = products.filter(p => p.status === 'active' && p.stock !== undefined && p.stock <= 5).length;
+    return { todayOrders, monthRevenue, totalCustomers, totalChips, unwrittenChips, lowStockCount };
+  }, [orders, cards, products]);
 
   const dailyChart = useMemo(() => {
     return Array.from({ length: 7 }, (_, i) => {
@@ -65,7 +68,11 @@ export default function DashboardOverviewPage() {
 
   const templateStats = useMemo(() => {
     const counts: Record<string, number> = {};
-    for (const o of orders) counts[o.templateId] = (counts[o.templateId] ?? 0) + 1;
+    for (const o of orders) {
+      for (const item of o.items) {
+        if (item.templateId) counts[item.templateId] = (counts[item.templateId] ?? 0) + 1;
+      }
+    }
     return Object.entries(TEMPLATES)
       .map(([id, t]) => ({ id, label: `${t.icon} ${t.name}`, count: counts[id] ?? 0, color: t.colors.primary }))
       .sort((a, b) => b.count - a.count)
@@ -140,15 +147,21 @@ export default function DashboardOverviewPage() {
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
-        <StatCard label="Đơn hàng hôm nay"        value={String(stats.todayOrders)}          />
-        <StatCard label="Doanh thu tháng"           value={fmtVnd(stats.monthRevenue) + 'đ'}   />
-        <StatCard label="Tổng khách hàng"           value={fmt(stats.totalCustomers)}           />
+      <div className="grid grid-cols-2 gap-3 xl:grid-cols-5">
+        <StatCard label="Đơn hàng hôm nay"  value={String(stats.todayOrders)}        />
+        <StatCard label="Doanh thu tháng"    value={fmtVnd(stats.monthRevenue) + 'đ'} />
+        <StatCard label="Tổng khách hàng"    value={fmt(stats.totalCustomers)}        />
         <StatCard
           label="Chip NFC"
           value={fmt(stats.totalChips)}
           delta={stats.unwrittenChips > 0 ? `${stats.unwrittenChips} chưa ghi` : 'Tất cả đã ghi'}
           deltaType={stats.unwrittenChips > 0 ? 'down' : 'up'}
+        />
+        <StatCard
+          label="Sắp hết hàng"
+          value={String(stats.lowStockCount)}
+          delta={stats.lowStockCount > 0 ? 'Cần nhập hàng' : 'Đủ hàng'}
+          deltaType={stats.lowStockCount > 0 ? 'down' : 'up'}
         />
       </div>
 

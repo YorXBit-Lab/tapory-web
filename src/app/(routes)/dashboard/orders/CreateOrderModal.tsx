@@ -46,7 +46,8 @@ export function CreateOrderModal({ onCreated }: Props) {
   const items: IOrderItem[] = Form.useWatch('items', form) ?? [];
 
   const { data: products = [] } = useProducts();
-  const productList = products as IProduct[];
+  // Chỉ hiện sản phẩm đang bán trong dropdown tạo đơn
+  const productList = (products as IProduct[]).filter(p => p.status === 'active' || p.status === undefined);
 
   const { data: settings } = useQuery({
     queryKey: ['settings'],
@@ -82,6 +83,8 @@ export function CreateOrderModal({ onCreated }: Props) {
 
   // Track item index → product ID (để biết item nào đã chọn từ catalog)
   const [itemProductMap, setItemProductMap] = useState<Record<number, string>>({});
+  // Track item index → selected variant { id, name }
+  const [itemVariantMap, setItemVariantMap] = useState<Record<number, { id: string; name: string } | null>>({});
   // Track item index → printConfig (từ catalog)
   const [itemPrintConfigMap, setItemPrintConfigMap] = useState<Record<number, IPrintConfig | undefined>>({});
   // Link upload ảnh in sau khi tạo đơn thành công
@@ -99,10 +102,12 @@ export function CreateOrderModal({ onCreated }: Props) {
     try {
       const idToken = await user.getIdToken();
 
-      // Merge printConfig từ catalog vào items
+      // Merge printConfig, productId và variantId từ catalog vào items
       const itemsWithPrint = values.items.map((item, idx) => ({
         ...item,
         ...(itemPrintConfigMap[idx]?.enabled ? { printConfig: itemPrintConfigMap[idx] } : {}),
+        ...(itemProductMap[idx] ? { productId: itemProductMap[idx] } : {}),
+        ...(itemVariantMap[idx] ? { variantId: itemVariantMap[idx]!.id, variantName: itemVariantMap[idx]!.name } : {}),
       }));
 
       const res = await fetch('/api/admin/create-order', {
@@ -117,6 +122,7 @@ export function CreateOrderModal({ onCreated }: Props) {
       const hasPrintItems = itemsWithPrint.some(i => i.printConfig?.enabled);
       form.resetFields();
       setItemProductMap({});
+      setItemVariantMap({});
       setItemPrintConfigMap({});
       setOpen(false);
       onCreated(json.orderId ?? '');
@@ -144,11 +150,38 @@ export function CreateOrderModal({ onCreated }: Props) {
     if (!product) return;
     form.setFieldValue(['items', fieldName, 'productName'], product.name);
     form.setFieldValue(['items', fieldName, 'unitPrice'], product.price);
-    // isNfc mặc định false — staff tự chọn lúc tạo đơn nếu sản phẩm canBeNfc
     form.setFieldValue(['items', fieldName, 'isNfc'], false);
     form.setFieldValue(['items', fieldName, 'templateId'], null);
     setItemProductMap(prev => ({ ...prev, [fieldName]: productId }));
+    setItemVariantMap(prev => { const n = { ...prev }; delete n[fieldName]; return n; });
     setItemPrintConfigMap(prev => ({ ...prev, [fieldName]: product.printConfig }));
+  };
+
+  /* Chọn biến thể → cập nhật giá, isNfc, printConfig */
+  const applyVariant = (fieldName: number, variantId: string) => {
+    const productId = itemProductMap[fieldName];
+    const product = productId ? productList.find(p => p.id === productId) : null;
+    if (!product?.variants) return;
+    const variant = product.variants[variantId];
+    if (!variant) return;
+    form.setFieldValue(['items', fieldName, 'unitPrice'], variant.price);
+    form.setFieldValue(['items', fieldName, 'isNfc'], variant.isNfc ?? false);
+    form.setFieldValue(['items', fieldName, 'templateId'], variant.isNfc ? (product.templateId ?? null) : null);
+    setItemVariantMap(prev => ({ ...prev, [fieldName]: { id: variantId, name: variant.name } }));
+    setItemPrintConfigMap(prev => ({ ...prev, [fieldName]: variant.printConfig }));
+  };
+
+  /* Xóa chọn biến thể → về base price của sản phẩm */
+  const clearVariant = (fieldName: number) => {
+    const productId = itemProductMap[fieldName];
+    const product = productId ? productList.find(p => p.id === productId) : null;
+    setItemVariantMap(prev => { const n = { ...prev }; delete n[fieldName]; return n; });
+    if (product) {
+      form.setFieldValue(['items', fieldName, 'unitPrice'], product.price);
+      form.setFieldValue(['items', fieldName, 'isNfc'], false);
+      form.setFieldValue(['items', fieldName, 'templateId'], null);
+      setItemPrintConfigMap(prev => ({ ...prev, [fieldName]: product.printConfig }));
+    }
   };
 
   /* Khi staff bật/tắt NFC → điều chỉnh giá và template */
@@ -177,10 +210,11 @@ export function CreateOrderModal({ onCreated }: Props) {
     form.setFieldValue(['items', fieldName, 'isNfc'], false);
     form.setFieldValue(['items', fieldName, 'templateId'], null);
     setItemProductMap(prev => { const n = { ...prev }; delete n[fieldName]; return n; });
+    setItemVariantMap(prev => { const n = { ...prev }; delete n[fieldName]; return n; });
     setItemPrintConfigMap(prev => { const n = { ...prev }; delete n[fieldName]; return n; });
   };
 
-  const handleClose = () => { setOpen(false); form.resetFields(); setItemProductMap({}); setItemPrintConfigMap({}); };
+  const handleClose = () => { setOpen(false); form.resetFields(); setItemProductMap({}); setItemVariantMap({}); setItemPrintConfigMap({}); };
 
   return (
     <>
@@ -271,6 +305,11 @@ export function CreateOrderModal({ onCreated }: Props) {
                   const fromCatalog = !!itemProductMap[name];
                   const catalogProduct = fromCatalog ? productList.find(p => p.id === itemProductMap[name]) : null;
 
+                  const selectedVariant = itemVariantMap[name];
+                  const catalogVariants = fromCatalog && catalogProduct?.variants
+                    ? Object.entries(catalogProduct.variants)
+                    : null;
+
                   return (
                     <div key={key} className="rounded-lg border border-divider bg-gray-50 p-3">
 
@@ -289,31 +328,71 @@ export function CreateOrderModal({ onCreated }: Props) {
                               String(option?.label ?? '').toLowerCase().includes(input.toLowerCase())
                             }
                           >
-                            {productList.map(p => (
-                              <Select.Option
-                                key={p.id}
-                                value={p.id}
-                                label={`${p.name} ${p.price.toLocaleString('vi-VN')}`}
-                              >
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                  {p.imageUrl ? (
-                                    <img
-                                      src={p.imageUrl}
-                                      alt={p.name}
-                                      style={{ width: 28, height: 28, borderRadius: 4, objectFit: 'cover', flexShrink: 0 }}
-                                    />
-                                  ) : (
-                                    <span style={{ fontSize: 18, lineHeight: 1 }}>📦</span>
-                                  )}
-                                  <span style={{ flex: 1, minWidth: 0 }}>
-                                    {p.canBeNfc ? '📡 ' : ''}{p.name}
-                                    <span style={{ color: '#888', marginLeft: 6, fontSize: 12 }}>
-                                      {p.price.toLocaleString('vi-VN')}đ
+                            {productList.map(p => {
+                              const outOfStock = p.stock === 0;
+                              return (
+                                <Select.Option
+                                  key={p.id}
+                                  value={p.id}
+                                  disabled={outOfStock}
+                                  label={`${p.name} ${p.price.toLocaleString('vi-VN')}`}
+                                >
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                    {p.imageUrl ? (
+                                      <img
+                                        src={p.imageUrl}
+                                        alt={p.name}
+                                        style={{ width: 28, height: 28, borderRadius: 4, objectFit: 'cover', flexShrink: 0 }}
+                                      />
+                                    ) : (
+                                      <span style={{ fontSize: 18, lineHeight: 1 }}>📦</span>
+                                    )}
+                                    <span style={{ flex: 1, minWidth: 0 }}>
+                                      {p.canBeNfc ? '📡 ' : ''}{p.name}
+                                      <span style={{ color: '#888', marginLeft: 6, fontSize: 12 }}>
+                                        {p.price.toLocaleString('vi-VN')}đ
+                                      </span>
+                                      {p.stock !== undefined && (
+                                        <span style={{ marginLeft: 6, fontSize: 11, color: outOfStock ? '#f5222d' : p.stock <= 5 ? '#fa8c16' : '#52c41a' }}>
+                                          {outOfStock ? '· Hết hàng' : `· Còn ${p.stock}`}
+                                        </span>
+                                      )}
                                     </span>
+                                  </div>
+                                </Select.Option>
+                              );
+                            })}
+                          </Select>
+                        </div>
+                      )}
+
+                      {/* Variant selector — hiện khi sản phẩm có biến thể */}
+                      {catalogVariants && catalogVariants.length > 0 && (
+                        <div className="mb-2">
+                          <Select
+                            placeholder="Chọn biến thể..."
+                            allowClear
+                            size="small"
+                            style={{ width: '100%' }}
+                            value={selectedVariant?.id ?? null}
+                            onChange={(variantId) => variantId ? applyVariant(name, variantId) : clearVariant(name)}
+                          >
+                            {catalogVariants.map(([id, v]) => {
+                              const outOfStock = v.stock === 0;
+                              return (
+                                <Select.Option key={id} value={id} disabled={outOfStock}>
+                                  <span style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                                    {v.isNfc ? '📡 ' : ''}{v.name}
+                                    <span style={{ color: '#888', fontSize: 12 }}>{v.price.toLocaleString('vi-VN')}đ</span>
+                                    {v.stock !== undefined && (
+                                      <span style={{ fontSize: 11, color: outOfStock ? '#f5222d' : v.stock <= 5 ? '#fa8c16' : '#52c41a' }}>
+                                        {outOfStock ? '· Hết' : `· Còn ${v.stock}`}
+                                      </span>
+                                    )}
                                   </span>
-                                </div>
-                              </Select.Option>
-                            ))}
+                                </Select.Option>
+                              );
+                            })}
                           </Select>
                         </div>
                       )}
@@ -363,7 +442,12 @@ export function CreateOrderModal({ onCreated }: Props) {
                             <Checkbox />
                           </Form.Item>
 
-                          {fromCatalog ? (
+                          {fromCatalog && selectedVariant ? (
+                            /* Biến thể đã chọn — NFC cố định theo variant */
+                            form.getFieldValue(['items', name, 'isNfc'])
+                              ? <Tag color="blue" style={{ fontSize: 10, margin: 0 }}>📡 NFC</Tag>
+                              : null
+                          ) : fromCatalog ? (
                             catalogProduct?.canBeNfc ? (
                               /* Sản phẩm có thể NFC → cho chọn */
                               <Form.Item noStyle shouldUpdate>
@@ -383,10 +467,7 @@ export function CreateOrderModal({ onCreated }: Props) {
                                   );
                                 }}
                               </Form.Item>
-                            ) : (
-                              /* Sản phẩm không có NFC → ẩn hẳn */
-                              null
-                            )
+                            ) : null
                           ) : (
                             /* Manual mode → checkbox như cũ */
                             <Checkbox
@@ -406,6 +487,7 @@ export function CreateOrderModal({ onCreated }: Props) {
                               onClick={() => {
                                 remove(name);
                                 setItemProductMap(prev => { const n = { ...prev }; delete n[name]; return n; });
+                                setItemVariantMap(prev => { const n = { ...prev }; delete n[name]; return n; });
                               }}
                             />
                           )}
