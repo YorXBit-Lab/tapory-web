@@ -12,6 +12,7 @@ import { FramePicker } from './pickers/FramePicker';
 import { EffectPicker } from './pickers/EffectPicker';
 import { IntroPicker } from './pickers/IntroPicker';
 import { TemplatePicker } from './pickers/TemplatePicker';
+import { SmartSuggestBanner } from './SmartSuggestBanner';
 import { ImageField } from './fields/ImageField';
 import { TextField } from './fields/TextField';
 import { TextareaField } from './fields/TextareaField';
@@ -26,6 +27,10 @@ export function EditorForm() {
   return (
     <section className="flex-1 space-y-5">
       <TemplatePicker />
+      {/* AI Smart Suggest — analyses imageUrl, shows top 3 style recommendations */}
+      {draft.imageUrl && !isRedirect && !isSpotify && (
+        <SmartSuggestBanner imageUrl={draft.imageUrl} />
+      )}
       <StylePicker />
 
       <Tabs

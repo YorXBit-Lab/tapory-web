@@ -84,6 +84,7 @@ export interface IProduct {
   name: string;
   price: number;
   canBeNfc: boolean; // sản phẩm có thể thêm NFC — lựa chọn thực tế nằm ở lúc tạo đơn
+  isNfc?: boolean;   // sản phẩm này là NFC (dùng cho badge & order-item flag)
   nfcExtraPrice?: number; // phụ phí khi thêm NFC; nếu không set thì dùng DEFAULT_NFC_EXTRA_PRICE
   templateId?: TemplateId; // template gợi ý mặc định khi chọn NFC
   description?: string;

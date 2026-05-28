@@ -65,7 +65,7 @@ export default function DashboardOverviewPage() {
 
   const templateStats = useMemo(() => {
     const counts: Record<string, number> = {};
-    for (const o of orders) counts[o.templateId] = (counts[o.templateId] ?? 0) + 1;
+    for (const o of orders) { const tid = o.templateId ?? ''; counts[tid] = (counts[tid] ?? 0) + 1; }
     return Object.entries(TEMPLATES)
       .map(([id, t]) => ({ id, label: `${t.icon} ${t.name}`, count: counts[id] ?? 0, color: t.colors.primary }))
       .sort((a, b) => b.count - a.count)

@@ -7,6 +7,8 @@ import { TemplateRenderer } from './TemplateRenderer';
 import { FrameOverlay } from './FrameOverlay';
 import { EffectOverlay } from './EffectOverlay';
 import { InlineEditLayer } from './InlineEditLayer';
+import { TextureMaterial } from '@/features/view/components/TextureMaterial';
+import { PreviewBackdrop } from './PreviewBackdrop';
 
 export function PhonePreview() {
   const { draft, activeStyle, activeFrame, activeEffect, fields, dispatch } = useEditorContext();
@@ -30,6 +32,25 @@ export function PhonePreview() {
     </>
   );
 
+  const texture = activeStyle ? (
+    <TextureMaterial
+      templateId={draft.templateId}
+      layout={activeStyle.layout}
+      primary={activeStyle.colors.primary}
+      secondary={activeStyle.colors.secondary}
+      accent={activeStyle.colors.accent}
+    />
+  ) : null;
+
+  const backdrop = activeStyle ? (
+    <PreviewBackdrop
+      primary={activeStyle.colors.primary}
+      secondary={activeStyle.colors.secondary}
+      accent={activeStyle.colors.accent}
+      screenBg={screenBg}
+    />
+  ) : undefined;
+
   const mainContent = (
     <>
       <div
@@ -38,6 +59,7 @@ export function PhonePreview() {
         style={{ ...screenBg, scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch', height: '100%' } as never}
       >
         {activeStyle && <TemplateRenderer data={draft} style={activeStyle} />}
+        {texture}
         <InlineEditLayer containerRef={screenRef} draft={draft} fields={fields} dispatch={dispatch} />
       </div>
       {overlays}
@@ -49,6 +71,7 @@ export function PhonePreview() {
       <div className="absolute inset-0 overflow-y-auto [&::-webkit-scrollbar]:hidden"
         style={{ ...screenBg, scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch', height: '100%' } as never}>
         {activeStyle && <TemplateRenderer data={draft} style={activeStyle} />}
+        {texture}
       </div>
       {overlays}
     </>
@@ -64,7 +87,7 @@ export function PhonePreview() {
 
       {/* Preview — click text to inline-edit; expand button to zoom */}
       <div className="relative">
-        <PhoneShell>{mainContent}</PhoneShell>
+        <PhoneShell backdrop={backdrop}>{mainContent}</PhoneShell>
         <button
           onClick={() => setOpen(true)}
           title="Phóng to"
@@ -127,7 +150,7 @@ export function PhonePreview() {
             style={{ width: 280 }}
             onClick={e => e.stopPropagation()}
           >
-            <PhoneShell>{modalContent}</PhoneShell>
+            <PhoneShell backdrop={backdrop}>{modalContent}</PhoneShell>
           </div>
         </div>
       )}

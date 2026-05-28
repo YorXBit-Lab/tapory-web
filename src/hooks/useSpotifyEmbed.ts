@@ -80,7 +80,7 @@ export interface UseSpotifyEmbedState {
 
 export interface UseSpotifyEmbedReturn extends UseSpotifyEmbedState {
   /** Attach to a hidden div in your layout — Spotify injects the iframe here */
-  holderRef: React.RefObject<HTMLDivElement>;
+  holderRef: React.RefObject<HTMLDivElement | null>;
   /** Resume playback. Must be called synchronously inside a user gesture. */
   play: () => void;
   /** Pause playback. */

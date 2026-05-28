@@ -286,6 +286,7 @@ function ProductModal({
           <Input.TextArea rows={2} placeholder="Mô tả ngắn..." />
         </Form.Item>
 
+        {/* @ts-expect-error — Antd Orientation type mismatch in this version */}
         <Divider orientation="left" orientationMargin={0} className="!mb-3 !mt-1 !text-xs !text-gray-400">
           In ảnh
         </Divider>
