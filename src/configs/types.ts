@@ -63,6 +63,17 @@ export interface ITemplate {
 
 export type ProductStatus = 'draft' | 'active' | 'archived';
 
+/** Mức phí vận chuyển */
+export interface IShippingRate {
+  id: string;
+  name: string;           // "Nội thành HCM", "Tỉnh thành khác"
+  price: number;
+  estimatedDays?: string; // "1-2 ngày", "3-5 ngày"
+  isDefault?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 /** Ảnh mẫu in sẵn gắn với một sản phẩm */
 export interface IPresetPhoto {
   id: string;

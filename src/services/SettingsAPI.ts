@@ -1,21 +1,16 @@
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '@/libs/firebase';
-import { DEFAULT_NFC_EXTRA_PRICE } from '@/configs/constants';
 
 export interface IGlobalSettings {
-  nfcExtraPrice: number;
+  // Placeholder — các cài đặt toàn hệ thống (mở rộng sau)
+  [key: string]: unknown;
 }
-
-const FALLBACK: IGlobalSettings = { nfcExtraPrice: DEFAULT_NFC_EXTRA_PRICE };
 
 export const SettingsAPI = {
   get: async (): Promise<IGlobalSettings> => {
     const snap = await getDoc(doc(db, 'settings', 'global'));
-    if (!snap.exists()) return FALLBACK;
-    const d = snap.data() as Record<string, unknown>;
-    return {
-      nfcExtraPrice: (d.nfcExtraPrice as number) ?? FALLBACK.nfcExtraPrice,
-    };
+    if (!snap.exists()) return {};
+    return snap.data() as IGlobalSettings;
   },
 
   update: async (idToken: string, data: Partial<IGlobalSettings>): Promise<void> => {

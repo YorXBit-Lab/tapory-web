@@ -9,14 +9,14 @@ import { CopyOutlined } from '@ant-design/icons';
 import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
 import { useAdminAuth } from '@/contexts/AdminAuthContext';
-import { DEFAULT_NFC_EXTRA_PRICE, TEMPLATE_LIST } from '@/configs/constants';
-import { SettingsAPI } from '@/services/SettingsAPI';
+import { TEMPLATE_LIST } from '@/configs/constants';
 import { OrderAPI } from '@/services/OrderAPI';
 import { useProducts } from '@/hooks/product';
 import { useServices } from '@/hooks/service';
 import { useAllPresetPhotos } from '@/hooks/presetPhoto';
+import { useShippingRates } from '@/hooks/shippingRate';
 import type { IOrderItem } from '@/services/OrderAPI';
-import type { IProduct, IService, IPresetPhoto, IPrintConfig } from '@/configs/types';
+import type { IProduct, IService, IPresetPhoto, IShippingRate, IPrintConfig } from '@/configs/types';
 
 const { Text } = Typography;
 
@@ -54,6 +54,10 @@ export function CreateOrderModal({ onCreated }: Props) {
   const services = rawServices as IService[];
   const serviceMap = Object.fromEntries(services.map(s => [s.id, s]));
 
+  const { data: rawShipping = [] } = useShippingRates();
+  const shippingRates = rawShipping as IShippingRate[];
+  const [selectedShipping, setSelectedShipping] = useState<IShippingRate | null>(null);
+
   const { data: rawPresets = [] } = useAllPresetPhotos(open);
   const allPresets = rawPresets as IPresetPhoto[];
   const presetsByProduct = allPresets.reduce<Record<string, IPresetPhoto[]>>((acc, p) => {
@@ -61,14 +65,6 @@ export function CreateOrderModal({ onCreated }: Props) {
     acc[p.productId].push(p);
     return acc;
   }, {});
-
-  const { data: settings } = useQuery({
-    queryKey: ['settings'],
-    queryFn: () => SettingsAPI.get(),
-    staleTime: 60_000,
-    enabled: open,
-  });
-  const globalNfcPrice = settings?.nfcExtraPrice ?? DEFAULT_NFC_EXTRA_PRICE;
 
   // Derive khách cũ từ orders history — lookup khi nhập SĐT
   const { data: pastOrders = [] } = useQuery({
@@ -133,7 +129,11 @@ export function CreateOrderModal({ onCreated }: Props) {
       const res = await fetch('/api/admin/create-order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${idToken}` },
-        body: JSON.stringify({ ...values, items: itemsWithPrint }),
+        body: JSON.stringify({
+          ...values,
+          items: itemsWithPrint,
+          ...(selectedShipping ? { shippingFee: selectedShipping.price, shippingRateName: selectedShipping.name } : {}),
+        }),
       });
 
       const json = (await res.json()) as { orderId?: string; error?: string };
@@ -242,25 +242,6 @@ export function CreateOrderModal({ onCreated }: Props) {
     }
   };
 
-  /* Khi staff bật/tắt NFC → điều chỉnh giá và template */
-  const handleNfcToggle = (fieldName: number, checked: boolean) => {
-    form.setFieldValue(['items', fieldName, 'isNfc'], checked);
-    const productId = itemProductMap[fieldName];
-    const product = productId ? productList.find(p => p.id === productId) : null;
-    const nfcExtra = product?.nfcExtraPrice || globalNfcPrice;
-    const basePrice = product?.price ?? (form.getFieldValue(['items', fieldName, 'unitPrice']) as number) ?? 0;
-
-    if (checked) {
-      form.setFieldValue(['items', fieldName, 'unitPrice'], basePrice + nfcExtra);
-      if (product?.templateId) {
-        form.setFieldValue(['items', fieldName, 'templateId'], product.templateId);
-      }
-    } else {
-      form.setFieldValue(['items', fieldName, 'unitPrice'], basePrice - nfcExtra);
-      form.setFieldValue(['items', fieldName, 'templateId'], null);
-    }
-  };
-
   /* Xóa chọn catalog → về manual mode */
   const clearProduct = (fieldName: number) => {
     form.setFieldValue(['items', fieldName, 'productName'], '');
@@ -282,6 +263,7 @@ export function CreateOrderModal({ onCreated }: Props) {
     setItemPrintConfigMap({});
     setItemAddonsMap({});
     setItemPresetMap({});
+    setSelectedShipping(null);
   };
 
   return (
@@ -565,41 +547,20 @@ export function CreateOrderModal({ onCreated }: Props) {
                           />
                         </Form.Item>
 
-                        {/* NFC tag / legacy NFC toggle + Xóa */}
+                        {/* NFC tag + Xóa */}
                         <div className="col-span-2 flex items-center justify-end gap-1">
                           <Form.Item name={[name, 'isNfc']} valuePropName="checked" className="mb-0 hidden">
                             <Checkbox />
                           </Form.Item>
 
-                          {fromCatalog && selectedVariant ? (
+                          {fromCatalog && selectedVariant && form.getFieldValue(['items', name, 'isNfc']) ? (
                             /* Variant có NFC baked-in */
-                            form.getFieldValue(['items', name, 'isNfc'])
-                              ? <Tag color="blue" style={{ fontSize: 10, margin: 0 }}>📡 NFC</Tag>
-                              : null
-                          ) : fromCatalog && !catalogProduct?.addons && catalogProduct?.canBeNfc ? (
-                            /* Legacy: canBeNfc toggle (sản phẩm chưa dùng addons) */
-                            <Form.Item noStyle shouldUpdate>
-                              {() => {
-                                const extra = catalogProduct.nfcExtraPrice || globalNfcPrice;
-                                const isOn = !!form.getFieldValue(['items', name, 'isNfc']);
-                                return (
-                                  <Tooltip title={isOn ? `Đã cộng +${extra.toLocaleString('vi-VN')}đ` : `+${extra.toLocaleString('vi-VN')}đ khi bật`}>
-                                    <Switch
-                                      size="small"
-                                      checked={isOn}
-                                      onChange={(checked) => handleNfcToggle(name, checked)}
-                                      checkedChildren="📡 NFC"
-                                      unCheckedChildren="NFC"
-                                    />
-                                  </Tooltip>
-                                );
-                              }}
-                            </Form.Item>
+                            <Tag color="blue" style={{ fontSize: 10, margin: 0 }}>📡 NFC</Tag>
                           ) : !fromCatalog ? (
-                            /* Manual mode */
+                            /* Manual mode — chỉ đánh dấu, không tính giá */
                             <Checkbox
                               checked={!!form.getFieldValue(['items', name, 'isNfc'])}
-                              onChange={(e) => handleNfcToggle(name, e.target.checked)}
+                              onChange={(e) => form.setFieldValue(['items', name, 'isNfc'], e.target.checked)}
                             >
                               <span className="text-xs">NFC</span>
                             </Checkbox>
@@ -661,11 +622,64 @@ export function CreateOrderModal({ onCreated }: Props) {
             )}
           </Form.List>
 
+          {/* Phí vận chuyển */}
+          {shippingRates.length > 0 && (
+            <div className="mt-3">
+              <Text className="mb-1.5 block text-sm font-medium">Phí vận chuyển</Text>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => setSelectedShipping(null)}
+                  className={`rounded-lg border px-3 py-1.5 text-xs transition-colors ${
+                    !selectedShipping
+                      ? 'border-blue-400 bg-blue-50 text-blue-700'
+                      : 'border-gray-200 text-gray-500 hover:border-gray-400'
+                  }`}
+                >
+                  Chưa tính phí
+                </button>
+                {shippingRates.map(rate => (
+                  <button
+                    key={rate.id}
+                    type="button"
+                    onClick={() => setSelectedShipping(rate)}
+                    className={`rounded-lg border px-3 py-1.5 text-xs transition-colors ${
+                      selectedShipping?.id === rate.id
+                        ? 'border-blue-400 bg-blue-50 text-blue-700'
+                        : 'border-gray-200 text-gray-500 hover:border-gray-400'
+                    }`}
+                  >
+                    <span className="font-medium">{rate.name}</span>
+                    <span className="ml-1.5 text-gray-400">
+                      {rate.price === 0 ? 'Miễn phí' : `+${rate.price.toLocaleString('vi-VN')}đ`}
+                    </span>
+                    {rate.estimatedDays && <span className="ml-1 text-gray-400">· {rate.estimatedDays}</span>}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Tổng */}
-          <div className="mt-3 flex justify-end">
-            <Text type="secondary" className="text-sm">
-              Tổng: <Text strong>{totalPrice.toLocaleString('vi-VN')}đ</Text>
-            </Text>
+          <div className="mt-3 space-y-1 border-t border-gray-100 pt-3">
+            {selectedShipping && (
+              <>
+                <div className="flex justify-between text-sm text-gray-500">
+                  <span>Tạm tính</span>
+                  <span>{totalPrice.toLocaleString('vi-VN')}đ</span>
+                </div>
+                <div className="flex justify-between text-sm text-gray-500">
+                  <span>Vận chuyển ({selectedShipping.name})</span>
+                  <span>{selectedShipping.price === 0 ? 'Miễn phí' : `${selectedShipping.price.toLocaleString('vi-VN')}đ`}</span>
+                </div>
+              </>
+            )}
+            <div className="flex justify-between">
+              <Text strong>Tổng cộng</Text>
+              <Text strong className="text-base">
+                {(totalPrice + (selectedShipping?.price ?? 0)).toLocaleString('vi-VN')}đ
+              </Text>
+            </div>
           </div>
 
           <Form.Item label="Ghi chú" name="notes" className="mt-3 mb-0">

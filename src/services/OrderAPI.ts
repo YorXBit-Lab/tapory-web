@@ -45,6 +45,8 @@ export interface IOrder {
   items: IOrderItem[];
   notes?: string;
   customized: boolean;
+  shippingFee?: number;
+  shippingRateName?: string;
   printPhotos?: IPrintPhotoSlot[];
   printedAt?: string;
   createdAt?: string;

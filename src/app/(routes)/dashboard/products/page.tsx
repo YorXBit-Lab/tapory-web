@@ -14,8 +14,7 @@ import { useAdminAuth } from '@/contexts/AdminAuthContext';
 import { useProducts, useCreateProduct, useUpdateProduct, useDeleteProduct } from '@/hooks/product';
 import { useServices, useCreateService, useUpdateService, useDeleteService } from '@/hooks/service';
 import { usePresetPhotos, useCreatePresetPhoto, useDeletePresetPhoto } from '@/hooks/presetPhoto';
-import { DEFAULT_NFC_EXTRA_PRICE, TEMPLATE_LIST } from '@/configs/constants';
-import { SettingsAPI } from '@/services/SettingsAPI';
+import { TEMPLATE_LIST } from '@/configs/constants';
 import { uploadProductImage, deleteProductImage } from '@/utils/r2-upload';
 import type { IProduct, IProductVariant, IService, IPresetPhoto, IPrintConfig, PrintShape, ProductStatus } from '@/configs/types';
 
@@ -322,8 +321,6 @@ function ProductModal({
   const [useVariants, setUseVariants] = useState(
     () => !!initial?.variants && Object.keys(initial.variants).length > 0
   );
-  const { data: settings } = useQuery({ queryKey: ['settings'], queryFn: () => SettingsAPI.get(), staleTime: 60_000 });
-  const globalNfcPrice = settings?.nfcExtraPrice ?? DEFAULT_NFC_EXTRA_PRICE;
   const [uploadedKey, setUploadedKey] = useState<string | null>(null);
   const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]);
   const imageUrl: string = Form.useWatch('imageUrl', form) ?? '';

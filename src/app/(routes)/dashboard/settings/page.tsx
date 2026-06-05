@@ -1,12 +1,12 @@
 'use client';
 
-import { Button, Card, Divider, Form, Input, InputNumber, Switch, Tag, Typography, notification } from 'antd';
-import { CheckCircleFilled, ClockCircleOutlined } from '@ant-design/icons';
+import { Button, Card, Divider, Form, Input, InputNumber, Modal, Popconfirm, Switch, Table, Tag, Typography, notification } from 'antd';
+import { CheckCircleFilled, ClockCircleOutlined, DeleteOutlined, EditOutlined, PlusOutlined } from '@ant-design/icons';
 import { useEffect, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAdminAuth } from '@/contexts/AdminAuthContext';
-import { SettingsAPI, type IGlobalSettings } from '@/services/SettingsAPI';
-import { DEFAULT_NFC_EXTRA_PRICE } from '@/configs/constants';
+import { useShippingRates, useCreateShipping, useUpdateShipping, useDeleteShipping } from '@/hooks/shippingRate';
+import type { IShippingRate } from '@/configs/types';
 
 const { Text, Title } = Typography;
 
@@ -235,71 +235,169 @@ function NotifRow({ label, desc, checked, onChange }: { label: string; desc: str
   );
 }
 
+
 /* ─────────────────────────────────────────────
-   Pricing card
+   Shipping rates card
 ───────────────────────────────────────────── */
-function PricingCard() {
-  const { user } = useAdminAuth();
-  const queryClient = useQueryClient();
+interface ShippingFormValues {
+  name: string;
+  price: number;
+  estimatedDays?: string;
+  isDefault?: boolean;
+}
+
+function ShippingRatesCard() {
+  const { Text } = Typography;
+  const { data: rawRates = [] } = useShippingRates();
+  const rates = rawRates as IShippingRate[];
+  const { mutateAsync: createRate } = useCreateShipping();
+  const { mutateAsync: updateRate } = useUpdateShipping();
+  const { mutateAsync: deleteRate } = useDeleteShipping();
+
+  const [formOpen, setFormOpen] = useState(false);
+  const [editing, setEditing] = useState<IShippingRate | null>(null);
+  const [form] = Form.useForm<ShippingFormValues>();
   const [saving, setSaving] = useState(false);
-  const [form] = Form.useForm<IGlobalSettings>();
 
-  const { data: settings, isLoading } = useQuery({
-    queryKey: ['settings'],
-    queryFn: () => SettingsAPI.get(),
-    staleTime: 60_000,
-  });
-
-  useEffect(() => {
-    if (settings) form.setFieldsValue(settings);
-  }, [settings, form]);
-
-  const handleSave = async (values: IGlobalSettings) => {
-    if (!user) return;
+  const handleSave = async (values: ShippingFormValues) => {
     setSaving(true);
     try {
-      const idToken = await user.getIdToken();
-      await SettingsAPI.update(idToken, values);
-      await queryClient.invalidateQueries({ queryKey: ['settings'] });
-      notification.success({ message: 'Đã lưu cài đặt' });
-    } catch (err) {
-      notification.error({
-        message: 'Lưu thất bại',
-        description: err instanceof Error ? err.message : 'Thử lại sau',
-      });
+      if (editing) {
+        await updateRate({ id: editing.id, data: values });
+        notification.success({ message: 'Đã cập nhật mức phí' });
+      } else {
+        await createRate(values);
+        notification.success({ message: 'Đã thêm mức phí' });
+      }
+      setFormOpen(false);
+      setEditing(null);
+      form.resetFields();
+    } catch {
+      notification.error({ message: 'Lưu thất bại' });
     } finally {
       setSaving(false);
     }
   };
 
-  return (
-    <Card title="Định giá" loading={isLoading}>
-      <Form
-        form={form}
-        layout="vertical"
-        initialValues={{ nfcExtraPrice: DEFAULT_NFC_EXTRA_PRICE }}
-        onFinish={handleSave}
-      >
-        <Form.Item
-          label="Phụ phí NFC mặc định"
-          name="nfcExtraPrice"
-          rules={[{ required: true, message: 'Nhập giá' }, { type: 'number', min: 0 }]}
-          extra="Áp dụng cho sản phẩm không có phụ phí NFC riêng. Tự động cộng vào đơn giá khi staff bật NFC lúc tạo đơn."
-        >
-          <InputNumber
-            min={0}
-            step={1000}
-            style={{ width: '100%' }}
-            formatter={(v) => `${v ?? ''}`.replace(/\B(?=(\d{3})+(?!\d))/g, '.')}
-            parser={(v) => Number((v ?? '').replace(/\./g, '')) as 0}
-            addonAfter="đ"
-          />
-        </Form.Item>
+  const openEdit = (rate: IShippingRate) => {
+    setEditing(rate);
+    setFormOpen(true);
+    setTimeout(() => form.setFieldsValue({
+      name: rate.name,
+      price: rate.price,
+      estimatedDays: rate.estimatedDays,
+      isDefault: rate.isDefault ?? false,
+    }), 0);
+  };
 
-        <div className="flex justify-end">
-          <Button type="primary" htmlType="submit" loading={saving}>Lưu</Button>
-        </div>
-      </Form>
+  const openCreate = () => {
+    setEditing(null);
+    form.resetFields();
+    setFormOpen(true);
+  };
+
+  return (
+    <Card title="Phí vận chuyển" className="col-span-2">
+      {rates.length > 0 && (
+        <Table
+          dataSource={rates}
+          rowKey="id"
+          size="small"
+          pagination={false}
+          className="mb-3"
+          columns={[
+            {
+              title: 'Khu vực',
+              render: (_: unknown, r: IShippingRate) => (
+                <div>
+                  <Text strong className="text-sm">{r.name}</Text>
+                  {r.isDefault && <Tag color="blue" className="ml-2 text-xs">Mặc định</Tag>}
+                  {r.estimatedDays && <Text type="secondary" className="ml-1 text-xs">· {r.estimatedDays}</Text>}
+                </div>
+              ),
+            },
+            {
+              title: 'Phí',
+              dataIndex: 'price',
+              width: 120,
+              render: (p: number) => (
+                <Text strong>{p === 0 ? 'Miễn phí' : `${p.toLocaleString('vi-VN')}đ`}</Text>
+              ),
+            },
+            {
+              title: '',
+              width: 70,
+              render: (_: unknown, r: IShippingRate) => (
+                <span className="flex gap-2 text-xs">
+                  <button className="text-primary hover:underline" onClick={() => openEdit(r)}>
+                    <EditOutlined />
+                  </button>
+                  <Popconfirm
+                    title="Xóa mức phí này?"
+                    onConfirm={() => deleteRate(r.id)}
+                    okText="Xóa" cancelText="Hủy"
+                    okButtonProps={{ danger: true }}
+                  >
+                    <button className="text-red-500 hover:underline"><DeleteOutlined /></button>
+                  </Popconfirm>
+                </span>
+              ),
+            },
+          ]}
+        />
+      )}
+      <Button type="dashed" block icon={<PlusOutlined />} onClick={openCreate}>
+        Thêm mức phí
+      </Button>
+
+      <Modal
+        title={editing ? 'Sửa mức phí' : 'Thêm mức phí vận chuyển'}
+        open={formOpen}
+        onCancel={() => { setFormOpen(false); setEditing(null); form.resetFields(); }}
+        footer={null}
+        destroyOnHidden
+        width={400}
+      >
+        <Form
+          form={form}
+          layout="vertical"
+          initialValues={{ price: 0, isDefault: false }}
+          onFinish={handleSave}
+          className="pt-2"
+        >
+          <Form.Item label="Tên khu vực" name="name" rules={[{ required: true, message: 'Nhập tên' }]}>
+            <Input placeholder="VD: Nội thành HCM, Tỉnh thành khác..." autoFocus />
+          </Form.Item>
+
+          <div className="grid grid-cols-2 gap-x-3">
+            <Form.Item label="Phí vận chuyển (đ)" name="price" rules={[{ required: true }]}>
+              <InputNumber
+                min={0}
+                step={5000}
+                style={{ width: '100%' }}
+                formatter={(v) => `${v ?? ''}`.replace(/\B(?=(\d{3})+(?!\d))/g, '.')}
+                parser={(v) => Number((v ?? '').replace(/\./g, '')) as 0}
+                placeholder="0 = miễn phí"
+              />
+            </Form.Item>
+
+            <Form.Item label="Thời gian giao" name="estimatedDays">
+              <Input placeholder="VD: 1-2 ngày" />
+            </Form.Item>
+          </div>
+
+          <Form.Item name="isDefault" valuePropName="checked" label="Mặc định khi tạo đơn">
+            <Switch />
+          </Form.Item>
+
+          <div className="flex justify-end gap-2 pt-1">
+            <Button onClick={() => { setFormOpen(false); setEditing(null); form.resetFields(); }}>Hủy</Button>
+            <Button type="primary" htmlType="submit" loading={saving}>
+              {editing ? 'Cập nhật' : 'Thêm'}
+            </Button>
+          </div>
+        </Form>
+      </Modal>
     </Card>
   );
 }
@@ -316,7 +414,7 @@ export default function SettingsPage() {
 
   return (
     <div className="grid max-w-4xl grid-cols-1 gap-5 md:grid-cols-2">
-      <PricingCard />
+      <ShippingRatesCard />
       <TiktokCard />
       <Card title="Cửa hàng">
         <SettingRow
@@ -341,12 +439,6 @@ export default function SettingsPage() {
           </div>
         </div>
       </section>
-
-      <Card title="Vận chuyển">
-        <SettingRow name="Đơn vị giao hàng" desc="GHN, GHTK, J&T Express" action={<ConfigBtn />} />
-        <SettingRow name="Phí vận chuyển" desc="Miễn phí toàn quốc" action={<EditBtn />} />
-        <SettingRow name="Thời gian giao hàng" desc="2–4 ngày làm việc" action={<EditBtn />} />
-      </Card>
 
       <Card title="Tích hợp">
         <SettingRow

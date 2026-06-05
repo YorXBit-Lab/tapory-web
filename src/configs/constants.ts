@@ -148,8 +148,6 @@ export const INTROS: IIntro[] = [
   { id: 'book',       name: 'Sách Kỷ Niệm', icon: '📚', hint: 'Lật sách bìa cứng luxury' },
 ];
 
-/** Phụ phí NFC mặc định (VND) — dùng khi sản phẩm không set nfcExtraPrice riêng */
-export const DEFAULT_NFC_EXTRA_PRICE = 50_000;
 
 export const FIRESTORE_COLLECTIONS = {
   MEMORIALS: 'memorials',
@@ -162,4 +160,5 @@ export const FIRESTORE_COLLECTIONS = {
   PURCHASE_ORDERS: 'purchase_orders',
   SERVICES: 'services',
   PRESET_PHOTOS: 'preset_photos',
+  SHIPPING_RATES: 'shipping_rates',
 } as const;
