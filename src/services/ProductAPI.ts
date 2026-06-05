@@ -58,7 +58,6 @@ function toVariants(raw: unknown): Record<string, IProductVariant> | undefined {
   return Object.keys(result).length > 0 ? result : undefined;
 }
 
-/** Deep-clean variants trước khi lưu Firestore (loại undefined) */
 function serializeVariants(variants: Record<string, IProductVariant> | undefined): Record<string, unknown> | undefined {
   if (!variants || Object.keys(variants).length === 0) return undefined;
   const out: Record<string, unknown> = {};
@@ -93,6 +92,7 @@ function toProduct(id: string, d: Record<string, unknown>): IProduct {
     imageUrl: d.imageUrl as string | undefined,
     printConfig: toPrintConfig(d.printConfig),
     variants: toVariants(d.variants),
+    serviceIds: Array.isArray(d.serviceIds) ? (d.serviceIds as string[]) : undefined,
     createdAt: (d.createdAt as Timestamp)?.toDate?.()?.toISOString(),
     updatedAt: (d.updatedAt as Timestamp)?.toDate?.()?.toISOString(),
   };
@@ -112,11 +112,12 @@ export const ProductAPI = {
   },
 
   createOne: async (data: Omit<IProduct, 'id' | 'createdAt' | 'updatedAt'>): Promise<{ data: { id: string } }> => {
-    const { variants, ...rest } = data;
+    const { variants, serviceIds, ...rest } = data;
     const serializedVariants = serializeVariants(variants);
     const ref = await addDoc(collection(db, COL), {
       ...clean(rest),
       ...(serializedVariants ? { variants: serializedVariants } : {}),
+      ...(serviceIds && serviceIds.length > 0 ? { serviceIds } : {}),
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     });
@@ -124,16 +125,18 @@ export const ProductAPI = {
   },
 
   updateOne: async (id: string, data: Partial<Omit<IProduct, 'id' | 'createdAt' | 'updatedAt'>>): Promise<{ data: { id: string } }> => {
-    const { variants, ...rest } = data;
+    const { variants, serviceIds, ...rest } = data;
     const payload: Record<string, unknown> = { ...clean(rest), updatedAt: serverTimestamp() };
 
-    // stock: undefined → xóa field (chuyển về không giới hạn)
     if ('stock' in rest && rest.stock === undefined) payload.stock = deleteField();
 
-    // variants: luôn cập nhật nếu được truyền vào (kể cả khi rỗng → deleteField)
     if ('variants' in data) {
       const serialized = serializeVariants(variants);
       payload.variants = serialized ?? deleteField();
+    }
+
+    if ('serviceIds' in data) {
+      payload.serviceIds = serviceIds && serviceIds.length > 0 ? serviceIds : deleteField();
     }
 
     await updateDoc(doc(db, COL, id), payload);

@@ -26,6 +26,7 @@ const NAV_ITEMS = [
     children: [
       { key: '/dashboard/orders', icon: <OrderIcon />, label: 'Đơn hàng' },
       { key: '/dashboard/products', icon: <ProductIcon />, label: 'Sản phẩm' },
+      { key: '/dashboard/inventory', icon: <InventoryIcon />, label: 'Nhập hàng' },
       { key: '/dashboard/print', icon: <PrintIcon />, label: 'In ảnh' },
       { key: '/dashboard/users', icon: <UserIcon />, label: 'Khách hàng' },
     ],
@@ -49,6 +50,7 @@ const PAGE_TITLES: Record<string, string> = {
   '/dashboard': 'Tổng quan',
   '/dashboard/orders': 'Đơn hàng',
   '/dashboard/products': 'Sản phẩm',
+  '/dashboard/inventory': 'Nhập hàng',
   '/dashboard/print': 'In ảnh',
   '/dashboard/users': 'Khách hàng',
   '/dashboard/memories': 'Kỷ niệm khách hàng',
@@ -320,6 +322,13 @@ function ProductIcon() {
   return (
     <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
       <path d="M1 2a1 1 0 011-1h2.5l1.5 3H14a1 1 0 01.95 1.316l-2 6A1 1 0 0112 12H5a1 1 0 01-.95-.684L1.05 3.316A1 1 0 011 3V2zm4.5 9a1.5 1.5 0 100 3 1.5 1.5 0 000-3zm6 0a1.5 1.5 0 100 3 1.5 1.5 0 000-3z" />
+    </svg>
+  );
+}
+function InventoryIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+      <path d="M8 1L1 4v1h14V4L8 1zM2 6v7h3V9h6v4h3V6H2zm4 3h4v4H6V9z" />
     </svg>
   );
 }

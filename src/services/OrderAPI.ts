@@ -21,15 +21,17 @@ import type { IPrintConfig, IPrintPhotoSlot } from '@/configs/types';
 export type OrderSource = 'local' | 'tiktok' | 'shopee';
 
 export interface IOrderItem {
-  productId?: string;    // ref đến products collection
-  variantId?: string;    // ref đến variant trong product (nếu có)
-  variantName?: string;  // tên variant — denormalized cho display
+  productId?: string;
+  variantId?: string;
+  variantName?: string;
   productName: string;
   quantity: number;
   unitPrice: number;
   isNfc: boolean;
   templateId?: string;
   printConfig?: IPrintConfig;
+  addonNames?: string[];
+  presetPhotoUrl?: string;   // URL ảnh mẫu đã chọn sẵn (không cần link upload)
 }
 
 export interface IOrder {

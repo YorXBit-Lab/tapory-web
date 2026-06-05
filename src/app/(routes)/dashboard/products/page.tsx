@@ -5,17 +5,19 @@ import {
   App, Badge, Button, Card, Divider, Form, Input, InputNumber, Modal,
   Popconfirm, Select, Switch, Table, Tag, Typography,
 } from 'antd';
-import { DeleteOutlined, EditOutlined, InboxOutlined, PlusOutlined, UploadOutlined } from '@ant-design/icons';
+import { DeleteOutlined, EditOutlined, PlusOutlined, UploadOutlined } from '@ant-design/icons';
 import { useQueryClient } from '@tanstack/react-query';
 import Image from 'next/image';
 import type { ColumnsType } from 'antd/es/table';
 import { useQuery } from '@tanstack/react-query';
 import { useAdminAuth } from '@/contexts/AdminAuthContext';
 import { useProducts, useCreateProduct, useUpdateProduct, useDeleteProduct } from '@/hooks/product';
+import { useServices, useCreateService, useUpdateService, useDeleteService } from '@/hooks/service';
+import { usePresetPhotos, useCreatePresetPhoto, useDeletePresetPhoto } from '@/hooks/presetPhoto';
 import { DEFAULT_NFC_EXTRA_PRICE, TEMPLATE_LIST } from '@/configs/constants';
 import { SettingsAPI } from '@/services/SettingsAPI';
 import { uploadProductImage, deleteProductImage } from '@/utils/r2-upload';
-import type { IProduct, IProductVariant, IPrintConfig, PrintShape, ProductStatus } from '@/configs/types';
+import type { IProduct, IProductVariant, IService, IPresetPhoto, IPrintConfig, PrintShape, ProductStatus } from '@/configs/types';
 
 const { Text } = Typography;
 
@@ -39,7 +41,7 @@ interface VariantRow {
   printConfig?: IPrintConfig;
 }
 
-type ProductFormInternal = Omit<IProduct, 'id' | 'createdAt' | 'updatedAt' | 'variants'> & {
+type ProductFormInternal = Omit<IProduct, 'id' | 'createdAt' | 'updatedAt' | 'variants' | 'serviceIds'> & {
   variantRows?: VariantRow[];
 };
 
@@ -57,144 +59,6 @@ function StockCell({ stock }: { stock?: number }) {
 }
 
 /* ── Restock modal ── */
-interface RestockItem {
-  key: string;
-  label: string;
-  subLabel?: string;
-  stock: number;
-  productId: string;
-  variantId?: string;
-}
-
-function RestockModal({ products, onClose }: { products: IProduct[]; onClose: () => void }) {
-  const { user } = useAdminAuth();
-  const { notification } = App.useApp();
-  const queryClient = useQueryClient();
-  const [saving, setSaving] = useState(false);
-  const [deltas, setDeltas] = useState<Record<string, number>>({});
-
-  const tracked: RestockItem[] = [];
-  for (const p of products) {
-    if (p.status === 'archived') continue;
-    if (p.variants && Object.keys(p.variants).length > 0) {
-      for (const [variantId, v] of Object.entries(p.variants)) {
-        if (v.stock !== undefined) {
-          tracked.push({
-            key: `${p.id}::${variantId}`,
-            label: p.name,
-            subLabel: v.name,
-            stock: v.stock,
-            productId: p.id,
-            variantId,
-          });
-        }
-      }
-    } else if (p.stock !== undefined) {
-      tracked.push({ key: p.id, label: p.name, stock: p.stock, productId: p.id });
-    }
-  }
-
-  const handleSave = async () => {
-    const updates = Object.entries(deltas)
-      .filter(([, delta]) => delta > 0)
-      .map(([key, delta]) => {
-        const item = tracked.find(t => t.key === key)!;
-        return { productId: item.productId, variantId: item.variantId, delta };
-      });
-
-    if (updates.length === 0) {
-      notification.warning({ message: 'Chưa nhập số lượng cho sản phẩm nào' });
-      return;
-    }
-
-    if (!user) return;
-    setSaving(true);
-    try {
-      const idToken = await user.getIdToken();
-      const res = await fetch('/api/admin/restock', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${idToken}` },
-        body: JSON.stringify({ updates }),
-      });
-      const json = await res.json() as { error?: string; updated?: number };
-      if (!res.ok) throw new Error(json.error ?? 'Lỗi nhập hàng');
-
-      notification.success({ message: `Đã cập nhật ${json.updated} mục` });
-      queryClient.invalidateQueries({ queryKey: ['products'] });
-      setDeltas({});
-      onClose();
-    } catch (err) {
-      notification.error({
-        message: 'Nhập hàng thất bại',
-        description: err instanceof Error ? err.message : undefined,
-      });
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  return (
-    <div className="space-y-3 pt-1">
-      {tracked.length === 0 ? (
-        <Text type="secondary" className="block text-sm">
-          Chưa có sản phẩm nào đang theo dõi kho. Hãy cài đặt tồn kho trong phần sửa sản phẩm.
-        </Text>
-      ) : (
-        <Table
-          dataSource={tracked}
-          rowKey="key"
-          size="small"
-          pagination={false}
-          columns={[
-            {
-              title: 'Sản phẩm',
-              render: (_: unknown, r: RestockItem) => (
-                <div>
-                  <Text strong className="text-sm">{r.label}</Text>
-                  {r.subLabel && <Text type="secondary" className="block text-xs">{r.subLabel}</Text>}
-                  <StockCell stock={r.stock} />
-                </div>
-              ),
-            },
-            {
-              title: 'Nhập thêm',
-              width: 130,
-              render: (_: unknown, r: RestockItem) => (
-                <InputNumber
-                  min={0}
-                  placeholder="0"
-                  size="small"
-                  style={{ width: '100%' }}
-                  value={deltas[r.key] ?? undefined}
-                  onChange={(v) =>
-                    setDeltas(prev => {
-                      const next = { ...prev };
-                      if (!v) delete next[r.key];
-                      else next[r.key] = v;
-                      return next;
-                    })
-                  }
-                />
-              ),
-            },
-          ]}
-        />
-      )}
-
-      <div className="flex justify-end gap-2 pt-2">
-        <Button onClick={onClose} disabled={saving}>Hủy</Button>
-        <Button
-          type="primary"
-          loading={saving}
-          disabled={tracked.length === 0}
-          onClick={handleSave}
-        >
-          Xác nhận nhập hàng
-        </Button>
-      </div>
-    </div>
-  );
-}
 
 /* ── Image uploader ── */
 function ImageUploader({
@@ -258,15 +122,195 @@ function ImageUploader({
   );
 }
 
-/* ── Product modal ── */
-function ProductModal({
+/* ── Preset photo manager ── */
+function PresetPhotoManager({ productId }: { productId: string }) {
+  const { user } = useAdminAuth();
+  const { notification } = App.useApp();
+  const { data: presets = [], isLoading } = usePresetPhotos(productId);
+  const { mutateAsync: createPreset } = useCreatePresetPhoto(productId);
+  const { mutateAsync: deletePreset } = useDeletePresetPhoto(productId);
+  const [uploading, setUploading] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const handleUpload = async (file: File) => {
+    if (!user) return;
+    setUploading(true);
+    try {
+      const idToken = await user.getIdToken();
+      const { url, key } = await uploadProductImage(file, idToken);
+      await createPreset({ productId, url, key, sortOrder: presets.length });
+    } catch (err) {
+      notification.error({ message: 'Upload thất bại', description: err instanceof Error ? err.message : undefined });
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleDelete = async (preset: IPresetPhoto) => {
+    try {
+      if (user) {
+        const idToken = await user.getIdToken();
+        deleteProductImage(preset.key, idToken);
+      }
+      await deletePreset(preset.id);
+    } catch {
+      notification.error({ message: 'Xóa thất bại' });
+    }
+  };
+
+  if (isLoading) return <Text type="secondary" className="text-xs">Đang tải...</Text>;
+
+  return (
+    <div>
+      <div className="flex flex-wrap gap-2">
+        {(presets as IPresetPhoto[]).map(preset => (
+          <div key={preset.id} className="group relative h-20 w-20 overflow-hidden rounded-lg border border-gray-200">
+            <Image src={preset.url} alt="preset" fill className="object-cover" sizes="80px" unoptimized />
+            <button
+              type="button"
+              className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity group-hover:opacity-100"
+              onClick={() => handleDelete(preset)}
+            >
+              <DeleteOutlined style={{ color: '#fff', fontSize: 16 }} />
+            </button>
+          </div>
+        ))}
+
+        {(presets as IPresetPhoto[]).length < 20 && (
+          <button
+            type="button"
+            disabled={uploading}
+            onClick={() => inputRef.current?.click()}
+            className="flex h-20 w-20 flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 text-gray-400 transition-colors hover:border-blue-400 hover:text-blue-500 disabled:opacity-50"
+          >
+            {uploading
+              ? <div className="h-5 w-5 animate-spin rounded-full border-2 border-gray-200 border-t-blue-500" />
+              : <><PlusOutlined style={{ fontSize: 18 }} /><span className="mt-1 text-[10px]">Thêm ảnh</span></>
+            }
+          </button>
+        )}
+      </div>
+
+      {(presets as IPresetPhoto[]).length === 0 && !uploading && (
+        <Text type="secondary" className="mt-1 block text-xs">Chưa có ảnh mẫu nào.</Text>
+      )}
+
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) handleUpload(file);
+          e.target.value = '';
+        }}
+      />
+    </div>
+  );
+}
+
+/* ── Service modal (quản lý dịch vụ toàn hệ thống) ── */
+interface ServiceFormValues {
+  name: string;
+  price: number;
+  enablesNfc?: boolean;
+  description?: string;
+}
+
+function ServiceModal({
   open,
   initial,
   onClose,
   onSave,
 }: {
   open: boolean;
+  initial?: IService | null;
+  onClose: () => void;
+  onSave: (values: ServiceFormValues) => Promise<void>;
+}) {
+  const [form] = Form.useForm<ServiceFormValues>();
+  const [saving, setSaving] = useState(false);
+
+  const handleFinish = async (values: ServiceFormValues) => {
+    setSaving(true);
+    try { await onSave(values); form.resetFields(); }
+    finally { setSaving(false); }
+  };
+
+  return (
+    <Modal
+      title={initial ? 'Sửa dịch vụ' : 'Thêm dịch vụ'}
+      open={open}
+      onCancel={() => { form.resetFields(); onClose(); }}
+      footer={null}
+      destroyOnHidden
+      width={400}
+      afterOpenChange={(vis) => {
+        if (vis && initial) {
+          form.setFieldsValue({
+            name: initial.name,
+            price: initial.price,
+            enablesNfc: initial.enablesNfc ?? false,
+            description: initial.description,
+          });
+        }
+      }}
+    >
+      <Form
+        form={form}
+        layout="vertical"
+        initialValues={{ enablesNfc: false, price: 0 }}
+        onFinish={handleFinish}
+        className="pt-2"
+      >
+        <Form.Item label="Tên dịch vụ" name="name" rules={[{ required: true, message: 'Nhập tên dịch vụ' }]}>
+          <Input placeholder="VD: NFC, Gói quà, Express 24h..." autoFocus />
+        </Form.Item>
+
+        <div className="grid grid-cols-2 gap-x-3">
+          <Form.Item label="Phụ phí (đ)" name="price" rules={[{ required: true }]}>
+            <InputNumber
+              min={0}
+              style={{ width: '100%' }}
+              formatter={(v) => `${v ?? ''}`.replace(/\B(?=(\d{3})+(?!\d))/g, '.')}
+              parser={(v) => Number((v ?? '').replace(/\./g, '')) as 0}
+              placeholder="0"
+              addonAfter="đ"
+            />
+          </Form.Item>
+
+          <Form.Item label="Kích hoạt NFC" name="enablesNfc" valuePropName="checked">
+            <Switch checkedChildren="📡 Có" unCheckedChildren="Không" />
+          </Form.Item>
+        </div>
+
+        <Form.Item label="Mô tả" name="description">
+          <Input placeholder="Mô tả ngắn (tùy chọn)" />
+        </Form.Item>
+
+        <div className="flex justify-end gap-2 pt-1">
+          <Button onClick={() => { form.resetFields(); onClose(); }} disabled={saving}>Hủy</Button>
+          <Button type="primary" htmlType="submit" loading={saving}>
+            {initial ? 'Cập nhật' : 'Thêm dịch vụ'}
+          </Button>
+        </div>
+      </Form>
+    </Modal>
+  );
+}
+
+/* ── Product modal ── */
+function ProductModal({
+  open,
+  initial,
+  services,
+  onClose,
+  onSave,
+}: {
+  open: boolean;
   initial?: IProduct | null;
+  services: IService[];
   onClose: () => void;
   onSave: (values: Omit<IProduct, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
 }) {
@@ -281,6 +325,7 @@ function ProductModal({
   const { data: settings } = useQuery({ queryKey: ['settings'], queryFn: () => SettingsAPI.get(), staleTime: 60_000 });
   const globalNfcPrice = settings?.nfcExtraPrice ?? DEFAULT_NFC_EXTRA_PRICE;
   const [uploadedKey, setUploadedKey] = useState<string | null>(null);
+  const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]);
   const imageUrl: string = Form.useWatch('imageUrl', form) ?? '';
 
   const discardPendingImage = async (key: string | null) => {
@@ -328,6 +373,7 @@ function ProductModal({
     setSaving(true);
     try {
       const { variantRows, ...rest } = values;
+
       let variants: IProduct['variants'];
       if (useVariants && variantRows && variantRows.length > 0) {
         variants = {};
@@ -342,7 +388,11 @@ function ProductModal({
         if (Object.keys(variants).length === 0) variants = undefined;
       }
 
-      await onSave({ ...rest, variants });
+      await onSave({
+        ...rest,
+        variants,
+        serviceIds: selectedServiceIds.length > 0 ? selectedServiceIds : undefined,
+      });
 
       if (initial?.imageUrl && values.imageUrl !== initial.imageUrl && user) {
         const base = (process.env.NEXT_PUBLIC_R2_PUBLIC_URL ?? '').replace(/\/$/, '');
@@ -385,6 +435,9 @@ function ProductModal({
               }))
             : [];
           setUseVariants(variantRows.length > 0);
+
+          setSelectedServiceIds(initial.serviceIds ?? []);
+
           form.setFieldsValue({
             name: initial.name,
             price: initial.price,
@@ -392,7 +445,6 @@ function ProductModal({
             stock: initial.stock,
             canBeNfc: initial.canBeNfc,
             nfcExtraPrice: initial.nfcExtraPrice,
-            templateId: initial.templateId,
             description: initial.description,
             imageUrl: initial.imageUrl ?? '',
             printConfig: initial.printConfig ?? { enabled: false },
@@ -421,27 +473,15 @@ function ProductModal({
           <Input placeholder="Ví dụ: Móc khóa NFC Premium" />
         </Form.Item>
 
-        <div className="grid grid-cols-2 gap-x-3">
-          <Form.Item label="Trạng thái" name="status" rules={[{ required: true }]}>
-            <Select
-              options={[
-                { value: 'draft',    label: '⬜ Draft — chưa bán' },
-                { value: 'active',   label: '🟢 Active — đang bán' },
-                { value: 'archived', label: '🔴 Archived — ngừng bán' },
-              ]}
-            />
-          </Form.Item>
-
-          <Form.Item label="Template NFC gợi ý" name="templateId" extra="Tự động chọn khi staff bật NFC lúc tạo đơn">
-            <Select placeholder="Chọn template" allowClear>
-              {TEMPLATE_LIST.map((tpl) => (
-                <Select.Option key={tpl.id} value={tpl.id}>
-                  {tpl.icon} {tpl.name}
-                </Select.Option>
-              ))}
-            </Select>
-          </Form.Item>
-        </div>
+        <Form.Item label="Trạng thái" name="status" rules={[{ required: true }]}>
+          <Select
+            options={[
+              { value: 'draft',    label: '⬜ Draft — chưa bán' },
+              { value: 'active',   label: '🟢 Active — đang bán' },
+              { value: 'archived', label: '🔴 Archived — ngừng bán' },
+            ]}
+          />
+        </Form.Item>
 
         <Form.Item label="Mô tả" name="description">
           <Input.TextArea rows={2} placeholder="Mô tả ngắn..." />
@@ -488,37 +528,6 @@ function ProductModal({
               </Form.Item>
             </div>
 
-            <div className="grid grid-cols-2 gap-x-3">
-              <Form.Item label="Tùy chọn NFC" name="canBeNfc" extra="Cho phép chọn thêm NFC khi tạo đơn hàng">
-                <Select
-                  options={[
-                    { value: false, label: 'Không có NFC' },
-                    { value: true, label: '📡 Có thể thêm NFC' },
-                  ]}
-                />
-              </Form.Item>
-
-              <Form.Item noStyle shouldUpdate={(prev, cur) => prev.canBeNfc !== cur.canBeNfc}>
-                {() =>
-                  form.getFieldValue('canBeNfc') ? (
-                    <Form.Item
-                      label="Phụ phí NFC"
-                      name="nfcExtraPrice"
-                      extra={`Mặc định: ${globalNfcPrice.toLocaleString('vi-VN')}đ`}
-                    >
-                      <InputNumber
-                        min={0}
-                        style={{ width: '100%' }}
-                        placeholder={DEFAULT_NFC_EXTRA_PRICE.toLocaleString('vi-VN')}
-                        formatter={(v) => `${v ?? ''}`.replace(/\B(?=(\d{3})+(?!\d))/g, '.')}
-                        parser={(v) => Number((v ?? '').replace(/\./g, '')) as 0}
-                        addonAfter="đ"
-                      />
-                    </Form.Item>
-                  ) : null
-                }
-              </Form.Item>
-            </div>
 
             <Divider orientation="left" orientationMargin={0} className="!mb-3 !mt-1 !text-xs !text-gray-400">
               In ảnh
@@ -680,7 +689,7 @@ function ProductModal({
                       <div className="mt-1 grid grid-cols-3 gap-1 text-center">
                         <Text type="secondary" className="text-[10px]">Tên biến thể</Text>
                         <Text type="secondary" className="text-[10px]">Giá (đ)</Text>
-                        <Text type="secondary" className="text-[10px]">Kho / NFC / Del</Text>
+                        <Text type="secondary" className="text-[10px]">Kho · NFC · Xóa</Text>
                       </div>
 
                       {/* Print config per variant */}
@@ -760,6 +769,54 @@ function ProductModal({
           </Form.List>
         )}
 
+        <Divider orientation="left" orientationMargin={0} className="!mb-3 !mt-2 !text-xs !text-gray-400">
+          Ảnh mẫu in sẵn
+        </Divider>
+
+        {initial ? (
+          <PresetPhotoManager productId={initial.id} />
+        ) : (
+          <Text type="secondary" className="text-xs">Lưu sản phẩm trước, sau đó quay lại để thêm ảnh mẫu.</Text>
+        )}
+
+        <Divider orientation="left" orientationMargin={0} className="!mb-3 !mt-2 !text-xs !text-gray-400">
+          Dịch vụ cộng thêm
+        </Divider>
+
+        {services.length === 0 ? (
+          <Text type="secondary" className="text-xs">
+            Chưa có dịch vụ nào. Tạo dịch vụ từ trang sản phẩm trước.
+          </Text>
+        ) : (
+          <div className="flex flex-wrap gap-2">
+            {services.map(service => {
+              const selected = selectedServiceIds.includes(service.id);
+              return (
+                <button
+                  key={service.id}
+                  type="button"
+                  onClick={() =>
+                    setSelectedServiceIds(prev =>
+                      selected ? prev.filter(id => id !== service.id) : [...prev, service.id]
+                    )
+                  }
+                  className={`flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs transition-colors ${
+                    selected
+                      ? 'border-blue-400 bg-blue-50 text-blue-700'
+                      : 'border-gray-200 bg-white text-gray-600 hover:border-gray-400'
+                  }`}
+                >
+                  {service.enablesNfc && <span>📡</span>}
+                  <span>{service.name}</span>
+                  <span className={selected ? 'text-blue-500' : 'text-gray-400'}>
+                    +{service.price.toLocaleString('vi-VN')}đ
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        )}
+
         <div className="flex justify-end gap-2 pt-4">
           <Button onClick={handleClose} disabled={saving}>Hủy</Button>
           <Button type="primary" htmlType="submit" loading={saving || uploading}>
@@ -804,9 +861,16 @@ export default function ProductsPage() {
   const { mutateAsync: updateProduct } = useUpdateProduct();
   const { mutateAsync: deleteProduct } = useDeleteProduct();
 
+  const { data: services = [] } = useServices();
+  const { mutateAsync: createService } = useCreateService();
+  const { mutateAsync: updateService } = useUpdateService();
+  const { mutateAsync: deleteService } = useDeleteService();
+
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<IProduct | null>(null);
-  const [restockOpen, setRestockOpen] = useState(false);
+  const [serviceListOpen, setServiceListOpen] = useState(false);
+  const [serviceFormOpen, setServiceFormOpen] = useState(false);
+  const [editingService, setEditingService] = useState<IService | null>(null);
 
   const openCreate = () => { setEditing(null); setModalOpen(true); };
   const openEdit = (p: IProduct) => { setEditing(p); setModalOpen(true); };
@@ -821,6 +885,23 @@ export default function ProductsPage() {
       notification.success({ message: 'Thêm sản phẩm thành công' });
     }
     closeModal();
+  };
+
+  const handleServiceSave = async (values: { name: string; price: number; enablesNfc?: boolean; description?: string }) => {
+    if (editingService) {
+      await updateService({ id: editingService.id, data: values });
+      notification.success({ message: 'Đã cập nhật dịch vụ' });
+    } else {
+      await createService(values);
+      notification.success({ message: 'Đã thêm dịch vụ' });
+    }
+    setServiceFormOpen(false);
+    setEditingService(null);
+  };
+
+  const handleServiceDelete = async (id: string) => {
+    await deleteService(id);
+    notification.success({ message: 'Đã xóa dịch vụ' });
   };
 
   const handleDelete = async (product: IProduct) => {
@@ -1012,8 +1093,11 @@ export default function ProductsPage() {
           )}
         </div>
         <div className="flex gap-2">
-          <Button icon={<InboxOutlined />} onClick={() => setRestockOpen(true)}>
-            Nhập hàng
+          <Button onClick={() => setServiceListOpen(true)}>
+            Dịch vụ
+            {(services as IService[]).length > 0 && (
+              <span className="ml-1 text-[10px] text-gray-400">({(services as IService[]).length})</span>
+            )}
           </Button>
           <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>
             Thêm sản phẩm
@@ -1046,20 +1130,88 @@ export default function ProductsPage() {
       <ProductModal
         open={modalOpen}
         initial={editing}
+        services={services as IService[]}
         onClose={closeModal}
         onSave={handleSave}
       />
 
+      {/* Danh sách dịch vụ */}
       <Modal
-        title="Nhập hàng"
-        open={restockOpen}
-        onCancel={() => setRestockOpen(false)}
+        title="Dịch vụ cộng thêm"
+        open={serviceListOpen}
+        onCancel={() => setServiceListOpen(false)}
         footer={null}
         destroyOnHidden
-        width={480}
+        width={520}
       >
-        <RestockModal products={productList} onClose={() => setRestockOpen(false)} />
+        <div className="space-y-3 pt-2">
+          {(services as IService[]).length === 0 ? (
+            <Text type="secondary" className="block text-sm">Chưa có dịch vụ nào.</Text>
+          ) : (
+            <Table
+              dataSource={services as IService[]}
+              rowKey="id"
+              size="small"
+              pagination={false}
+              columns={[
+                {
+                  title: 'Dịch vụ',
+                  render: (_: unknown, s: IService) => (
+                    <div>
+                      <Text strong className="text-sm">{s.enablesNfc ? '📡 ' : ''}{s.name}</Text>
+                      {s.description && <Text type="secondary" className="block text-xs">{s.description}</Text>}
+                    </div>
+                  ),
+                },
+                {
+                  title: 'Phụ phí',
+                  dataIndex: 'price',
+                  width: 120,
+                  render: (p: number) => <Text strong>+{p.toLocaleString('vi-VN')}đ</Text>,
+                },
+                {
+                  title: '',
+                  width: 80,
+                  render: (_: unknown, s: IService) => (
+                    <span className="flex gap-2 text-xs">
+                      <button
+                        className="text-primary hover:underline"
+                        onClick={() => { setEditingService(s); setServiceFormOpen(true); }}
+                      >
+                        <EditOutlined /> Sửa
+                      </button>
+                      <Popconfirm
+                        title="Xóa dịch vụ này?"
+                        onConfirm={() => handleServiceDelete(s.id)}
+                        okText="Xóa" cancelText="Hủy"
+                        okButtonProps={{ danger: true }}
+                      >
+                        <button className="text-red-500 hover:underline">
+                          <DeleteOutlined />
+                        </button>
+                      </Popconfirm>
+                    </span>
+                  ),
+                },
+              ]}
+            />
+          )}
+          <Button
+            type="dashed" block icon={<PlusOutlined />}
+            onClick={() => { setEditingService(null); setServiceFormOpen(true); }}
+          >
+            Thêm dịch vụ mới
+          </Button>
+        </div>
       </Modal>
+
+      <ServiceModal
+        open={serviceFormOpen}
+        initial={editingService}
+        onClose={() => { setServiceFormOpen(false); setEditingService(null); }}
+        onSave={handleServiceSave}
+      />
+
     </div>
   );
 }
