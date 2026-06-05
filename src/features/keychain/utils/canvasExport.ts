@@ -32,12 +32,13 @@ export async function exportImageToPng(
   ctx.clip()
 
   const img = await loadImage(imageUrl)
+  const scaleY = state.scaleY ?? state.scale
   ctx.drawImage(
     img,
     state.x * upscale,
     state.y * upscale,
     img.naturalWidth  * state.scale * upscale,
-    img.naturalHeight * state.scale * upscale,
+    img.naturalHeight * scaleY       * upscale,
   )
   ctx.restore()
 

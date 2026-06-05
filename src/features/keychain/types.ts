@@ -1,4 +1,5 @@
 export type TemplateShape = 'rectangle' | 'square' | 'circle'
+export type FitMode = 'cover' | 'contain' | 'stretch'
 
 export interface KeychainTemplate {
   id: TemplateShape
@@ -22,4 +23,6 @@ export interface ImageEditorState {
   x: number
   y: number
   scale: number
+  scaleY?: number  // only set for stretch mode
+  fitMode: FitMode
 }

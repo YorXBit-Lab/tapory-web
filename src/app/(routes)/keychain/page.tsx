@@ -9,7 +9,13 @@ import { useExportPDF }       from '@/features/keychain/hooks/useExportPDF'
 import { KEYCHAIN_TEMPLATES } from '@/features/keychain/constants'
 import { GAP_BY_SHAPE }       from '@/features/keychain/utils/pdfLayout'
 import { mmToPt, A4_W_PT, A4_H_PT } from '@/features/keychain/utils/dpi'
-import type { KeychainTemplate } from '@/features/keychain/types'
+import type { KeychainTemplate, FitMode } from '@/features/keychain/types'
+
+const FIT_LABELS: Record<FitMode, string> = {
+  cover:   'Lấp đầy',
+  contain: 'Vừa khít',
+  stretch: 'Kéo giãn',
+}
 
 function LayoutInfo({ template }: { template: KeychainTemplate }) {
   const gapMm  = GAP_BY_SHAPE[template.id] ?? 3
@@ -28,8 +34,8 @@ function LayoutInfo({ template }: { template: KeychainTemplate }) {
 }
 
 export default function KeychainPage() {
-  // Default template for newly uploaded images
   const [defaultTemplate, setDefaultTemplate] = useState<KeychainTemplate>(KEYCHAIN_TEMPLATES[0])
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const inputRef = useRef<HTMLInputElement>(null)
 
   const {
@@ -42,9 +48,22 @@ export default function KeychainPage() {
     removeImage,
     updateTemplate,
     updateEditorState,
+    batchApplyFitMode,
     toggleDuplex,
     markPrinted,
   } = useKeychainImages()
+
+  const toggleSelect = (id: string) =>
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      next.has(id) ? next.delete(id) : next.add(id)
+      return next
+    })
+
+  const handleBatchFit = (fitMode: FitMode) => {
+    batchApplyFitMode([...selectedIds], fitMode)
+    setSelectedIds(new Set())
+  }
 
   const { exportPDF, exporting, progress } = useExportPDF()
 
@@ -110,54 +129,113 @@ export default function KeychainPage() {
           </div>
 
           {images.length > 0 && (
-            <div className="mt-4 flex flex-wrap gap-2">
-              {images.map((img) => (
-                <div
-                  key={img.id}
-                  className={clsx(
-                    'relative cursor-pointer overflow-hidden rounded-lg border-2 transition',
-                    activeId === img.id
-                      ? 'border-blue-500 ring-2 ring-blue-200'
-                      : 'border-transparent hover:border-gray-300',
-                  )}
-                  style={{ width: 72, height: 72 }}
-                  onClick={() => setActiveId(img.id)}
+            <div className="mt-4 space-y-2">
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() =>
+                    selectedIds.size === images.length
+                      ? setSelectedIds(new Set())
+                      : setSelectedIds(new Set(images.map((i) => i.id)))
+                  }
+                  className="text-xs text-violet-600 hover:underline"
                 >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={img.previewUrl} alt="" className="h-full w-full object-cover" />
-
-                  {/* Bottom bar: template + duplex toggle */}
-                  <div className="absolute bottom-0 left-0 right-0 flex items-center justify-between bg-black/55 px-1">
-                    <span className="text-[9px] leading-4 text-white/80">
-                      {img.template.id === 'rectangle' ? 'rect' : img.template.id === 'square' ? 'sq' : 'circ'}
-                    </span>
-                    <button
+                  {selectedIds.size === images.length ? 'Bỏ chọn tất cả' : 'Chọn tất cả'}
+                </button>
+                <span className="text-xs text-gray-300">·</span>
+                <span className="text-xs text-gray-400">{images.length} ảnh</span>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {images.map((img) => {
+                  const isSelected = selectedIds.has(img.id)
+                  return (
+                    <div
+                      key={img.id}
                       className={clsx(
-                        'rounded px-1 text-[9px] font-bold leading-4 transition',
-                        img.duplex
-                          ? 'bg-yellow-400 text-black'
-                          : 'text-white/60 hover:text-white',
+                        'relative cursor-pointer overflow-hidden rounded-lg border-2 transition',
+                        isSelected
+                          ? 'border-violet-500 ring-2 ring-violet-200'
+                          : activeId === img.id
+                            ? 'border-blue-500 ring-2 ring-blue-200'
+                            : 'border-transparent hover:border-gray-300',
                       )}
-                      onClick={(e) => { e.stopPropagation(); toggleDuplex(img.id) }}
-                      title="In 2 mặt"
+                      style={{ width: 72, height: 72 }}
+                      onClick={() => setActiveId(img.id)}
                     >
-                      2M
-                    </button>
-                  </div>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={img.previewUrl} alt="" className="h-full w-full object-cover" />
 
-                  {img.printed && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/40">
-                      <CheckCircle2 size={20} className="text-green-400" />
+                      {/* Checkbox top-left */}
+                      <button
+                        className={clsx(
+                          'absolute left-0.5 top-0.5 flex h-4 w-4 items-center justify-center rounded border transition',
+                          isSelected
+                            ? 'border-violet-500 bg-violet-500 text-white'
+                            : 'border-white/70 bg-black/30 text-transparent hover:bg-black/50',
+                        )}
+                        onClick={(e) => { e.stopPropagation(); toggleSelect(img.id) }}
+                        title="Chọn nhiều"
+                      >
+                        {isSelected && <span className="text-[9px] font-bold leading-none">✓</span>}
+                      </button>
+
+                      {/* Bottom bar: template + duplex toggle */}
+                      <div className="absolute bottom-0 left-0 right-0 flex items-center justify-between bg-black/55 px-1">
+                        <span className="text-[9px] leading-4 text-white/80">
+                          {img.template.id === 'rectangle' ? 'rect' : img.template.id === 'square' ? 'sq' : 'circ'}
+                        </span>
+                        <button
+                          className={clsx(
+                            'rounded px-1 text-[9px] font-bold leading-4 transition',
+                            img.duplex
+                              ? 'bg-yellow-400 text-black'
+                              : 'text-white/60 hover:text-white',
+                          )}
+                          onClick={(e) => { e.stopPropagation(); toggleDuplex(img.id) }}
+                          title="In 2 mặt"
+                        >
+                          2M
+                        </button>
+                      </div>
+
+                      {img.printed && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+                          <CheckCircle2 size={20} className="text-green-400" />
+                        </div>
+                      )}
+                      <button
+                        className="absolute right-0.5 top-0.5 rounded-full bg-black/50 p-0.5 text-white transition hover:bg-black/70"
+                        onClick={(e) => { e.stopPropagation(); removeImage(img.id) }}
+                      >
+                        <X size={12} />
+                      </button>
                     </div>
-                  )}
+                  )
+                })}
+              </div>
+
+              {/* Batch action bar */}
+              {selectedIds.size > 0 && (
+                <div className="flex flex-wrap items-center gap-2 rounded-lg bg-violet-50 px-3 py-2 text-sm">
+                  <span className="font-medium text-violet-700">{selectedIds.size} ảnh đã chọn</span>
+                  <span className="text-violet-300">·</span>
+                  <span className="text-violet-500">Áp dụng scale:</span>
+                  {(['cover', 'contain', 'stretch'] as FitMode[]).map((mode) => (
+                    <button
+                      key={mode}
+                      onClick={() => handleBatchFit(mode)}
+                      className="rounded-md border border-violet-300 bg-white px-2.5 py-0.5 text-xs font-medium text-violet-700 transition hover:bg-violet-100"
+                    >
+                      {FIT_LABELS[mode]}
+                    </button>
+                  ))}
                   <button
-                    className="absolute right-0.5 top-0.5 rounded-full bg-black/50 p-0.5 text-white transition hover:bg-black/70"
-                    onClick={(e) => { e.stopPropagation(); removeImage(img.id) }}
+                    onClick={() => setSelectedIds(new Set())}
+                    className="ml-auto text-violet-400 hover:text-violet-600"
                   >
-                    <X size={12} />
+                    <X size={14} />
                   </button>
                 </div>
-              ))}
+              )}
             </div>
           )}
         </section>

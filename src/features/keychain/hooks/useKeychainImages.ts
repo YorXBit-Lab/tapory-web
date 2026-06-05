@@ -1,25 +1,38 @@
 import { useState, useCallback } from 'react'
-import type { KeychainImage, KeychainTemplate, ImageEditorState } from '../types'
+import type { KeychainImage, KeychainTemplate, ImageEditorState, FitMode } from '../types'
 import { EDITOR_PX_PER_CM } from '../constants'
 
-function computeCoverFit(
+function computeFitForImage(
   imageUrl: string,
-  template: KeychainTemplate,
+  fitMode: FitMode,
+  W: number,
+  H: number,
 ): Promise<ImageEditorState> {
-  const W = Math.round(template.widthCm  * EDITOR_PX_PER_CM)
-  const H = Math.round(template.heightCm * EDITOR_PX_PER_CM)
   return new Promise((resolve) => {
     const img = new Image()
     img.onload = () => {
-      const scale = Math.max(W / img.naturalWidth, H / img.naturalHeight)
-      resolve({
-        x:     (W - img.naturalWidth  * scale) / 2,
-        y:     (H - img.naturalHeight * scale) / 2,
-        scale,
-      })
+      if (fitMode === 'stretch') {
+        resolve({ x: 0, y: 0, scale: W / img.naturalWidth, scaleY: H / img.naturalHeight, fitMode })
+      } else {
+        const scale = fitMode === 'cover'
+          ? Math.max(W / img.naturalWidth, H / img.naturalHeight)
+          : Math.min(W / img.naturalWidth, H / img.naturalHeight)
+        resolve({
+          x: (W - img.naturalWidth  * scale) / 2,
+          y: (H - img.naturalHeight * scale) / 2,
+          scale,
+          fitMode,
+        })
+      }
     }
     img.src = imageUrl
   })
+}
+
+function computeInitialFit(imageUrl: string, template: KeychainTemplate): Promise<ImageEditorState> {
+  const W = Math.round(template.widthCm  * EDITOR_PX_PER_CM)
+  const H = Math.round(template.heightCm * EDITOR_PX_PER_CM)
+  return computeFitForImage(imageUrl, 'cover', W, H)
 }
 
 export function useKeychainImages() {
@@ -32,8 +45,8 @@ export function useKeychainImages() {
 
     const next: KeychainImage[] = await Promise.all(
       valid.map(async (file) => {
-        const previewUrl   = URL.createObjectURL(file)
-        const editorState  = await computeCoverFit(previewUrl, defaultTemplate)
+        const previewUrl  = URL.createObjectURL(file)
+        const editorState = await computeInitialFit(previewUrl, defaultTemplate)
         return {
           id: crypto.randomUUID(),
           file,
@@ -61,10 +74,9 @@ export function useKeychainImages() {
   }, [])
 
   const updateTemplate = useCallback(async (id: string, template: KeychainTemplate) => {
-    // Recompute editorState for the new frame size immediately
     const img = images.find((i) => i.id === id)
     if (!img) return
-    const editorState = await computeCoverFit(img.previewUrl, template)
+    const editorState = await computeInitialFit(img.previewUrl, template)
     setImages((prev) =>
       prev.map((i) => i.id === id ? { ...i, template, editorState } : i),
     )
@@ -74,6 +86,23 @@ export function useKeychainImages() {
     setImages((prev) =>
       prev.map((img) => img.id === id ? { ...img, editorState: state } : img),
     ), [])
+
+  const batchApplyFitMode = useCallback(async (ids: string[], fitMode: FitMode) => {
+    const targets = images.filter((i) => ids.includes(i.id))
+    const updates = await Promise.all(
+      targets.map(async (img) => {
+        const W = Math.round(img.template.widthCm  * EDITOR_PX_PER_CM)
+        const H = Math.round(img.template.heightCm * EDITOR_PX_PER_CM)
+        return { id: img.id, state: await computeFitForImage(img.previewUrl, fitMode, W, H) }
+      }),
+    )
+    setImages((prev) =>
+      prev.map((img) => {
+        const u = updates.find((u) => u.id === img.id)
+        return u ? { ...img, editorState: u.state } : img
+      }),
+    )
+  }, [images])
 
   const toggleDuplex = useCallback((id: string) =>
     setImages((prev) =>
@@ -98,6 +127,7 @@ export function useKeychainImages() {
     removeImage,
     updateTemplate,
     updateEditorState,
+    batchApplyFitMode,
     toggleDuplex,
     markPrinted,
   }

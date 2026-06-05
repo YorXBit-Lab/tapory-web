@@ -1,10 +1,10 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { Stage, Layer, Image as KonvaImage, Rect, Circle } from 'react-konva'
 import useImage from 'use-image'
 import type Konva from 'konva'
-import type { KeychainTemplate, ImageEditorState } from '../types'
+import type { KeychainTemplate, ImageEditorState, FitMode } from '../types'
 import { EDITOR_PX_PER_CM } from '../constants'
 
 interface Props {
@@ -14,14 +14,20 @@ interface Props {
   onChange:    (s: ImageEditorState) => void
 }
 
-function coverFit(
+function computeFit(
+  mode: FitMode,
   imgW: number, imgH: number,
   frameW: number, frameH: number,
-): ImageEditorState {
-  const scale = Math.max(frameW / imgW, frameH / imgH)
+): { x: number; y: number; scale: number; scaleY?: number } {
+  if (mode === 'stretch') {
+    return { x: 0, y: 0, scale: frameW / imgW, scaleY: frameH / imgH }
+  }
+  const scale = mode === 'cover'
+    ? Math.max(frameW / imgW, frameH / imgH)
+    : Math.min(frameW / imgW, frameH / imgH)
   return {
-    x:     (frameW - imgW * scale) / 2,
-    y:     (frameH - imgH * scale) / 2,
+    x: (frameW - imgW * scale) / 2,
+    y: (frameH - imgH * scale) / 2,
     scale,
   }
 }
@@ -32,13 +38,18 @@ export function KeychainEditorCanvas({ imageUrl, template, editorState, onChange
   const H = Math.round(template.heightCm * EDITOR_PX_PER_CM)
   const isCircle = template.id === 'circle'
 
-  // Auto-fit when image loads or template changes
+  const appliedRef = useRef<{ fitMode: FitMode; W: number; H: number } | null>(null)
+
+  // Re-fit when image loads, template changes, or fitMode changes
   useEffect(() => {
-    if (status === 'loaded' && image) {
-      onChange(coverFit(image.naturalWidth, image.naturalHeight, W, H))
-    }
+    if (status !== 'loaded' || !image) return
+    const fitMode = editorState?.fitMode ?? 'cover'
+    const prev = appliedRef.current
+    if (prev?.fitMode === fitMode && prev.W === W && prev.H === H) return
+    appliedRef.current = { fitMode, W, H }
+    onChange({ ...computeFit(fitMode, image.naturalWidth, image.naturalHeight, W, H), fitMode })
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [status, image, W, H])
+  }, [status, image, W, H, editorState?.fitMode])
 
   const handleDragEnd = (e: Konva.KonvaEventObject<DragEvent>) =>
     onChange({ ...editorState!, x: e.target.x(), y: e.target.y() })
@@ -52,9 +63,11 @@ export function KeychainEditorCanvas({ imageUrl, template, editorState, onChange
     const { x: px, y: py } = stage.getPointerPosition()!
     const ratio     = newScale / editorState.scale
     onChange({
-      scale: newScale,
-      x:     px - (px - editorState.x) * ratio,
-      y:     py - (py - editorState.y) * ratio,
+      scale:   newScale,
+      scaleY:  editorState.scaleY != null ? editorState.scaleY * factor : undefined,
+      x:       px - (px - editorState.x) * ratio,
+      y:       py - (py - editorState.y) * ratio,
+      fitMode: editorState.fitMode,
     })
   }
 
@@ -73,7 +86,7 @@ export function KeychainEditorCanvas({ imageUrl, template, editorState, onChange
             x={editorState.x}
             y={editorState.y}
             scaleX={editorState.scale}
-            scaleY={editorState.scale}
+            scaleY={editorState.scaleY ?? editorState.scale}
             draggable
             onDragEnd={handleDragEnd}
           />
