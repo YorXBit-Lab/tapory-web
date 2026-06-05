@@ -28,6 +28,12 @@ export function CardAuthGate({ cardId, children }: Props) {
   // Check existing session + memorial existence.
   // Wait for Firebase Auth to finish restoring its session (async) before deciding.
   useEffect(() => {
+    // Demo mode — no auth whatsoever, editor is read-only (no save button shown)
+    if (cardId === 'demo') {
+      setMode('verified');
+      return;
+    }
+
     const unsub = onAuthStateChanged(auth, (user) => {
       unsub(); // only need the first emission
 

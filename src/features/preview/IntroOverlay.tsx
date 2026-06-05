@@ -179,6 +179,32 @@ const CSS = `
   35%     { transform:translateX(-1%) translateY(-.5%); opacity:.10; }
   70%     { transform:translateX(.7%) translateY(.3%);  opacity:.08; }
 }
+
+/* ── memory dust ── */
+@keyframes _dst_float{0%,100%{transform:translateY(0) scale(1);opacity:var(--do)}50%{transform:translateY(-6px) scale(1.35);opacity:calc(var(--do)*2.1)}}
+@keyframes _dst_gather{0%{transform:translate(0,0) scale(1);opacity:var(--do)}65%{opacity:calc(var(--do)*2.8)}100%{transform:translate(var(--gx),var(--gy)) scale(0);opacity:0}}
+@keyframes _dst_glow{0%{opacity:0;transform:translate(-50%,-50%) scale(.1)}70%{opacity:1}100%{opacity:.82;transform:translate(-50%,-50%) scale(1)}}
+@keyframes _dst_mem{from{opacity:0;transform:translateY(18px) scale(.92)}to{opacity:1;transform:translateY(0) scale(1)}}
+
+/* ── voice message ── */
+@keyframes _vox_bar{0%,100%{transform:scaleY(var(--bh))}50%{transform:scaleY(calc(var(--bh)*2.8+.15))}}
+@keyframes _vox_pulse{0%,100%{transform:scale(1);opacity:.38}50%{transform:scale(1.07);opacity:.7}}
+
+/* ── galaxy / stellar ── */
+@keyframes _gal_ring{0%{opacity:0;transform:scale(.06)}50%{opacity:.75}100%{opacity:0;transform:scale(3.4)}}
+@keyframes _gal_corona{0%{opacity:0;transform:scale(.10)}60%{opacity:.88}100%{opacity:.16;transform:scale(1)}}
+@keyframes _gal_rise{from{opacity:0;transform:translateY(28px) scale(.88)}to{opacity:1;transform:translateY(0) scale(1)}}
+
+/* ── cinema reel ── */
+@keyframes _rl_flicker{0%,100%{opacity:1}4%{opacity:.68}5%{opacity:.95}11%{opacity:.82}12%{opacity:1}44%{opacity:1}45%{opacity:.42}46%{opacity:.88}47%{opacity:1}}
+@keyframes _rl_num{0%{transform:scale(2.4);opacity:0}14%{transform:scale(1);opacity:1}80%{transform:scale(1);opacity:1}100%{transform:scale(.4);opacity:0}}
+@keyframes _rl_beam{0%{clip-path:polygon(12% 0%,88% 0%,88% 0%,12% 0%);opacity:0}22%{opacity:.9}100%{clip-path:polygon(0% 0%,100% 0%,100% 100%,0% 100%);opacity:1}}
+@keyframes _rl_scan{from{top:-3px}to{top:104%}}
+
+/* ── storybook ── */
+@keyframes _bk_turn{0%{transform:perspective(920px) rotateY(0)}72%{transform:perspective(920px) rotateY(-195deg)}88%{transform:perspective(920px) rotateY(-177deg)}100%{transform:perspective(920px) rotateY(-180deg)}}
+@keyframes _bk_inner{from{opacity:0;transform:scale(.96) translateX(8px)}to{opacity:1;transform:scale(1) translateX(0)}}
+@keyframes _bk_shadow{0%{opacity:0;transform:translateX(8px) scaleX(.08)}100%{opacity:.6;transform:translateX(0) scaleX(1)}}
 `;
 
 /* ══════════════════════════════════════════════════════════
@@ -2096,6 +2122,968 @@ function ScratchIntro({ onComplete, primaryColor }: BaseProps) {
 }
 
 /* ══════════════════════════════════════════════════════════
+   11. DUST  —  Memory Dust
+══════════════════════════════════════════════════════════ */
+function DustIntro({ onComplete, primaryColor, title, imageUrl }: BaseProps) {
+  type Ph = 'idle' | 'gathering' | 'revealed';
+  const [ph, setPh] = useState<Ph>('idle');
+  const { fading, trigger, style: fs } = useFadeOut(onComplete);
+
+  const tap = useCallback(() => {
+    if (ph !== 'idle' || fading) return;
+    setPh('gathering');
+    setTimeout(() => setPh('revealed'), 1100);
+    setTimeout(() => trigger(), 3200);
+  }, [ph, fading, trigger]);
+
+  const particles = useMemo(() => [...Array(52)].map((_, i) => {
+    const angle = (i / 52) * Math.PI * 2;
+    const r = 22 + (i * 23) % 38;
+    const left = Math.round(50 + Math.cos(angle) * r * 0.88);
+    const top  = Math.round(50 + Math.sin(angle) * r * 0.58);
+    return {
+      left: `${Math.max(2, Math.min(98, left))}%`,
+      top:  `${Math.max(2, Math.min(98, top))}%`,
+      gx: `${50 - left}%`, gy: `${50 - top}%`,
+      do: (0.18 + (i % 7) * 0.08).toFixed(2),
+      size: 2 + (i % 4),
+      dur: `${2.0 + (i % 6) * 0.45}s`,
+      delay: `${(i * 211) % 3000}ms`,
+      gdelay: `${(i * 41) % 700}ms`,
+      type: i % 3,
+    };
+  }), []);
+
+  return (
+    <div onClick={tap} style={{
+      ...WRAP,
+      cursor: ph === 'idle' ? 'pointer' : 'default',
+      background: `radial-gradient(ellipse at 50% 50%, ${primaryColor}12 0%, #060308 62%, #030107 100%)`,
+      ...fs,
+    }}>
+      <div style={{ position:'absolute',inset:0,pointerEvents:'none',
+        background:'radial-gradient(ellipse at center,transparent 28%,rgba(0,0,0,.75) 100%)' }} />
+
+      {ph !== 'revealed' && particles.map((p, i) => (
+        <div key={i} style={{
+          position:'absolute', left:p.left, top:p.top,
+          width:p.size, height:p.size,
+          borderRadius: p.type === 2 ? 1 : '50%',
+          background: p.type === 1
+            ? `radial-gradient(circle,#fff 0%,${primaryColor} 50%,transparent 100%)`
+            : `radial-gradient(circle,${primaryColor} 0%,transparent 75%)`,
+          boxShadow: `0 0 ${p.size * 4}px ${primaryColor}`,
+          transform: 'translate(-50%,-50%)',
+          ['--do' as string]: p.do, ['--gx' as string]: p.gx, ['--gy' as string]: p.gy,
+          animation: ph === 'idle'
+            ? `_dst_float ${p.dur} ${p.delay} ease-in-out infinite`
+            : `_dst_gather .85s ${p.gdelay} ${EXPO} forwards`,
+        }} />
+      ))}
+
+      {ph === 'gathering' && (
+        <div style={{
+          position:'absolute', left:'50%', top:'50%',
+          width:130, height:130, borderRadius:'50%',
+          background:`radial-gradient(circle,${primaryColor}cc 0%,${primaryColor}44 40%,transparent 70%)`,
+          animation:`_dst_glow .75s .72s ${EXPO} both`,
+          pointerEvents:'none',
+        }} />
+      )}
+
+      {ph === 'revealed' && (
+        <div style={{ display:'flex',flexDirection:'column',alignItems:'center',gap:18,
+          padding:'0 28px',textAlign:'center',animation:`_dst_mem .65s ${SPR} both` }}>
+          {imageUrl ? (
+            <div style={{ width:112,height:112,borderRadius:'50%',overflow:'hidden',
+              boxShadow:`0 0 48px ${primaryColor}66,0 0 80px ${primaryColor}28`,
+              border:`2px solid ${primaryColor}55` }}>
+              <img src={imageUrl} alt="" style={{ width:'100%',height:'100%',objectFit:'cover' }} />
+            </div>
+          ) : (
+            <div style={{ width:88,height:88,borderRadius:'50%',
+              background:`radial-gradient(circle,${primaryColor}44 0%,transparent 70%)`,
+              boxShadow:`0 0 48px ${primaryColor}66`,
+              display:'flex',alignItems:'center',justifyContent:'center',fontSize:36 }}>✨</div>
+          )}
+          <p style={{ margin:0,fontSize:18,fontFamily:FD,fontWeight:700,color:'#fff',
+            textShadow:`0 0 28px ${primaryColor}`,letterSpacing:'.02em' }}>
+            {title || '✨ Ký ức của bạn'}
+          </p>
+          <p style={{ margin:0,fontSize:9,letterSpacing:'.24em',textTransform:'uppercase',
+            color:`${primaryColor}88`,fontFamily:FS }}>chạm để xem</p>
+        </div>
+      )}
+
+      {ph === 'idle' && (
+        <div style={{ position:'absolute',bottom:'22%',left:0,right:0,textAlign:'center',
+          animation:'_hint 2.6s ease-in-out infinite',pointerEvents:'none' }}>
+          <p style={{ margin:0,fontSize:9,letterSpacing:'.26em',textTransform:'uppercase',
+            color:`${primaryColor}55`,fontFamily:FS }}>chạm để hội tụ ký ức</p>
+        </div>
+      )}
+      <Skip onClick={trigger} />
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════════════════
+   12. VOICE  —  Voice Message
+══════════════════════════════════════════════════════════ */
+function VoiceIntro({ onComplete, primaryColor, title, imageUrl }: BaseProps) {
+  type Ph = 'idle' | 'playing' | 'revealed';
+  const [ph, setPh] = useState<Ph>('idle');
+  const { fading, trigger, style: fs } = useFadeOut(onComplete);
+
+  const tap = useCallback(() => {
+    if (ph !== 'idle' || fading) return;
+    setPh('playing');
+    setTimeout(() => setPh('revealed'), 2600);
+    setTimeout(() => trigger(), 4500);
+  }, [ph, fading, trigger]);
+
+  const bars = useMemo(() => [...Array(30)].map((_, i) => {
+    const h = 6 + ((i * 37 + 11) % 36);
+    return {
+      idleH: h,
+      bh: (0.1 + (h / 44) * 0.8).toFixed(3),
+      dur: `${0.30 + (i % 7) * 0.06}s`,
+      delay: `${(i * 53) % 460}ms`,
+    };
+  }), []);
+
+  return (
+    <div onClick={tap} style={{
+      ...WRAP,
+      cursor: ph === 'idle' ? 'pointer' : 'default',
+      background:'#060810',
+      ...fs,
+    }}>
+      <div style={{ position:'absolute',inset:0,pointerEvents:'none',
+        background:`radial-gradient(ellipse at 50% 44%,${primaryColor}10 0%,transparent 60%)` }} />
+
+      {/* Blurred bg image */}
+      {imageUrl && (
+        <div style={{
+          position:'absolute',inset:0,
+          backgroundImage:`url(${imageUrl})`,
+          backgroundSize:'cover',backgroundPosition:'center',
+          filter: ph === 'revealed' ? 'blur(0px) brightness(.65)' : 'blur(22px) brightness(.22)',
+          transition: ph === 'revealed' ? 'filter 1.1s ease' : 'none',
+          transform:'scale(1.08)',
+        }} />
+      )}
+      {ph !== 'revealed' && (
+        <div style={{ position:'absolute',inset:0,background:'rgba(6,8,16,.86)',pointerEvents:'none' }} />
+      )}
+
+      {ph !== 'revealed' && (
+        <div style={{ position:'relative',zIndex:2,display:'flex',flexDirection:'column',
+          alignItems:'center',gap:18,width:'72%' }}>
+          {/* Avatar */}
+          <div style={{ width:72,height:72,borderRadius:'50%',overflow:'hidden',
+            border:`2px solid ${primaryColor}44`,flexShrink:0,
+            animation:'_vox_pulse 2.2s ease-in-out infinite' }}>
+            {imageUrl
+              ? <img src={imageUrl} alt="" style={{ width:'100%',height:'100%',objectFit:'cover',
+                  filter:ph==='playing'?'none':'blur(8px)',transition:'filter .7s' }} />
+              : <div style={{ width:'100%',height:'100%',background:`radial-gradient(circle,${primaryColor}22 0%,transparent 70%)`,
+                  display:'flex',alignItems:'center',justifyContent:'center',fontSize:28 }}>💌</div>
+            }
+          </div>
+          {/* Title */}
+          <p style={{ margin:0,fontSize:13,fontFamily:FD,color:'rgba(255,255,255,.82)',
+            letterSpacing:'.01em',textAlign:'center' }}>
+            {title || 'Tin nhắn thoại'}
+          </p>
+          {/* Waveform */}
+          <div style={{ display:'flex',alignItems:'flex-end',gap:2,height:44,width:'100%' }}>
+            {bars.map((bar, i) => (
+              <div key={i} style={{ flex:1,height:'100%',display:'flex',
+                alignItems:'flex-end',justifyContent:'center' }}>
+                <div style={{
+                  width:'100%',
+                  height: ph === 'playing' ? '100%' : `${bar.idleH}px`,
+                  borderRadius:2,
+                  background: i === 14 || i === 15
+                    ? primaryColor
+                    : `${primaryColor}${i%3===0?'cc':i%3===1?'88':'aa'}`,
+                  transformOrigin:'center',
+                  ['--bh' as string]: bar.bh,
+                  opacity: ph === 'playing' ? 1 : 0.42,
+                  animation: ph === 'playing'
+                    ? `_vox_bar ${bar.dur} ${bar.delay} ease-in-out infinite`
+                    : 'none',
+                }} />
+              </div>
+            ))}
+          </div>
+          {ph === 'idle' && (
+            <p style={{ margin:0,fontSize:9,letterSpacing:'.24em',textTransform:'uppercase',
+              color:`${primaryColor}66`,fontFamily:FS,animation:'_hint 2.2s ease-in-out infinite' }}>
+              chạm để nghe
+            </p>
+          )}
+          {ph === 'playing' && (
+            <p style={{ margin:0,fontSize:10,letterSpacing:'.12em',
+              color:`${primaryColor}aa`,fontFamily:FS }}>▶ đang phát…</p>
+          )}
+        </div>
+      )}
+
+      {ph === 'revealed' && (
+        <div style={{ position:'relative',zIndex:2,display:'flex',flexDirection:'column',
+          alignItems:'center',gap:14,padding:'0 28px',textAlign:'center',
+          animation:`_dst_mem .7s ${SPR} both` }}>
+          <p style={{ margin:0,fontSize:19,fontFamily:FD,fontWeight:700,color:'#fff',
+            textShadow:'0 2px 20px rgba(0,0,0,.8)',letterSpacing:'.02em' }}>
+            {title || 'Dành cho bạn'}
+          </p>
+          <div style={{ width:40,height:1,background:`${primaryColor}88` }} />
+          <p style={{ margin:0,fontSize:9,letterSpacing:'.22em',textTransform:'uppercase',
+            color:'rgba(255,255,255,.42)',fontFamily:FS }}>chạm để xem</p>
+        </div>
+      )}
+      <Skip onClick={trigger} />
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════════════════
+   13. UNIVERSE  —  Cinematic Galaxy
+══════════════════════════════════════════════════════════ */
+function UniverseIntro({ onComplete, primaryColor, accentColor, title, imageUrl }: BaseProps) {
+  type Ph = 'void' | 'emerging' | 'drifting' | 'converging' | 'blooming';
+  const [ph, setPh]  = useState<Ph>('void');
+  const { fading, trigger, style: fs } = useFadeOut(onComplete);
+  const cvRef  = useRef<HTMLCanvasElement>(null);
+  const stRef  = useRef<{ ph: Ph; t0emerge: number; t0conv: number; t0bloom: number }>(
+    { ph: 'void', t0emerge: 0, t0conv: 0, t0bloom: 0 },
+  );
+  const rafRef = useRef<number>(0);
+
+  const tap = useCallback(() => {
+    if (stRef.current.ph !== 'drifting' || fading) return;
+    stRef.current.ph     = 'converging';
+    stRef.current.t0conv = performance.now();
+    setPh('converging');
+    setTimeout(() => {
+      stRef.current.ph      = 'blooming';
+      stRef.current.t0bloom = performance.now();
+      setPh('blooming');
+    }, 1950);
+    setTimeout(() => trigger(), 4700);
+  }, [fading, trigger]);
+
+  useEffect(() => {
+    const cv = cvRef.current; if (!cv) return;
+    const W  = cv.width  = window.innerWidth;
+    const H  = cv.height = window.innerHeight;
+    const ctx = cv.getContext('2d'); if (!ctx) return;
+    const cx = W / 2, cy = H / 2;
+    const R  = (a: number, b: number) => a + Math.random() * (b - a); // range helper
+
+    /* ── Phase auto-sequence ── */
+    const tE = setTimeout(() => {
+      stRef.current.t0emerge = performance.now();
+      stRef.current.ph       = 'emerging';
+      setPh('emerging');
+    }, 750);
+    const tD = setTimeout(() => {
+      if (stRef.current.ph === 'void' || stRef.current.ph === 'emerging') {
+        stRef.current.ph = 'drifting';
+        setPh('drifting');
+      }
+    }, 5200);
+
+    /* ── Colors ── */
+    const hex2rgb = (h: string): [number,number,number] => {
+      const m = /^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(h ?? '');
+      return m ? [parseInt(m[1],16), parseInt(m[2],16), parseInt(m[3],16)] : [99,102,241];
+    };
+    const K = (v: number) => Math.round(Math.max(0, Math.min(255, v)));
+    const [pr, pg, pb] = hex2rgb(primaryColor ?? '#6366f1');
+    const [ar, ag, ab] = hex2rgb(accentColor  ?? '#a5b4fc');
+
+    /* ── Stars ── */
+    interface Star {
+      bx:number; by:number; vx:number; vy:number;
+      r:number; baseA:number; tAmp:number; tSpd:number; tPh:number;
+      cr:number; cg:number; cb:number; layer:number;
+      birth:number; fadeD:number;  // fade-in timing (ms from canvas start)
+    }
+    const stars: Star[] = [];
+
+    /* Galaxy spiral arms — 2 × 80 = 160 */
+    for (let i = 0; i < 160; i++) {
+      const arm  = i & 1;
+      const frac = (i >> 1) / 80;
+      const t    = frac * Math.PI * 3.6 + arm * Math.PI;
+      const dist = 18 + frac * Math.max(W, H) * 0.46;
+      const sc   = R(-1, 1) * dist * 0.30; const jt = R(-9, 9);
+      stars.push({
+        bx: Math.cos(t) * (dist + sc) + jt, by: Math.sin(t) * (dist + sc) * 0.58 + jt * 0.5,
+        vx: R(-0.036, 0.036), vy: R(-0.022, 0.022),
+        r: R(0.7, 2.3), baseA: R(0.35, 0.88), tAmp: R(0.18, 0.60), tSpd: R(0.5, 2.1), tPh: R(0, Math.PI*2),
+        cr: K(200+R(0,55)), cg: K(215+R(0,40)), cb: 255, layer: 1,
+        birth: R(1100, 4600), fadeD: R(600, 1200),
+      });
+    }
+    /* Bright foreground — 90 */
+    for (let i = 0; i < 90; i++) {
+      const a = Math.random()*Math.PI*2; const d = R(20, Math.max(W,H)*0.62);
+      stars.push({
+        bx: Math.cos(a)*d, by: Math.sin(a)*d*0.80,
+        vx: R(-0.058, 0.058), vy: R(-0.036, 0.036),
+        r: R(1.4, 3.3), baseA: R(0.50, 0.98), tAmp: R(0.28, 0.55), tSpd: R(0.6, 2.5), tPh: R(0,Math.PI*2),
+        cr: K(pr+70+R(0,85)), cg: K(pg+55+R(0,85)), cb: K(pb+30+R(0,75)), layer: 2,
+        birth: R(1400, 5000), fadeD: R(700, 1300),
+      });
+    }
+    /* Mid stars — 195 */
+    for (let i = 0; i < 195; i++) {
+      const a = Math.random()*Math.PI*2; const d = Math.random()*Math.max(W,H)*0.74;
+      stars.push({
+        bx: Math.cos(a)*d, by: Math.sin(a)*d*0.86,
+        vx: R(-0.022, 0.022), vy: R(-0.014, 0.014),
+        r: R(0.38, 1.0), baseA: R(0.15, 0.42), tAmp: R(0.08, 0.22), tSpd: R(0.3, 1.2), tPh: R(0,Math.PI*2),
+        cr: K(185+R(0,70)), cg: K(192+R(0,63)), cb: K(210+R(0,45)), layer: 1,
+        birth: R(600, 4000), fadeD: R(500, 1000),
+      });
+    }
+    /* Deep background — 210 */
+    for (let i = 0; i < 210; i++) {
+      stars.push({
+        bx: R(-1,1)*W*1.55, by: R(-1,1)*H*1.55,
+        vx: R(-0.007, 0.007), vy: R(-0.004, 0.004),
+        r: R(0.15, 0.55), baseA: R(0.04, 0.15), tAmp: R(0.02, 0.06), tSpd: R(0.08, 0.5), tPh: R(0,Math.PI*2),
+        cr: K(175+R(0,80)), cg: K(188+R(0,67)), cb: K(212+R(0,43)), layer: 0,
+        birth: R(300, 3800), fadeD: R(400, 1000),
+      });
+    }
+
+    /* ── Shooting stars ── */
+    interface Shoot { x:number;y:number;dx:number;dy:number;len:number;alpha:number;life:number;maxLife:number; }
+    const shoots: Shoot[] = [];
+    let shootTimer = R(1800, 3200);
+    const spawnShoot = () => {
+      const ang = R(-0.55, -0.10); const spd = R(7, 15);
+      shoots.push({ x: R(0.03, 0.58)*W, y: R(0, 0.52)*H,
+        dx: Math.cos(ang)*spd, dy: Math.sin(ang)*spd + R(1, 3),
+        len: R(60, 135), alpha: R(0.65, 1), life: 0, maxLife: R(28, 52) });
+    };
+
+    /* ── Nebulae ── */
+    const nebulae = [
+      { x:W*0.12, y:H*0.17, rx:W*0.30, ry:H*0.18, r:pr,          g:pg,          b:pb,           a:0.062 },
+      { x:W*0.82, y:H*0.11, rx:W*0.24, ry:H*0.15, r:ar,          g:ag,          b:ab,           a:0.050 },
+      { x:W*0.06, y:H*0.66, rx:W*0.26, ry:H*0.16, r:K(pr+25),    g:K(pg+15),    b:K(pb+85),     a:0.055 },
+      { x:W*0.87, y:H*0.72, rx:W*0.28, ry:H*0.18, r:K(ar-15),    g:K(ag+50),    b:K(ab+8),      a:0.060 },
+      { x:W*0.50, y:H*0.50, rx:W*0.38, ry:H*0.26, r:pr,          g:pg,          b:pb,           a:0.032 },
+      { x:W*0.30, y:H*0.78, rx:W*0.20, ry:H*0.14, r:K(pr-20),    g:K(pg+38),    b:K(pb+65),     a:0.042 },
+      { x:W*0.68, y:H*0.32, rx:W*0.18, ry:H*0.12, r:K(ar+10),    g:K(ag-10),    b:K(ab+30),     a:0.038 },
+    ];
+
+    /* ── Milky Way cluster blobs ── */
+    const mwBlobs = Array.from({ length: 200 }, (_, i) => {
+      const t = i / 200;
+      return { x: R(-0.08, 0.08)*W + t*W, y: R(-0.06, 0.06)*H + t*H*0.52 + H*0.14, r: R(1, 6), a: R(0.003, 0.016) };
+    });
+
+    /* ── God ray angles (converging) ── */
+    const rays = Array.from({ length: 14 }, () => ({ angle: R(0, Math.PI*2), width: R(5, 16), alpha: R(0.10, 0.25) }));
+
+    /* ── Dust motes ── */
+    const motes = Array.from({ length: 78 }, () => ({
+      x: Math.random()*W, y: Math.random()*H,
+      r: R(0.28, 0.88), a: R(0.018, 0.068), vx: R(-0.09, 0.09), vy: R(-0.075, -0.018),
+    }));
+
+    /* ── Core micro-stars (center cluster) ── */
+    const coreStars = Array.from({ length: 36 }, (_, i) => {
+      const ang = (i/36)*Math.PI*2; const d = R(3, 28);
+      return { x: cx+Math.cos(ang)*d, y: cy+Math.sin(ang)*d*0.65, r: R(0.3, 1.8), a: R(0.20, 0.58), ph: R(0,Math.PI*2) };
+    });
+
+    /* ── Camera drift coefficients ── */
+    const CAM = { ax:22, ay:14, f1:0.000096, f2:0.000138, f3:0.000110, f4:0.000083, zAmp:0.016, zF:0.000064 };
+
+    let prevNow = performance.now();
+    let t0: number | null = null;
+    let mounted = true;
+
+    const draw = (now: number) => {
+      if (!mounted) return;
+      if (t0 === null) t0 = now;
+      const ms  = now - t0;
+      const dt  = Math.min(now - prevNow, 50); prevNow = now;
+      const { ph: curPh, t0emerge, t0conv, t0bloom } = stRef.current;
+
+      /* Emergence progress (0→1 over 4.5s from first star appearing) */
+      const emergeT  = t0emerge > 0 ? Math.min(1, (now - t0emerge) / 4200) : 0;
+      /* Convergence ease-in³: slow start → dramatic rush */
+      const convRaw  = curPh === 'converging' ? Math.min(1, (now - t0conv) / 1900)
+                     : curPh === 'blooming'   ? 1 : 0;
+      const convE    = convRaw * convRaw * convRaw;
+      /* Bloom dark-overlay alpha */
+      const blA      = curPh === 'blooming' ? Math.min(0.93, (now - t0bloom) / 700) : 0;
+      /* Cinematic camera drift (fades out during convergence) */
+      const camMult  = curPh === 'converging' ? Math.max(0, 1 - convE * 2.4)
+                     : curPh === 'blooming'   ? 0 : 1;
+      const camX     = (CAM.ax*Math.sin(ms*CAM.f1) + CAM.ax*0.38*Math.cos(ms*CAM.f2)) * camMult;
+      const camY     = (CAM.ay*Math.cos(ms*CAM.f3) + CAM.ay*0.28*Math.sin(ms*CAM.f4)) * camMult;
+      const camZ     = 1 + CAM.zAmp*Math.sin(ms*CAM.zF);
+
+      ctx.clearRect(0, 0, W, H);
+
+      /* ── Deep space background ── */
+      const bg = ctx.createRadialGradient(cx, cy*0.88, 0, cx, cy, Math.max(W,H)*0.92);
+      bg.addColorStop(0,    `rgba(${pr>>1},${pg>>1},${pb>>1},0.18)`);
+      bg.addColorStop(0.18, 'rgba(4,2,10,1)');
+      bg.addColorStop(0.52, 'rgba(2,1,7,1)');
+      bg.addColorStop(1,    'rgba(1,0,4,1)');
+      ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+
+      /* ── Milky Way band ── */
+      const mwVis = Math.min(1, emergeT * 1.6);
+      if (mwVis > 0) {
+        for (const b of mwBlobs) {
+          ctx.beginPath(); ctx.arc(b.x + camX*0.08, b.y + camY*0.08, b.r, 0, Math.PI*2);
+          ctx.fillStyle = `rgba(${ar},${ag},${ab},${(b.a * mwVis).toFixed(4)})`; ctx.fill();
+        }
+        const mwG = ctx.createLinearGradient(0, H*0.08, W, H*0.92);
+        mwG.addColorStop(0,    'rgba(255,255,255,0)');
+        mwG.addColorStop(0.30, `rgba(${pr},${pg},${pb},${(0.022*mwVis).toFixed(4)})`);
+        mwG.addColorStop(0.50, `rgba(${ar},${ag},${ab},${(0.034*mwVis).toFixed(4)})`);
+        mwG.addColorStop(0.70, `rgba(${pr},${pg},${pb},${(0.020*mwVis).toFixed(4)})`);
+        mwG.addColorStop(1,    'rgba(255,255,255,0)');
+        ctx.fillStyle = mwG; ctx.fillRect(0, 0, W, H);
+      }
+
+      /* ── Nebulae ── */
+      const nebVis = Math.min(1, emergeT * 2.0);
+      for (const n of nebulae) {
+        const pulse = 1 + 0.028 * Math.sin(ms*0.000422 + n.x*0.011);
+        ctx.save();
+        ctx.translate(n.x + camX*0.14, n.y + camY*0.14);
+        ctx.scale(pulse, pulse*0.76);
+        const ng = ctx.createRadialGradient(0, 0, 0, 0, 0, n.rx);
+        ng.addColorStop(0,    `rgba(${n.r},${n.g},${n.b},${(n.a*3.5*nebVis).toFixed(3)})`);
+        ng.addColorStop(0.28, `rgba(${n.r},${n.g},${n.b},${(n.a*nebVis).toFixed(3)})`);
+        ng.addColorStop(1,    `rgba(${n.r},${n.g},${n.b},0)`);
+        ctx.fillStyle = ng;
+        ctx.beginPath(); ctx.ellipse(0, 0, n.rx, n.ry, Math.PI*0.06, 0, Math.PI*2); ctx.fill();
+        ctx.restore();
+      }
+
+      /* ── Dust motes (drifting only) ── */
+      if (curPh === 'drifting') {
+        for (const m of motes) {
+          m.x += m.vx; m.y += m.vy;
+          if (m.x<0) m.x=W; else if (m.x>W) m.x=0;
+          if (m.y<0) m.y=H;
+          ctx.beginPath(); ctx.arc(m.x, m.y, m.r, 0, Math.PI*2);
+          ctx.fillStyle = `rgba(${pr},${pg},${pb},${m.a.toFixed(3)})`; ctx.fill();
+        }
+      }
+
+      /* ── Stars ── */
+      if (curPh !== 'blooming') {
+        for (const s of stars) {
+          s.bx += s.vx; s.by += s.vy;
+          const bnd = Math.max(W,H)*0.86;
+          if (s.bx<-bnd) s.bx=bnd; else if (s.bx>bnd) s.bx=-bnd;
+          if (s.by<-bnd) s.by=bnd; else if (s.by>bnd) s.by=-bnd;
+
+          /* Fade-in from birth */
+          const age    = ms - s.birth;
+          const fadeIn = age < 0 ? 0 : Math.min(1, age / s.fadeD);
+          if (fadeIn < 0.005) continue;
+
+          const twink = 1 - s.tAmp + s.tAmp * Math.sin(ms*0.001*s.tSpd + s.tPh);
+          const alpha = s.baseA * twink * fadeIn * Math.max(0, 1 - convE*1.22);
+          if (alpha < 0.007) continue;
+
+          /* Camera + convergence lerp */
+          const lerpF = convE;
+          const x = cx + (s.bx*(1-lerpF) + camX) * camZ;
+          const y = cy + (s.by*(1-lerpF)*0.90 + camY) * camZ;
+          const r = Math.max(0.1, s.r*(1-lerpF*0.92));
+
+          ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI*2);
+          ctx.fillStyle = `rgba(${s.cr},${s.cg},${s.cb},${alpha.toFixed(3)})`; ctx.fill();
+
+          /* 4-point sparkle cross on bright foreground stars */
+          if (s.layer === 2 && s.r > 1.6 && alpha > 0.22) {
+            const span = r*(2.1 + twink*0.8);
+            ctx.strokeStyle = `rgba(${s.cr},${s.cg},${s.cb},${(alpha*0.28).toFixed(3)})`;
+            ctx.lineWidth   = 0.50;
+            ctx.beginPath();
+            ctx.moveTo(x-span,y); ctx.lineTo(x+span,y);
+            ctx.moveTo(x,y-span); ctx.lineTo(x,y+span);
+            ctx.stroke();
+          }
+        }
+      }
+
+      /* ── Core micro-stars (idle/emerging) ── */
+      if (curPh === 'drifting' || curPh === 'emerging') {
+        const cVis = Math.min(1, emergeT * 2.5);
+        for (const s of coreStars) {
+          const a = s.a * cVis * (0.48 + 0.52*Math.sin(ms*0.0024 + s.ph));
+          ctx.beginPath(); ctx.arc(s.x + camX*0.2, s.y + camY*0.2, s.r, 0, Math.PI*2);
+          ctx.fillStyle = `rgba(${ar},${ag},${ab},${a.toFixed(3)})`; ctx.fill();
+        }
+      }
+
+      /* ── Shooting stars ── */
+      if (curPh === 'drifting') {
+        shootTimer -= dt;
+        if (shootTimer <= 0) { spawnShoot(); shootTimer = R(1500, 2900); }
+        for (let i = shoots.length-1; i >= 0; i--) {
+          const sh = shoots[i];
+          sh.x += sh.dx; sh.y += sh.dy; sh.life++;
+          if (sh.life > sh.maxLife) { shoots.splice(i,1); continue; }
+          const prog = sh.life / sh.maxLife;
+          const sa   = sh.alpha * (1-prog);
+          const mag  = Math.hypot(sh.dx, sh.dy);
+          const tx   = sh.x - (sh.dx/mag)*sh.len;
+          const ty   = sh.y - (sh.dy/mag)*sh.len;
+          const grd  = ctx.createLinearGradient(sh.x, sh.y, tx, ty);
+          grd.addColorStop(0,    `rgba(255,255,255,${sa.toFixed(3)})`);
+          grd.addColorStop(0.20, `rgba(${ar},${ag},${ab},${(sa*0.55).toFixed(3)})`);
+          grd.addColorStop(1,    `rgba(${pr},${pg},${pb},0)`);
+          ctx.strokeStyle = grd; ctx.lineWidth = Math.max(0.3, 1.5-prog); ctx.lineCap = 'round';
+          ctx.beginPath(); ctx.moveTo(sh.x,sh.y); ctx.lineTo(tx,ty); ctx.stroke();
+        }
+      }
+
+      /* ── God rays — volumetric light during convergence ── */
+      if (curPh === 'converging' && convE > 0.04) {
+        ctx.save();
+        ctx.globalCompositeOperation = 'screen';
+        const rA = Math.min(1, (convE-0.04) * 1.8);
+        for (const ray of rays) {
+          const a = ray.alpha * rA;
+          if (a < 0.005) continue;
+          ctx.save();
+          ctx.translate(cx, cy);
+          ctx.rotate(ray.angle + ms*0.000032);
+          const len = Math.max(W, H) * 1.5;
+          const grd = ctx.createLinearGradient(0, 0, 0, -len);
+          grd.addColorStop(0,    `rgba(${pr},${pg},${pb},${a.toFixed(3)})`);
+          grd.addColorStop(0.30, `rgba(${pr},${pg},${pb},${(a*0.38).toFixed(3)})`);
+          grd.addColorStop(1,    `rgba(${pr},${pg},${pb},0)`);
+          ctx.fillStyle = grd;
+          ctx.beginPath();
+          ctx.moveTo(-ray.width, 0);
+          ctx.lineTo(-ray.width*0.08, -len);
+          ctx.lineTo(ray.width*0.08, -len);
+          ctx.lineTo(ray.width, 0);
+          ctx.fill();
+          ctx.restore();
+        }
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.restore();
+      }
+
+      /* ── Convergence energy bloom ── */
+      if (curPh === 'converging') {
+        const bloomR = 4 + convE*Math.max(W,H)*0.72;
+        const bInt   = Math.min(0.96, convE*2.1);
+        const bl = ctx.createRadialGradient(cx,cy,0, cx,cy,bloomR);
+        bl.addColorStop(0,    `rgba(255,255,255,${Math.min(1,convE*3.2).toFixed(3)})`);
+        bl.addColorStop(0.04, `rgba(${pr},${pg},${pb},${bInt.toFixed(3)})`);
+        bl.addColorStop(0.24, `rgba(${pr},${pg},${pb},${(bInt*0.38).toFixed(3)})`);
+        bl.addColorStop(0.56, `rgba(${pr},${pg},${pb},${(bInt*0.08).toFixed(3)})`);
+        bl.addColorStop(1,    `rgba(${pr},${pg},${pb},0)`);
+        ctx.fillStyle = bl;
+        ctx.beginPath(); ctx.arc(cx,cy,bloomR,0,Math.PI*2); ctx.fill();
+        if (convE > 0.25) {
+          const rR = bloomR*0.34;
+          const rg = ctx.createRadialGradient(cx,cy,0, cx,cy,rR);
+          rg.addColorStop(0, `rgba(${ar},${ag},${ab},${((convE-0.25)*0.62*1.4).toFixed(3)})`);
+          rg.addColorStop(1, 'rgba(0,0,0,0)');
+          ctx.fillStyle = rg;
+          ctx.beginPath(); ctx.arc(cx,cy,rR,0,Math.PI*2); ctx.fill();
+        }
+      }
+
+      /* ── Blooming: fade to darkness + residual glow ── */
+      if (curPh === 'blooming') {
+        ctx.fillStyle = `rgba(1,0,4,${blA.toFixed(3)})`; ctx.fillRect(0,0,W,H);
+        const halo = ctx.createRadialGradient(cx,cy,0, cx,cy,Math.max(W,H)*0.58);
+        halo.addColorStop(0,    `rgba(${pr},${pg},${pb},${(0.15*(1-blA)).toFixed(3)})`);
+        halo.addColorStop(0.36, `rgba(${pr},${pg},${pb},${(0.04*(1-blA)).toFixed(3)})`);
+        halo.addColorStop(1,    'rgba(0,0,0,0)');
+        ctx.fillStyle = halo; ctx.fillRect(0,0,W,H);
+      }
+
+      /* ── Void: black overlay that fades out at start ── */
+      const voidA = Math.max(0, 1 - ms / 2200);
+      if (voidA > 0) { ctx.fillStyle = `rgba(0,0,0,${voidA.toFixed(3)})`; ctx.fillRect(0,0,W,H); }
+
+      rafRef.current = requestAnimationFrame(draw);
+    };
+
+    rafRef.current = requestAnimationFrame(draw);
+    return () => {
+      mounted = false;
+      cancelAnimationFrame(rafRef.current);
+      clearTimeout(tE);
+      clearTimeout(tD);
+    };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  return (
+    <div
+      onClick={tap}
+      style={{ ...WRAP, cursor: ph === 'drifting' ? 'pointer' : 'default', background:'#000000', ...fs }}
+    >
+      {/* ── Cinematic galaxy canvas ── */}
+      <canvas ref={cvRef} style={{ position:'absolute', inset:0, width:'100%', height:'100%' }} />
+
+      {/* ── Convergence energy ring ── */}
+      {ph === 'converging' && (
+        <div style={{
+          position:'absolute', left:'50%', top:'50%', marginLeft:-135, marginTop:-135,
+          width:270, height:270, borderRadius:'50%', zIndex:2, pointerEvents:'none',
+          border:`1.5px solid ${primaryColor}50`,
+          animation:`_gal_ring 1.95s ${EXPO} forwards`,
+        }} />
+      )}
+
+      {/* ── Cinematic bloom reveal ── */}
+      {ph === 'blooming' && (<>
+        {/* Three expanding corona rings at staggered sizes */}
+        <div style={{ position:'absolute', left:'50%', top:'50%', marginLeft:-165, marginTop:-165,
+          width:330, height:330, borderRadius:'50%', border:`1px solid ${primaryColor}25`,
+          zIndex:2, pointerEvents:'none', animation:`_gal_corona 2.7s ${EXPO} both` }} />
+        <div style={{ position:'absolute', left:'50%', top:'50%', marginLeft:-115, marginTop:-115,
+          width:230, height:230, borderRadius:'50%', border:`1px solid ${primaryColor}45`,
+          zIndex:2, pointerEvents:'none', animation:`_gal_corona 2.15s .14s ${EXPO} both` }} />
+        <div style={{ position:'absolute', left:'50%', top:'50%', marginLeft:-76, marginTop:-76,
+          width:152, height:152, borderRadius:'50%', border:`1px solid ${primaryColor}65`,
+          zIndex:2, pointerEvents:'none', animation:`_gal_corona 1.80s .26s ${EXPO} both` }} />
+
+        {/* Memory content */}
+        <div style={{ position:'relative', zIndex:3, display:'flex', flexDirection:'column',
+          alignItems:'center', gap:20, padding:'0 32px', textAlign:'center' }}>
+
+          {imageUrl && (
+            <div style={{ position:'relative', flexShrink:0 }}>
+              {/* Outer ambient glow */}
+              <div style={{
+                position:'absolute', inset:-18, borderRadius:'50%', pointerEvents:'none',
+                background:`radial-gradient(circle,${primaryColor}1e 30%,transparent 72%)`,
+                animation:`_float 4s ease-in-out infinite`,
+              }} />
+              {/* Photo */}
+              <div style={{
+                width:130, height:130, borderRadius:'50%', overflow:'hidden',
+                border:`2.5px solid ${primaryColor}80`,
+                boxShadow:`0 0 0 8px ${primaryColor}12,0 0 72px ${primaryColor}68,0 0 160px ${primaryColor}25`,
+                animation:`_gal_rise .92s .20s ${EXPO} both`, position:'relative', zIndex:2,
+              }}>
+                <img
+                  src={imageUrl} alt=""
+                  style={{ width:'100%', height:'100%', objectFit:'cover',
+                    filter:'brightness(1.06) contrast(1.04) saturate(1.10)' }}
+                />
+              </div>
+            </div>
+          )}
+
+          <p style={{
+            margin:0, fontSize:21, fontFamily:FD, fontWeight:700, color:'#ffffff',
+            letterSpacing:'.03em', lineHeight:1.28,
+            textShadow:`0 0 52px ${primaryColor},0 0 110px ${primaryColor}50,0 2px 20px rgba(0,0,0,.85)`,
+            animation:`_gal_rise .88s .48s ${EXPO} both`,
+          }}>
+            {title || '🌌 Ký ức vũ trụ'}
+          </p>
+
+          <div style={{ display:'flex', alignItems:'center', gap:10, width:'60%',
+            animation:`_gal_rise .78s .64s ${EXPO} both` }}>
+            <div style={{ flex:1, height:'.5px', background:`linear-gradient(to right,transparent,${primaryColor}58)` }} />
+            <span style={{ color:`${primaryColor}88`, fontSize:9, lineHeight:1 }}>✦</span>
+            <div style={{ flex:1, height:'.5px', background:`linear-gradient(to left,transparent,${primaryColor}58)` }} />
+          </div>
+
+          <p style={{ margin:0, fontSize:9, letterSpacing:'.30em', textTransform:'uppercase',
+            color:`${primaryColor}58`, fontFamily:FS,
+            animation:`_gal_rise .72s .80s ${EXPO} both` }}>
+            chạm để xem
+          </p>
+        </div>
+      </>)}
+
+      {/* ── Tap prompt (only when galaxy is ready) ── */}
+      {ph === 'drifting' && (
+        <div style={{ position:'absolute', bottom:'18%', left:0, right:0, zIndex:2,
+          textAlign:'center', pointerEvents:'none', animation:'_hint 3.4s ease-in-out infinite' }}>
+          <div style={{ display:'inline-flex', flexDirection:'column', alignItems:'center', gap:10 }}>
+            <div style={{ width:1, height:30,
+              background:`linear-gradient(to bottom,transparent,${primaryColor}38)` }} />
+            <p style={{ margin:0, fontSize:9, letterSpacing:'.30em', textTransform:'uppercase',
+              color:`${primaryColor}46`, fontFamily:FS }}>chạm để hội tụ</p>
+          </div>
+        </div>
+      )}
+
+      <Skip onClick={trigger} />
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════════════════
+   14. REEL  —  Cinema Reel
+══════════════════════════════════════════════════════════ */
+function ReelIntro({ onComplete, primaryColor, title }: BaseProps) {
+  type Ph = 'idle' | 'counting' | 'projecting';
+  const [ph, setPh] = useState<Ph>('idle');
+  const [count, setCount] = useState(3);
+  const { fading, trigger, style: fs } = useFadeOut(onComplete);
+
+  const tap = useCallback(() => {
+    if (ph !== 'idle' || fading) return;
+    setPh('counting');
+    setTimeout(() => setCount(2), 900);
+    setTimeout(() => setCount(1), 1800);
+    setTimeout(() => { setPh('projecting'); setCount(0); }, 2700);
+    setTimeout(() => trigger(), 4600);
+  }, [ph, fading, trigger]);
+
+  const sprockets = useMemo(() => [...Array(6)].map((_, i) => ({ t: 8 + i * 16 })), []);
+
+  return (
+    <div onClick={tap} style={{
+      ...WRAP,
+      cursor: ph === 'idle' ? 'pointer' : 'default',
+      background:'#040404',
+      ...fs,
+    }}>
+      {/* Film strip chrome + grain */}
+      {ph !== 'projecting' && (
+        <div style={{ position:'absolute',inset:0,pointerEvents:'none',
+          animation: ph === 'counting' ? `_rl_flicker 1.5s steps(1) infinite` : 'none' }}>
+          {sprockets.map((s, i) => (
+            <div key={`L${i}`} style={{ position:'absolute',left:6,top:`${s.t}%`,
+              width:10,height:14,border:'1.5px solid rgba(255,255,255,.18)',
+              borderRadius:2,background:'rgba(0,0,0,.75)' }} />
+          ))}
+          {sprockets.map((s, i) => (
+            <div key={`R${i}`} style={{ position:'absolute',right:6,top:`${s.t}%`,
+              width:10,height:14,border:'1.5px solid rgba(255,255,255,.18)',
+              borderRadius:2,background:'rgba(0,0,0,.75)' }} />
+          ))}
+          <div style={{ position:'absolute',inset:0,opacity:.038,
+            backgroundImage:`url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.72' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`,
+            animation:'_cdn_grain .48s steps(1) infinite' }} />
+          <div style={{ position:'absolute',inset:0,
+            background:'radial-gradient(ellipse at center,rgba(255,180,80,.04) 0%,rgba(20,10,4,.38) 100%)',
+            mixBlendMode:'multiply' as const }} />
+        </div>
+      )}
+
+      {/* Countdown */}
+      {ph === 'counting' && count > 0 && (
+        <div style={{ position:'relative',zIndex:5,textAlign:'center' }}>
+          <svg width="110" height="110" style={{ position:'absolute',inset:0 }}>
+            <circle cx="55" cy="55" r="48" fill="none" stroke="rgba(255,255,255,.12)" strokeWidth="2"/>
+            {[...Array(12)].map((_, i) => (
+              <line key={i}
+                x1={55 + 48 * Math.cos(i / 12 * Math.PI * 2 - Math.PI / 2)}
+                y1={55 + 48 * Math.sin(i / 12 * Math.PI * 2 - Math.PI / 2)}
+                x2={55 + (i % 3 === 0 ? 38 : 42) * Math.cos(i / 12 * Math.PI * 2 - Math.PI / 2)}
+                y2={55 + (i % 3 === 0 ? 38 : 42) * Math.sin(i / 12 * Math.PI * 2 - Math.PI / 2)}
+                stroke="rgba(255,255,255,.25)" strokeWidth="1.2" />
+            ))}
+          </svg>
+          <div style={{ width:110,height:110,display:'flex',alignItems:'center',justifyContent:'center' }}>
+            <span key={count} style={{ fontSize:56,fontWeight:900,color:'#fff',
+              fontFamily:'Georgia,serif',textShadow:'0 0 28px rgba(255,255,255,.38)',
+              animation:`_rl_num .85s ${EXPO} both` }}>{count}</span>
+          </div>
+          <div style={{ position:'absolute',left:0,right:0,height:2,top:0,
+            background:'rgba(255,255,255,.16)',
+            animation:`_rl_scan 1.8s linear infinite` }} />
+        </div>
+      )}
+
+      {/* Idle: clapboard + prompt */}
+      {ph === 'idle' && (
+        <div style={{ display:'flex',flexDirection:'column',alignItems:'center',gap:16,zIndex:2 }}>
+          <div style={{ position:'relative',width:60,height:48 }}>
+            <div style={{ width:'100%',height:'100%',background:'linear-gradient(135deg,#1e1e1e,#2e2e2e)',
+              borderRadius:3,border:'2px solid #484848',
+              display:'flex',alignItems:'center',justifyContent:'center' }}>
+              <span style={{ fontSize:18,color:'rgba(255,255,255,.4)' }}>▶</span>
+            </div>
+            <div style={{ position:'absolute',top:-11,left:-2,right:-2,height:13,
+              background:'repeating-linear-gradient(90deg,#f0f0f0 0,#f0f0f0 9px,#111 9px,#111 18px)',
+              borderRadius:'2px 2px 0 0',border:'1.5px solid #484848',borderBottom:'none',
+              transform:'rotate(-7deg)',transformOrigin:'bottom left' }} />
+          </div>
+          <p style={{ margin:0,fontSize:14,fontFamily:FD,color:'rgba(255,255,255,.68)',
+            letterSpacing:'.02em' }}>{title || 'Ký ức điện ảnh'}</p>
+          <p style={{ margin:0,fontSize:9,letterSpacing:'.26em',textTransform:'uppercase',
+            color:'rgba(255,255,255,.22)',fontFamily:FS,animation:'_hint 2.4s ease-in-out infinite' }}>
+            chạm để chiếu phim
+          </p>
+        </div>
+      )}
+
+      {/* Projector beam reveal */}
+      {ph === 'projecting' && (
+        <>
+          <div style={{ position:'absolute',inset:0,
+            background:`linear-gradient(180deg,${primaryColor}28 0%,rgba(0,0,0,.2) 55%,rgba(0,0,0,.5) 100%)`,
+            animation:`_rl_beam 1.1s ${EXPO} both`,pointerEvents:'none' }} />
+          <div style={{ position:'relative',zIndex:5,display:'flex',flexDirection:'column',
+            alignItems:'center',gap:14,padding:'0 24px',textAlign:'center',
+            animation:`_dst_mem .65s .85s ${EXPO} both` }}>
+            <p style={{ margin:0,fontSize:20,fontFamily:FD,fontWeight:700,color:'#fff',
+              letterSpacing:'.015em',
+              textShadow:`0 0 40px ${primaryColor},0 2px 14px rgba(0,0,0,.85)` }}>
+              {title || '🎬 Khởi chiếu ký ức'}
+            </p>
+            <div style={{ width:44,height:1,background:`${primaryColor}88` }} />
+          </div>
+          <div style={{ position:'absolute',left:0,right:0,height:3,top:0,zIndex:6,
+            background:`linear-gradient(90deg,transparent,${primaryColor}88,transparent)`,
+            animation:`_rl_scan 2.2s linear infinite`,pointerEvents:'none' }} />
+        </>
+      )}
+      <Skip onClick={trigger} dark={ph === 'projecting'} />
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════════════════
+   15. BOOK  —  Luxury Storybook
+══════════════════════════════════════════════════════════ */
+function BookIntro({ onComplete, primaryColor, accentColor, title, imageUrl }: BaseProps) {
+  type Ph = 'closed' | 'turning' | 'open';
+  const [ph, setPh] = useState<Ph>('closed');
+  const { fading, trigger, style: fs } = useFadeOut(onComplete);
+
+  const tap = useCallback(() => {
+    if (ph !== 'closed' || fading) return;
+    setPh('turning');
+    setTimeout(() => setPh('open'), 1050);
+    setTimeout(() => trigger(), 3400);
+  }, [ph, fading, trigger]);
+
+  return (
+    <div onClick={tap} style={{
+      ...WRAP,
+      cursor: ph === 'closed' ? 'pointer' : 'default',
+      background:'radial-gradient(ellipse at 46% 50%,#1c1208 0%,#0c0804 55%,#060404 100%)',
+      ...fs,
+    }}>
+      <div style={{ position:'absolute',inset:0,pointerEvents:'none',
+        background:'radial-gradient(ellipse at 46% 50%,rgba(201,164,83,.07) 0%,transparent 55%)' }} />
+
+      <div style={{ position:'relative',width:220,height:280 }}>
+        {/* Drop shadow */}
+        <div style={{ position:'absolute',left:10,top:14,width:'100%',height:'100%',
+          background:'rgba(0,0,0,.55)',filter:'blur(24px)',borderRadius:6,
+          animation: ph !== 'closed' ? `_bk_shadow .9s ${EXPO} forwards` : 'none' }} />
+
+        {/* Page stack */}
+        {[3, 2, 1].map(n => (
+          <div key={n} style={{ position:'absolute',inset:0,
+            background:`hsl(42,${22-n}%,${94-n}%)`,
+            borderRadius:'2px 5px 5px 2px',zIndex:n,
+            transform:`translateX(${n*2.5}px) translateY(${n*.5}px)`,
+            boxShadow:'1px 1px 4px rgba(0,0,0,.14)' }} />
+        ))}
+
+        {/* Inside endpaper */}
+        {(ph === 'turning' || ph === 'open') && (
+          <div style={{ position:'absolute',inset:0,zIndex:8,
+            background:'linear-gradient(148deg,#fdf9f0 0%,#f5ede0 100%)',
+            borderRadius:'2px 5px 5px 2px',
+            display:'flex',flexDirection:'column',alignItems:'center',
+            justifyContent:'center',padding:22,gap:10,
+            boxShadow:'3px 0 26px rgba(0,0,0,.28)',
+            animation:`_bk_inner .55s .72s ${EXPO} both` }}>
+            <div style={{ position:'absolute',inset:0,opacity:.05,
+              backgroundImage:'repeating-linear-gradient(48deg,#c9a453 0,#c9a453 .7px,transparent .7px,transparent 12px),repeating-linear-gradient(-48deg,#c9a453 0,#c9a453 .7px,transparent .7px,transparent 12px)',
+              borderRadius:'2px 5px 5px 2px' }} />
+            {[12, 17].map(n => (
+              <div key={n} style={{ position:'absolute',inset:n,
+                border:`1px solid rgba(201,164,83,${(.48-.16*(n/12)).toFixed(2)})`,
+                borderRadius:3,pointerEvents:'none' }} />
+            ))}
+            {imageUrl && (
+              <div style={{ width:82,height:82,borderRadius:4,overflow:'hidden',
+                border:'1.5px solid rgba(201,164,83,.4)',
+                boxShadow:'0 3px 16px rgba(0,0,0,.22)',flexShrink:0 }}>
+                <img src={imageUrl} alt="" style={{ width:'100%',height:'100%',objectFit:'cover' }} />
+              </div>
+            )}
+            <div style={{ display:'flex',alignItems:'center',gap:5,width:'75%' }}>
+              <div style={{ flex:1,height:'.5px',background:'rgba(201,164,83,.5)' }} />
+              <span style={{ fontSize:7,color:accentColor,opacity:.75 }}>✦</span>
+              <div style={{ flex:1,height:'.5px',background:'rgba(201,164,83,.5)' }} />
+            </div>
+            <p style={{ margin:0,fontSize:16,fontFamily:FD,fontWeight:700,color:'#2c1808',
+              textAlign:'center',lineHeight:1.45 }}>{title || 'Dành cho bạn'}</p>
+            <p style={{ margin:0,fontSize:9,fontFamily:FD,fontStyle:'italic',color:'#9a7050',
+              letterSpacing:'.04em' }}>một trang ký ức đặc biệt</p>
+          </div>
+        )}
+
+        {/* Book cover — flips away */}
+        <div style={{ position:'absolute',inset:0,zIndex:10,
+          transformOrigin:'left center',
+          backfaceVisibility:'hidden',
+          WebkitBackfaceVisibility:'hidden' as const,
+          animation: ph !== 'closed' ? `_bk_turn 1.18s ${CIN} forwards` : 'none' }}>
+          <div style={{ width:'100%',height:'100%',
+            background:`linear-gradient(158deg,${primaryColor} 0%,#180c04 48%,${primaryColor}88 100%)`,
+            borderRadius:'2px 5px 5px 2px',
+            boxShadow:'7px 7px 38px rgba(0,0,0,.76)',
+            display:'flex',flexDirection:'column',alignItems:'center',
+            justifyContent:'center',padding:26,position:'relative',overflow:'hidden' }}>
+            <div style={{ position:'absolute',inset:0,opacity:.09,
+              backgroundImage:'repeating-linear-gradient(35deg,rgba(255,255,255,.07) 0,rgba(255,255,255,.07) .8px,transparent .8px,transparent 7px)' }} />
+            {[10, 15, 20].map(n => (
+              <div key={n} style={{ position:'absolute',inset:n,
+                border:`1px solid rgba(201,164,83,${(.56-.16*(n/10)).toFixed(2)})`,borderRadius:3 }} />
+            ))}
+            {([{ top:12,left:12 },{ top:12,right:12 },{ bottom:12,left:12 },{ bottom:12,right:12 }] as React.CSSProperties[]).map((pos, i) => (
+              <span key={i} style={{ position:'absolute',...pos,color:accentColor,fontSize:11,opacity:.88,
+                textShadow:`0 0 6px ${accentColor}` }}>✦</span>
+            ))}
+            <div style={{ position:'absolute',top:-2,right:30,width:10,height:42,
+              background:`linear-gradient(180deg,${accentColor},${accentColor}77)`,
+              clipPath:'polygon(0 0,100% 0,100% 100%,50% 88%,0 100%)',
+              boxShadow:`0 0 8px ${accentColor}44` }} />
+            <p style={{ margin:'0 0 10px',fontSize:16,fontWeight:700,color:'#fff',
+              fontFamily:FD,textAlign:'center',lineHeight:1.4,
+              textShadow:'0 2px 10px rgba(0,0,0,.55)',letterSpacing:'.015em' }}>
+              {title || 'Dành cho bạn'}
+            </p>
+            <div style={{ width:40,height:.75,background:accentColor,opacity:.72 }} />
+          </div>
+        </div>
+      </div>
+
+      {ph === 'closed' && (
+        <p style={{ marginTop:26,fontSize:9,letterSpacing:'.24em',textTransform:'uppercase',
+          color:'rgba(201,164,83,.28)',fontFamily:FS,animation:'_hint 2.2s ease-in-out infinite' }}>
+          chạm để mở sách
+        </p>
+      )}
+      <Skip onClick={trigger} />
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════════════════
    § MAIN EXPORT
 ══════════════════════════════════════════════════════════ */
 export interface IntroOverlayProps {
@@ -2130,6 +3118,11 @@ export function IntroOverlay({
     gate:       GateIntro,
     flip:       FlipIntro,
     scratch:    ScratchIntro,
+    dust:       DustIntro,
+    voice:      VoiceIntro,
+    universe:   UniverseIntro,
+    reel:       ReelIntro,
+    book:       BookIntro,
   };
 
   const Component = map[introId];

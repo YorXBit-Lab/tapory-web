@@ -2,9 +2,11 @@ import type { ReactNode } from 'react';
 
 interface Props {
   children: ReactNode;
+  /** Optional absolute-positioned background layer — replaces the default grey stage */
+  backdrop?: ReactNode;
 }
 
-export function PhoneShell({ children }: Props) {
+export function PhoneShell({ children, backdrop }: Props) {
   const shadow = [
     '0 0 0 0.5px rgba(255,255,255,0.10)',
     'inset 0 1.5px 0 rgba(255,255,255,0.14)',
@@ -17,12 +19,22 @@ export function PhoneShell({ children }: Props) {
   return (
     <div
       className="relative flex w-full items-center justify-center overflow-hidden rounded-3xl px-4 py-6 lg:py-10"
-      style={{ background: 'linear-gradient(160deg, #f4f4f6 0%, #eaeaec 100%)' }}
+      style={backdrop ? undefined : { background: 'linear-gradient(160deg, #f4f4f6 0%, #eaeaec 100%)' }}
     >
-      {/* Spotlight */}
+      {/* Cinematic backdrop — fills stage behind the phone */}
+      {backdrop && (
+        <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-3xl">
+          {backdrop}
+        </div>
+      )}
+
+      {/* Spotlight — reduced opacity when backdrop is active */}
       <div
         className="pointer-events-none absolute left-1/2 top-1/2 h-80 w-80 -translate-x-1/2 -translate-y-[52%] rounded-full"
-        style={{ background: 'radial-gradient(circle, rgba(255,255,255,0.88) 0%, transparent 68%)' }}
+        style={{
+          background: 'radial-gradient(circle, rgba(255,255,255,0.88) 0%, transparent 68%)',
+          opacity: backdrop ? 0.22 : 1,
+        }}
       />
 
       <div className="group relative cursor-default select-none">
@@ -82,8 +94,7 @@ export function PhoneShell({ children }: Props) {
               />
             </div>
 
-            {/* Screen area — z-index contract:
-                content (none) → depth vignette (z-10) → FrameOverlay (z-20) → EffectOverlay (z-25) → Dynamic Island (z-30) */}
+            {/* Screen area */}
             {children}
           </div>
 

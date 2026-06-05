@@ -263,7 +263,7 @@ export async function POST(req: NextRequest) {
     }
 
     const pdfBytes = await pdfDoc.save();
-    return new NextResponse(pdfBytes, {
+    return new NextResponse(Buffer.from(pdfBytes), {
       headers: {
         'Content-Type': 'application/pdf',
         'Content-Disposition': `attachment; filename="in-anh-${new Date().toISOString().slice(0, 10)}.pdf"`,

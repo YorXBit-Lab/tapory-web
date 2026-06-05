@@ -141,6 +141,11 @@ export const INTROS: IIntro[] = [
   { id: 'gate',       name: 'Cánh Cửa',   icon: '🚪', hint: 'Mở cánh cửa bí ẩn' },
   { id: 'flip',       name: 'Lật Album',   icon: '📖', hint: 'Lật trang album' },
   { id: 'scratch',    name: 'Cào May Mắn', icon: '🪙', hint: 'Cào để khám phá' },
+  { id: 'dust',       name: 'Bụi Ký Ức',  icon: '✨', hint: 'Hạt bụi hội tụ ký ức' },
+  { id: 'voice',      name: 'Tin Nhắn',   icon: '💌', hint: 'Tin nhắn thoại bí mật' },
+  { id: 'universe',   name: 'Vũ Trụ',     icon: '🌌', hint: 'Sao hội tụ từ vũ trụ' },
+  { id: 'reel',       name: 'Phim Cuộn',  icon: '🎞️', hint: 'Cuộn phim điện ảnh cổ điển' },
+  { id: 'book',       name: 'Sách Kỷ Niệm', icon: '📚', hint: 'Lật sách bìa cứng luxury' },
 ];
 
 /** Phụ phí NFC mặc định (VND) — dùng khi sản phẩm không set nfcExtraPrice riêng */

@@ -27,6 +27,13 @@ export function useImageUpload(orderId: string) {
   const originalSavedUrlRef = useRef<string | null>(null);
 
   const handlePhoto = async (file: File) => {
+    // Demo mode — use a local object URL, no upload, no auth needed
+    if (orderId === 'demo') {
+      const localUrl = URL.createObjectURL(file);
+      dispatch(updateField({ imageUrl: localUrl }));
+      return;
+    }
+
     const currentUser = auth.currentUser;
     if (!currentUser) return; // not authenticated yet
 

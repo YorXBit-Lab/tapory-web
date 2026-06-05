@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import { MemorialAPI } from '@/services/MemorialAPI';
@@ -11,6 +11,13 @@ import { EffectOverlay } from '@/features/preview/EffectOverlay';
 import { IntroOverlay } from '@/features/preview/IntroOverlay';
 import { getScreenBackground } from '@/features/preview/screenBg';
 import { getTemplateStyles } from '@/templates/registry';
+import { CinematicParallax } from '@/features/view/components/CinematicParallax';
+import { TextureMaterial } from '@/features/view/components/TextureMaterial';
+import { LightingOverlay } from '@/features/view/components/LightingOverlay';
+import { ShareButton } from '@/features/view/components/ShareButton';
+import { MusicPulse } from '@/features/view/components/MusicPulse';
+import { useMagneticElement } from '@/features/view/hooks/useMagneticElement';
+import { useTouchScatter } from '@/features/view/hooks/useTouchScatter';
 import '@/templates/init';
 import { FRAMES, EFFECTS } from '@/configs/constants';
 import type { IEditDraft, IMemorial } from '@/configs/types';
@@ -132,6 +139,13 @@ export function ViewClient({ orderId }: { orderId: string }) {
   const [scale, setScale] = useState<number | null>(null);
   const [introCompleted, setIntroCompleted] = useState(false);
 
+  // Magnetic edit button — springs toward cursor on desktop
+  const editBtnRef = useMagneticElement<HTMLAnchorElement>({ strength: 0.40, radius: 72 });
+
+  // Touch scatter — tap card → particles burst at tap point
+  const cardRef        = useRef<HTMLDivElement>(null);
+  const scatterOverlay = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     const update = () => {
       const vw = window.visualViewport?.width  ?? window.innerWidth;
@@ -165,6 +179,15 @@ export function ViewClient({ orderId }: { orderId: string }) {
   const introId = memorial?.introId ?? 'none';
   const hasIntro = introId && introId !== 'none';
 
+  // Touch scatter — must be called before early returns (Rules of Hooks).
+  // The hook's inner useEffect guards against missing refs, so calling it
+  // before data loads is safe — it just won't attach until the card mounts.
+  useTouchScatter(cardRef, scatterOverlay, {
+    primary:   activeStyle?.colors.primary   ?? '#6366f1',
+    secondary: activeStyle?.colors.secondary ?? '#a5b4fc',
+    count: 14,
+  });
+
   if (!scale || isLoading) return <LoadingScreen />;
   if (isError) return <NoContentScreen cardId={orderId} />;
   if (!memorial) return <NoContentScreen cardId={orderId} />;
@@ -176,6 +199,12 @@ export function ViewClient({ orderId }: { orderId: string }) {
   return (
     <>
       <style>{`#tapory-screen::-webkit-scrollbar{display:none}`}</style>
+
+      {/* Scatter particle overlay — fixed, pointer-events:none, z:55 */}
+      <div
+        ref={scatterOverlay}
+        style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 55, overflow: 'hidden' }}
+      />
 
       {/* Intro overlay — blocks view until user interacts */}
       {hasIntro && !introCompleted && (
@@ -189,19 +218,17 @@ export function ViewClient({ orderId }: { orderId: string }) {
         />
       )}
 
-      <div
-        style={{
-          position: 'fixed',
-          inset: 0,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          overflow: 'hidden',
-          ...screenBg,
-        }}
+      {/* ── Cinematic Parallax Depth System ── */}
+      <CinematicParallax
+        primary={activeStyle?.colors.primary ?? '#c45c8a'}
+        secondary={activeStyle?.colors.secondary ?? '#f8b4cc'}
+        accent={activeStyle?.colors.accent ?? '#fdf5f8'}
+        screenBg={screenBg}
       >
+        {/* Card — sits on Layer 2 inside the parallax */}
         <div style={{ zoom: scale } as React.CSSProperties}>
           <div
+            ref={cardRef}
             id="tapory-screen"
             style={{
               width: NATIVE_W,
@@ -211,14 +238,33 @@ export function ViewClient({ orderId }: { orderId: string }) {
               overflowY: 'auto',
               scrollbarWidth: 'none',
               WebkitOverflowScrolling: 'touch',
-              ...screenBg,
+              /* Soft drop shadow gives depth to the floating card */
+              boxShadow: '0 32px 80px rgba(0,0,0,0.28), 0 8px 24px rgba(0,0,0,0.18)',
+              borderRadius: 2,
             } as React.CSSProperties}
           >
             {activeStyle && <TemplateRenderer data={draft} style={activeStyle} autoPlay />}
+
+            {/* ── Texture & Material System — overlays on top of template ── */}
+            <TextureMaterial
+              templateId={draft.templateId}
+              layout={activeStyle?.layout ?? ''}
+              primary={activeStyle?.colors.primary ?? '#c45c8a'}
+              secondary={activeStyle?.colors.secondary ?? '#f8b4cc'}
+              accent={activeStyle?.colors.accent ?? '#fdf5f8'}
+            />
           </div>
         </div>
-      </div>
+      </CinematicParallax>
 
+      {/* ── Dynamic Lighting System — z:45, above parallax, below frames ── */}
+      <LightingOverlay
+        primary={activeStyle?.colors.primary ?? '#c45c8a'}
+        secondary={activeStyle?.colors.secondary ?? '#f8b4cc'}
+        accent={activeStyle?.colors.accent ?? '#fdf5f8'}
+      />
+
+      {/* Frame + Effect overlays — z:50 */}
       <div
         style={{
           position: 'fixed',
@@ -232,13 +278,15 @@ export function ViewClient({ orderId }: { orderId: string }) {
         <FrameOverlay frame={activeFrame} />
       </div>
 
+      {/* ── Edit button — moved to bottom:70 to clear ShareButton ── */}
       <Link
+        ref={editBtnRef}
         href={`/edit/${orderId}`}
         style={{
           position: 'fixed',
-          bottom: 20,
+          bottom: 70,
           right: 20,
-          zIndex: 60,
+          zIndex: 61,
           width: 40,
           height: 40,
           borderRadius: '50%',
@@ -252,8 +300,8 @@ export function ViewClient({ orderId }: { orderId: string }) {
           color: 'rgba(0,0,0,0.60)',
           textDecoration: 'none',
           boxShadow: '0 2px 16px rgba(0,0,0,0.22)',
-          transition: 'opacity 0.2s',
-        }}
+          willChange: 'transform',
+        } as React.CSSProperties}
         title="Chỉnh sửa"
       >
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -261,6 +309,16 @@ export function ViewClient({ orderId }: { orderId: string }) {
           <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
         </svg>
       </Link>
+
+      {/* ── Share System — z:62 ── */}
+      <ShareButton
+        orderId={orderId}
+        title={memorial.title}
+        primary={activeStyle?.colors.primary ?? '#6366f1'}
+      />
+
+      {/* ── Music Pulse — z:44 (ring) + z:62 (controls) ── */}
+      <MusicPulse primary={activeStyle?.colors.primary ?? '#c45c8a'} />
     </>
   );
 }

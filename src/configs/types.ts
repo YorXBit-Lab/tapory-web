@@ -118,9 +118,9 @@ export interface IProduct {
   name: string;
   price: number;
   status: ProductStatus;
-  stock?: number;
-  canBeNfc: boolean;         // legacy — dùng addons thay thế
-  nfcExtraPrice?: number;    // legacy — dùng addons thay thế
+  stock?: number;            // chỉ dùng khi không có variants
+  canBeNfc: boolean;         // chỉ dùng khi không có variants
+  nfcExtraPrice?: number;
   templateId?: TemplateId;
   description?: string;
   imageUrl?: string;

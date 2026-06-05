@@ -1,7 +1,15 @@
 export function getFontFamily(fontStyle?: string): string {
-  if (fontStyle === 'serif')  return 'var(--font-playfair), "Playfair Display", Georgia, serif';
-  if (fontStyle === 'script') return 'var(--font-dancing), "Dancing Script", cursive';
-  return 'var(--font-montserrat), Montserrat, sans-serif';
+  switch (fontStyle) {
+    case 'serif':      return 'var(--font-playfair), "Playfair Display", Georgia, serif';
+    case 'script':     return 'var(--font-dancing), "Dancing Script", cursive';
+    case 'be-vietnam': return 'var(--font-be-vietnam), "Be Vietnam Pro", sans-serif';
+    case 'lora':       return 'var(--font-lora), Lora, Georgia, serif';
+    case 'cormorant':  return 'var(--font-cormorant), "Cormorant Garamond", Georgia, serif';
+    case 'raleway':    return 'var(--font-raleway), Raleway, sans-serif';
+    case 'nunito':     return 'var(--font-nunito), Nunito, sans-serif';
+    case 'josefin':    return 'var(--font-josefin), "Josefin Sans", sans-serif';
+    default:           return 'var(--font-montserrat), Montserrat, sans-serif';
+  }
 }
 
 export function getImageFilter(imageFilter?: string): string {

@@ -142,9 +142,7 @@ export const INTRO_THUMBNAIL: Record<string, React.ReactNode> = {
 
   scratch: (
     <div style={{ width: '100%', height: '100%', borderRadius: 6, overflow: 'hidden', position: 'relative' }}>
-      {/* Gold base */}
       <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg,#b8882a,#e8c050,#f5d060,#e8c050,#b8882a)' }} />
-      {/* Scratch marks */}
       {[20,40,55,70,85].map((y, i) => (
         <div key={i} style={{
           position: 'absolute', top: `${y}%`, left: `${10 + i * 8}%`, right: `${5 + (4-i) * 7}%`,
@@ -152,10 +150,111 @@ export const INTRO_THUMBNAIL: Record<string, React.ReactNode> = {
           transform: `rotate(${(i-2) * 3}deg)`,
         }} />
       ))}
-      {/* Revealed area */}
       <div style={{ position: 'absolute', top: '20%', left: '20%', right: '20%', bottom: '20%', background: 'rgba(255,255,255,.25)', borderRadius: 2 }} />
       <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <span style={{ fontSize: 18, filter: 'drop-shadow(0 1px 3px rgba(0,0,0,.4))' }}>🪙</span>
+      </div>
+    </div>
+  ),
+
+  dust: (
+    <div style={{ width: '100%', height: '100%', borderRadius: 6, position: 'relative', background: 'radial-gradient(ellipse at 50% 50%,#1a0a2a,#060308)' }}>
+      <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse at center,rgba(180,100,255,.18) 0%,transparent 65%)' }} />
+      {[
+        { l:'22%',t:'28%',s:3,o:.7 },{ l:'72%',t:'20%',s:2,o:.5 },{ l:'45%',t:'65%',s:4,o:.6 },
+        { l:'15%',t:'55%',s:2,o:.4 },{ l:'80%',t:'45%',s:3,o:.65 },{ l:'58%',t:'30%',s:2,o:.45 },
+        { l:'30%',t:'75%',s:2,o:.55 },{ l:'68%',t:'70%',s:3,o:.5 },
+      ].map((p, i) => (
+        <div key={i} style={{ position: 'absolute', left: p.l, top: p.t,
+          width: p.s, height: p.s, borderRadius: '50%', transform: 'translate(-50%,-50%)',
+          background: 'radial-gradient(circle,#c87aff 0%,transparent 75%)',
+          boxShadow: '0 0 6px #a050f0', opacity: p.o }} />
+      ))}
+      <div style={{ position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%,-50%)',
+        width: 18, height: 18, borderRadius: '50%',
+        background: 'radial-gradient(circle,rgba(200,100,255,.7) 0%,transparent 70%)',
+        boxShadow: '0 0 12px rgba(180,80,255,.8)' }} />
+      <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <span style={{ fontSize: 14, opacity: .7 }}>✨</span>
+      </div>
+    </div>
+  ),
+
+  voice: (
+    <div style={{ width: '100%', height: '100%', borderRadius: 6, background: '#060810', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4, padding: '6px 6px' }}>
+      <div style={{ width: 22, height: 22, borderRadius: '50%', background: 'radial-gradient(circle,rgba(100,150,255,.25) 0%,transparent 70%)', border: '1.5px solid rgba(100,150,255,.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+        <span style={{ fontSize: 10 }}>💌</span>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 1.5, height: 18, width: '88%' }}>
+        {[5,9,14,7,16,11,5,18,8,13,6,15,9,12,17,7,14,10,6,13].map((h, i) => (
+          <div key={i} style={{ flex: 1, height: `${h}px`, maxHeight: '100%', borderRadius: 1.5,
+            background: i === 9 || i === 10 ? 'rgba(100,150,255,.9)' : `rgba(100,150,255,${.35 + (i%3)*.15})` }} />
+        ))}
+      </div>
+      <p style={{ margin: 0, fontSize: 4, letterSpacing: '.18em', textTransform: 'uppercase', color: 'rgba(100,150,255,.4)', fontFamily: 'sans-serif' }}>TAP TO PLAY</p>
+    </div>
+  ),
+
+  universe: (
+    <div style={{ width: '100%', height: '100%', borderRadius: 6, position: 'relative', background: 'radial-gradient(ellipse at 50% 46%,#0c0a1c,#030206)' }}>
+      <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse at center,rgba(120,80,255,.14) 0%,transparent 65%)' }} />
+      {[
+        { l:'18%',t:'22%',s:1.5 },{ l:'72%',t:'16%',s:1 },{ l:'42%',t:'12%',s:2 },
+        { l:'82%',t:'38%',s:1.5 },{ l:'28%',t:'48%',s:1 },{ l:'62%',t:'55%',s:1 },
+        { l:'14%',t:'65%',s:1.5 },{ l:'78%',t:'68%',s:2 },{ l:'48%',t:'75%',s:1 },
+        { l:'35%',t:'32%',s:1 },  { l:'88%',t:'24%',s:1.5 },{ l:'55%',t:'42%',s:3 },
+      ].map((s, i) => (
+        <div key={i} style={{ position: 'absolute', left: s.l, top: s.t,
+          width: s.s, height: s.s, borderRadius: '50%', transform: 'translate(-50%,-50%)',
+          background: i === 11 ? 'radial-gradient(circle,#e0c8ff 0%,#9060f0 50%,transparent 80%)' : '#fff',
+          boxShadow: i === 11 ? '0 0 8px #9060f0' : 'none',
+          opacity: i === 11 ? 1 : 0.5 + (i % 4) * 0.12 }} />
+      ))}
+      <div style={{ position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%,-50%)',
+        width: 16, height: 16, borderRadius: '50%',
+        background: 'radial-gradient(circle,rgba(180,140,255,.6) 0%,transparent 70%)',
+        filter: 'blur(3px)' }} />
+    </div>
+  ),
+
+  reel: (
+    <div style={{ width: '100%', height: '100%', borderRadius: 6, background: '#040404', position: 'relative', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      {[0,1,2].map(i => (
+        <div key={i} style={{ position: 'absolute', left: 3, top: `${18 + i * 24}%`, width: 5, height: 8, border: '1px solid rgba(255,255,255,.18)', borderRadius: 1 }} />
+      ))}
+      {[0,1,2].map(i => (
+        <div key={i} style={{ position: 'absolute', right: 3, top: `${18 + i * 24}%`, width: 5, height: 8, border: '1px solid rgba(255,255,255,.18)', borderRadius: 1 }} />
+      ))}
+      <div style={{ position: 'relative' }}>
+        <svg width="38" height="38">
+          <circle cx="19" cy="19" r="16" fill="none" stroke="rgba(255,255,255,.15)" strokeWidth="1.5"/>
+          {[0,90,180,270].map(a => (
+            <line key={a}
+              x1={19 + 16*Math.cos(a*Math.PI/180)} y1={19 + 16*Math.sin(a*Math.PI/180)}
+              x2={19 + 11*Math.cos(a*Math.PI/180)} y2={19 + 11*Math.sin(a*Math.PI/180)}
+              stroke="rgba(255,255,255,.22)" strokeWidth="1.2"/>
+          ))}
+        </svg>
+        <span style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 900, color: '#fff', fontFamily: 'Georgia,serif', textShadow: '0 0 10px rgba(255,255,255,.4)' }}>3</span>
+      </div>
+    </div>
+  ),
+
+  book: (
+    <div style={{ width: '100%', height: '100%', borderRadius: 6, background: 'radial-gradient(ellipse at 46% 50%,#1c1208,#060404)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ position: 'relative', width: 34, height: 44 }}>
+        {/* Spine */}
+        <div style={{ position: 'absolute', left: -4, top: 2, bottom: 2, width: 6, background: 'linear-gradient(90deg,#1a0800,#4a2408)', borderRadius: '2px 0 0 2px' }} />
+        {/* Pages */}
+        {[2,1].map(n => <div key={n} style={{ position: 'absolute', inset: 0, background: `hsl(42,22%,${93-n}%)`, borderRadius: '0 2px 2px 0', transform: `translateX(${n*2}px)` }} />)}
+        {/* Cover */}
+        <div style={{ width: '100%', height: '100%', background: 'linear-gradient(158deg,#c45c8a,#180c04)', borderRadius: '1px 3px 3px 1px', boxShadow: '3px 3px 12px rgba(0,0,0,.6)', position: 'relative', overflow: 'hidden' }}>
+          <div style={{ position: 'absolute', inset: 3, border: '1px solid rgba(201,164,83,.45)', borderRadius: 1 }} />
+          <div style={{ position: 'absolute', top: -1, right: 6, width: 4, height: 12, background: '#f0d060', clipPath: 'polygon(0 0,100% 0,100% 100%,50% 88%,0 100%)' }} />
+          <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <span style={{ fontSize: 9, opacity: .8 }}>📖</span>
+          </div>
+        </div>
       </div>
     </div>
   ),
