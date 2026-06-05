@@ -63,6 +63,28 @@ export interface ITemplate {
 
 export type ProductStatus = 'draft' | 'active' | 'archived';
 
+/** Ảnh mẫu in sẵn gắn với một sản phẩm */
+export interface IPresetPhoto {
+  id: string;
+  productId: string;
+  url: string;
+  key: string;       // R2 key để xóa
+  name?: string;
+  sortOrder?: number;
+  createdAt?: string;
+}
+
+/** Dịch vụ cộng thêm toàn hệ thống (NFC, Gói quà, Express...) */
+export interface IService {
+  id: string;
+  name: string;
+  price: number;
+  enablesNfc?: boolean;
+  description?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export type PrintShape = 'rectangle' | 'square' | 'circle';
 
 export interface IPrintPhotoSlot {
@@ -94,17 +116,17 @@ export interface IProductVariant {
 export interface IProduct {
   id: string;
   name: string;
-  price: number;             // giá gốc / fallback khi không chọn variant
+  price: number;
   status: ProductStatus;
   stock?: number;            // chỉ dùng khi không có variants
-  canBeNfc: boolean;         // sản phẩm có thể thêm NFC — lựa chọn thực tế nằm ở lúc tạo đơn
-  isNfc?: boolean;           // sản phẩm này là NFC (dùng cho badge & order-item flag)
-  nfcExtraPrice?: number;    // phụ phí khi thêm NFC; nếu không set thì dùng DEFAULT_NFC_EXTRA_PRICE
-  templateId?: TemplateId;   // template gợi ý mặc định khi chọn NFC
+  canBeNfc: boolean;         // chỉ dùng khi không có variants
+  nfcExtraPrice?: number;
+  templateId?: TemplateId;
   description?: string;
   imageUrl?: string;
-  printConfig?: IPrintConfig; // chỉ dùng khi không có variants
-  variants?: Record<string, IProductVariant>; // variantId → variant
+  printConfig?: IPrintConfig;
+  variants?: Record<string, IProductVariant>;
+  serviceIds?: string[];   // tham chiếu đến IService trong collection services
   createdAt?: string;
   updatedAt?: string;
 }
@@ -144,4 +166,29 @@ export interface IMemorialDoc extends IMemorial {
 
 export interface IEditDraft extends IMemorial {
   isDirty: boolean;
+}
+
+export type PurchaseOrderStatus = 'planned' | 'ordered' | 'received';
+
+export interface IPurchaseOrderItem {
+  productId: string;
+  productName: string;
+  variantId?: string;
+  variantName?: string;
+  quantity: number;
+  unitCost: number;
+}
+
+export interface IPurchaseOrder {
+  id: string;
+  status: PurchaseOrderStatus;
+  items: IPurchaseOrderItem[];
+  totalCost: number;
+  supplier?: string;
+  note?: string;
+  expectedDate?: string;
+  imageUrls?: string[];
+  receivedAt?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
