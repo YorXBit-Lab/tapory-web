@@ -2,8 +2,21 @@
 
 import { useRef, useState } from 'react';
 import {
-  App, Badge, Button, Card, Divider, Form, Input, InputNumber, Modal,
-  Popconfirm, Select, Switch, Table, Tag, Typography,
+  App,
+  Badge,
+  Button,
+  Card,
+  Divider,
+  Form,
+  Input,
+  InputNumber,
+  Modal,
+  Popconfirm,
+  Select,
+  Switch,
+  Table,
+  Tag,
+  Typography,
 } from 'antd';
 import { DeleteOutlined, EditOutlined, PlusOutlined, UploadOutlined } from '@ant-design/icons';
 import { useQueryClient } from '@tanstack/react-query';
@@ -16,7 +29,15 @@ import { useServices, useCreateService, useUpdateService, useDeleteService } fro
 import { usePresetPhotos, useCreatePresetPhoto, useDeletePresetPhoto } from '@/hooks/presetPhoto';
 import { TEMPLATE_LIST } from '@/configs/constants';
 import { uploadProductImage, deleteProductImage } from '@/utils/r2-upload';
-import type { IProduct, IProductVariant, IService, IPresetPhoto, IPrintConfig, PrintShape, ProductStatus } from '@/configs/types';
+import type {
+  IProduct,
+  IProductVariant,
+  IService,
+  IPresetPhoto,
+  IPrintConfig,
+  PrintShape,
+  ProductStatus,
+} from '@/configs/types';
 
 const { Text } = Typography;
 
@@ -40,20 +61,38 @@ interface VariantRow {
   printConfig?: IPrintConfig;
 }
 
-type ProductFormInternal = Omit<IProduct, 'id' | 'createdAt' | 'updatedAt' | 'variants' | 'serviceIds'> & {
+type ProductFormInternal = Omit<
+  IProduct,
+  'id' | 'createdAt' | 'updatedAt' | 'variants' | 'serviceIds'
+> & {
   variantRows?: VariantRow[];
 };
 
 const PRODUCT_STATUS_CONFIG: Record<ProductStatus, { color: string; label: string }> = {
-  draft:    { color: 'default', label: 'Draft' },
-  active:   { color: 'success', label: 'Active' },
-  archived: { color: 'error',   label: 'Archived' },
+  draft: { color: 'default', label: 'Draft' },
+  active: { color: 'success', label: 'Active' },
+  archived: { color: 'error', label: 'Archived' },
 };
 
 function StockCell({ stock }: { stock?: number }) {
-  if (stock === undefined) return <Text type="secondary" className="text-xs">∞</Text>;
-  if (stock === 0) return <Tag color="error" className="text-xs">Hết hàng</Tag>;
-  if (stock <= 5) return <Tag color="warning" className="text-xs">Còn {stock}</Tag>;
+  if (stock === undefined)
+    return (
+      <Text type="secondary" className="text-xs">
+        ∞
+      </Text>
+    );
+  if (stock === 0)
+    return (
+      <Tag color="error" className="text-xs">
+        Hết hàng
+      </Tag>
+    );
+  if (stock <= 5)
+    return (
+      <Tag color="warning" className="text-xs">
+        Còn {stock}
+      </Tag>
+    );
   return <Text className="text-xs font-medium">{stock}</Text>;
 }
 
@@ -95,7 +134,12 @@ function ImageUploader({
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <Button size="small" icon={<UploadOutlined />} loading={uploading} onClick={() => inputRef.current?.click()}>
+        <Button
+          size="small"
+          icon={<UploadOutlined />}
+          loading={uploading}
+          onClick={() => inputRef.current?.click()}
+        >
           {value ? 'Đổi ảnh' : 'Chọn ảnh'}
         </Button>
         {value && (
@@ -103,7 +147,9 @@ function ImageUploader({
             Xóa ảnh
           </Button>
         )}
-        <Text type="secondary" className="text-[10px]">JPEG · PNG · WebP · tối đa 5 MB</Text>
+        <Text type="secondary" className="text-[10px]">
+          JPEG · PNG · WebP · tối đa 5 MB
+        </Text>
       </div>
 
       <input
@@ -139,7 +185,10 @@ function PresetPhotoManager({ productId }: { productId: string }) {
       const { url, key } = await uploadProductImage(file, idToken);
       await createPreset({ productId, url, key, sortOrder: presets.length });
     } catch (err) {
-      notification.error({ message: 'Upload thất bại', description: err instanceof Error ? err.message : undefined });
+      notification.error({
+        message: 'Upload thất bại',
+        description: err instanceof Error ? err.message : undefined,
+      });
     } finally {
       setUploading(false);
     }
@@ -157,14 +206,29 @@ function PresetPhotoManager({ productId }: { productId: string }) {
     }
   };
 
-  if (isLoading) return <Text type="secondary" className="text-xs">Đang tải...</Text>;
+  if (isLoading)
+    return (
+      <Text type="secondary" className="text-xs">
+        Đang tải...
+      </Text>
+    );
 
   return (
     <div>
       <div className="flex flex-wrap gap-2">
-        {(presets as IPresetPhoto[]).map(preset => (
-          <div key={preset.id} className="group relative h-20 w-20 overflow-hidden rounded-lg border border-gray-200">
-            <Image src={preset.url} alt="preset" fill className="object-cover" sizes="80px" unoptimized />
+        {(presets as IPresetPhoto[]).map((preset) => (
+          <div
+            key={preset.id}
+            className="group relative h-20 w-20 overflow-hidden rounded-lg border border-gray-200"
+          >
+            <Image
+              src={preset.url}
+              alt="preset"
+              fill
+              className="object-cover"
+              sizes="80px"
+              unoptimized
+            />
             <button
               type="button"
               className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity group-hover:opacity-100"
@@ -182,16 +246,22 @@ function PresetPhotoManager({ productId }: { productId: string }) {
             onClick={() => inputRef.current?.click()}
             className="flex h-20 w-20 flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 text-gray-400 transition-colors hover:border-blue-400 hover:text-blue-500 disabled:opacity-50"
           >
-            {uploading
-              ? <div className="h-5 w-5 animate-spin rounded-full border-2 border-gray-200 border-t-blue-500" />
-              : <><PlusOutlined style={{ fontSize: 18 }} /><span className="mt-1 text-[10px]">Thêm ảnh</span></>
-            }
+            {uploading ? (
+              <div className="h-5 w-5 animate-spin rounded-full border-2 border-gray-200 border-t-blue-500" />
+            ) : (
+              <>
+                <PlusOutlined style={{ fontSize: 18 }} />
+                <span className="mt-1 text-[10px]">Thêm ảnh</span>
+              </>
+            )}
           </button>
         )}
       </div>
 
       {(presets as IPresetPhoto[]).length === 0 && !uploading && (
-        <Text type="secondary" className="mt-1 block text-xs">Chưa có ảnh mẫu nào.</Text>
+        <Text type="secondary" className="mt-1 block text-xs">
+          Chưa có ảnh mẫu nào.
+        </Text>
       )}
 
       <input
@@ -213,7 +283,7 @@ function PresetPhotoManager({ productId }: { productId: string }) {
 interface ServiceFormValues {
   name: string;
   price: number;
-  enablesNfc?: boolean;
+  imageUrl?: string;
   description?: string;
 }
 
@@ -228,20 +298,78 @@ function ServiceModal({
   onClose: () => void;
   onSave: (values: ServiceFormValues) => Promise<void>;
 }) {
+  const { user } = useAdminAuth();
+  const { notification } = App.useApp();
   const [form] = Form.useForm<ServiceFormValues>();
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [uploadedKey, setUploadedKey] = useState<string | null>(null);
+  const imageUrl: string = Form.useWatch('imageUrl', form) ?? '';
+
+  const discardPendingImage = async (key: string | null) => {
+    if (!key || !user) return;
+    const idToken = await user.getIdToken();
+    deleteProductImage(key, idToken);
+  };
+
+  const handleUpload = async (file: File) => {
+    if (!user) return;
+    setUploading(true);
+    try {
+      if (uploadedKey) {
+        await discardPendingImage(uploadedKey);
+        setUploadedKey(null);
+      }
+      const idToken = await user.getIdToken();
+      const { url, key } = await uploadProductImage(file, idToken);
+      form.setFieldValue('imageUrl', url);
+      setUploadedKey(key);
+    } catch (err) {
+      notification.error({
+        message: 'Upload thất bại',
+        description: err instanceof Error ? err.message : 'Thử lại sau',
+      });
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleRemoveImage = async () => {
+    await discardPendingImage(uploadedKey);
+    setUploadedKey(null);
+    form.setFieldValue('imageUrl', '');
+  };
+
+  const handleClose = async () => {
+    await discardPendingImage(uploadedKey);
+    setUploadedKey(null);
+    form.resetFields();
+    onClose();
+  };
 
   const handleFinish = async (values: ServiceFormValues) => {
     setSaving(true);
-    try { await onSave(values); form.resetFields(); }
-    finally { setSaving(false); }
+    try {
+      await onSave(values);
+      if (initial?.imageUrl && values.imageUrl !== initial.imageUrl && user) {
+        const key = r2KeyFromUrl(initial.imageUrl);
+        if (key) {
+          const idToken = await user.getIdToken();
+          deleteProductImage(key, idToken);
+        }
+      }
+      setUploadedKey(null);
+      form.resetFields();
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
     <Modal
       title={initial ? 'Sửa dịch vụ' : 'Thêm dịch vụ'}
       open={open}
-      onCancel={() => { form.resetFields(); onClose(); }}
+      onCancel={handleClose}
       footer={null}
       destroyOnHidden
       width={400}
@@ -250,7 +378,7 @@ function ServiceModal({
           form.setFieldsValue({
             name: initial.name,
             price: initial.price,
-            enablesNfc: initial.enablesNfc ?? false,
+            imageUrl: initial.imageUrl ?? '',
             description: initial.description,
           });
         }
@@ -259,12 +387,25 @@ function ServiceModal({
       <Form
         form={form}
         layout="vertical"
-        initialValues={{ enablesNfc: false, price: 0 }}
+        initialValues={{ price: 0, imageUrl: '' }}
         onFinish={handleFinish}
         className="pt-2"
       >
-        <Form.Item label="Tên dịch vụ" name="name" rules={[{ required: true, message: 'Nhập tên dịch vụ' }]}>
-          <Input placeholder="VD: NFC, Gói quà, Express 24h..." autoFocus />
+        <Form.Item label="Ảnh dịch vụ" name="imageUrl">
+          <ImageUploader
+            value={imageUrl}
+            uploading={uploading}
+            onUpload={handleUpload}
+            onRemove={handleRemoveImage}
+          />
+        </Form.Item>
+
+        <Form.Item
+          label="Tên dịch vụ"
+          name="name"
+          rules={[{ required: true, message: 'Nhập tên dịch vụ' }]}
+        >
+          <Input placeholder="VD: Gói quà, Express 24h..." autoFocus />
         </Form.Item>
 
         <div className="grid grid-cols-2 gap-x-3">
@@ -278,10 +419,6 @@ function ServiceModal({
               addonAfter="đ"
             />
           </Form.Item>
-
-          <Form.Item label="Kích hoạt NFC" name="enablesNfc" valuePropName="checked">
-            <Switch checkedChildren="📡 Có" unCheckedChildren="Không" />
-          </Form.Item>
         </div>
 
         <Form.Item label="Mô tả" name="description">
@@ -289,8 +426,15 @@ function ServiceModal({
         </Form.Item>
 
         <div className="flex justify-end gap-2 pt-1">
-          <Button onClick={() => { form.resetFields(); onClose(); }} disabled={saving}>Hủy</Button>
-          <Button type="primary" htmlType="submit" loading={saving}>
+          <Button
+            onClick={() => {
+              void handleClose();
+            }}
+            disabled={saving}
+          >
+            Hủy
+          </Button>
+          <Button type="primary" htmlType="submit" loading={saving || uploading}>
             {initial ? 'Cập nhật' : 'Thêm dịch vụ'}
           </Button>
         </div>
@@ -319,7 +463,7 @@ function ProductModal({
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [useVariants, setUseVariants] = useState(
-    () => !!initial?.variants && Object.keys(initial.variants).length > 0
+    () => !!initial?.variants && Object.keys(initial.variants).length > 0,
   );
   const [uploadedKey, setUploadedKey] = useState<string | null>(null);
   const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]);
@@ -453,7 +597,14 @@ function ProductModal({
       <Form
         form={form}
         layout="vertical"
-        initialValues={{ status: 'draft', canBeNfc: false, price: 0, imageUrl: '', printConfig: { enabled: false }, variantRows: [] }}
+        initialValues={{
+          status: 'draft',
+          canBeNfc: false,
+          price: 0,
+          imageUrl: '',
+          printConfig: { enabled: false },
+          variantRows: [],
+        }}
         onFinish={handleFinish}
         className="pt-2"
       >
@@ -466,15 +617,19 @@ function ProductModal({
           />
         </Form.Item>
 
-        <Form.Item label="Tên sản phẩm" name="name" rules={[{ required: true, message: 'Nhập tên sản phẩm' }]}>
+        <Form.Item
+          label="Tên sản phẩm"
+          name="name"
+          rules={[{ required: true, message: 'Nhập tên sản phẩm' }]}
+        >
           <Input placeholder="Ví dụ: Móc khóa NFC Premium" />
         </Form.Item>
 
         <Form.Item label="Trạng thái" name="status" rules={[{ required: true }]}>
           <Select
             options={[
-              { value: 'draft',    label: '⬜ Draft — chưa bán' },
-              { value: 'active',   label: '🟢 Active — đang bán' },
+              { value: 'draft', label: '⬜ Draft — chưa bán' },
+              { value: 'active', label: '🟢 Active — đang bán' },
               { value: 'archived', label: '🔴 Archived — ngừng bán' },
             ]}
           />
@@ -485,7 +640,11 @@ function ProductModal({
         </Form.Item>
 
         {/* @ts-expect-error — Antd Orientation type mismatch in this version */}
-        <Divider orientation="left" orientationMargin={0} className="!mb-3 !mt-1 !text-xs !text-gray-400">
+        <Divider
+          orientation="left"
+          orientationMargin={0}
+          className="!mt-1 !mb-3 !text-xs !text-gray-400"
+        >
           Giá & Kho
         </Divider>
 
@@ -496,21 +655,29 @@ function ProductModal({
             onChange={(checked) => {
               setUseVariants(checked);
               if (checked) {
-                form.setFieldValue('variantRows', [{ _id: newVariantId(), name: '', price: 0, printConfig: { enabled: false } }]);
+                form.setFieldValue('variantRows', [
+                  { _id: newVariantId(), name: '', price: 0, printConfig: { enabled: false } },
+                ]);
               } else {
                 form.setFieldValue('variantRows', []);
               }
             }}
           />
           <Text className="text-sm">Sử dụng biến thể</Text>
-          <Text type="secondary" className="text-xs">(VD: "NFC + In vuông", "Chỉ in", "Thường")</Text>
+          <Text type="secondary" className="text-xs">
+            (VD: NFC + In vuong, Chi in, Thuong)
+          </Text>
         </div>
 
         {/* ── No-variant mode ── */}
         {!useVariants && (
           <>
             <div className="grid grid-cols-2 gap-x-3">
-              <Form.Item label="Đơn giá (đ)" name="price" rules={[{ required: true, message: 'Nhập giá' }]}>
+              <Form.Item
+                label="Đơn giá (đ)"
+                name="price"
+                rules={[{ required: true, message: 'Nhập giá' }]}
+              >
                 <InputNumber
                   min={0}
                   style={{ width: '100%' }}
@@ -525,9 +692,12 @@ function ProductModal({
               </Form.Item>
             </div>
 
-
             {/* @ts-expect-error — Antd Orientation type mismatch in this version */}
-            <Divider orientation="left" orientationMargin={0} className="!mb-3 !mt-1 !text-xs !text-gray-400">
+            <Divider
+              orientation="left"
+              orientationMargin={0}
+              className="!mt-1 !mb-3 !text-xs !text-gray-400"
+            >
               In ảnh
             </Divider>
 
@@ -535,11 +705,18 @@ function ProductModal({
               <Switch />
             </Form.Item>
 
-            <Form.Item noStyle shouldUpdate={(prev, cur) => prev.printConfig?.enabled !== cur.printConfig?.enabled}>
+            <Form.Item
+              noStyle
+              shouldUpdate={(prev, cur) => prev.printConfig?.enabled !== cur.printConfig?.enabled}
+            >
               {() =>
                 form.getFieldValue(['printConfig', 'enabled']) ? (
                   <>
-                    <Form.Item label="Hình dạng" name={['printConfig', 'shape']} rules={[{ required: true, message: 'Chọn hình dạng' }]}>
+                    <Form.Item
+                      label="Hình dạng"
+                      name={['printConfig', 'shape']}
+                      rules={[{ required: true, message: 'Chọn hình dạng' }]}
+                    >
                       <Select
                         placeholder="Chọn hình dạng"
                         onChange={() => {
@@ -555,19 +732,31 @@ function ProductModal({
                       />
                     </Form.Item>
 
-                    <Form.Item noStyle shouldUpdate={(prev, cur) =>
-                      prev.printConfig?.shape !== cur.printConfig?.shape ||
-                      prev.printConfig?.width !== cur.printConfig?.width ||
-                      prev.printConfig?.height !== cur.printConfig?.height
-                    }>
+                    <Form.Item
+                      noStyle
+                      shouldUpdate={(prev, cur) =>
+                        prev.printConfig?.shape !== cur.printConfig?.shape ||
+                        prev.printConfig?.width !== cur.printConfig?.width ||
+                        prev.printConfig?.height !== cur.printConfig?.height
+                      }
+                    >
                       {() => {
-                        const shape: PrintShape | undefined = form.getFieldValue(['printConfig', 'shape']);
+                        const shape: PrintShape | undefined = form.getFieldValue([
+                          'printConfig',
+                          'shape',
+                        ]);
                         if (shape === 'rectangle') {
-                          const w: number | undefined = form.getFieldValue(['printConfig', 'width']);
-                          const h: number | undefined = form.getFieldValue(['printConfig', 'height']);
+                          const w: number | undefined = form.getFieldValue([
+                            'printConfig',
+                            'width',
+                          ]);
+                          const h: number | undefined = form.getFieldValue([
+                            'printConfig',
+                            'height',
+                          ]);
                           const isPortrait = !w || !h || h >= w;
                           const MAX = 48;
-                          const ratio = (w && h) ? w / h : 0.6;
+                          const ratio = w && h ? w / h : 0.6;
                           const previewW = isPortrait ? Math.round(MAX * ratio) : MAX;
                           const previewH = isPortrait ? MAX : Math.round(MAX / ratio);
 
@@ -581,11 +770,31 @@ function ProductModal({
                           return (
                             <>
                               <div className="grid grid-cols-2 gap-x-3">
-                                <Form.Item label="Chiều rộng — ngang (cm)" name={['printConfig', 'width']} rules={[{ required: true, message: 'Nhập chiều rộng' }]}>
-                                  <InputNumber min={0.1} step={0.1} style={{ width: '100%' }} placeholder="3.4" addonAfter="cm" />
+                                <Form.Item
+                                  label="Chiều rộng — ngang (cm)"
+                                  name={['printConfig', 'width']}
+                                  rules={[{ required: true, message: 'Nhập chiều rộng' }]}
+                                >
+                                  <InputNumber
+                                    min={0.1}
+                                    step={0.1}
+                                    style={{ width: '100%' }}
+                                    placeholder="3.4"
+                                    addonAfter="cm"
+                                  />
                                 </Form.Item>
-                                <Form.Item label="Chiều cao — dọc (cm)" name={['printConfig', 'height']} rules={[{ required: true, message: 'Nhập chiều cao' }]}>
-                                  <InputNumber min={0.1} step={0.1} style={{ width: '100%' }} placeholder="5.0" addonAfter="cm" />
+                                <Form.Item
+                                  label="Chiều cao — dọc (cm)"
+                                  name={['printConfig', 'height']}
+                                  rules={[{ required: true, message: 'Nhập chiều cao' }]}
+                                >
+                                  <InputNumber
+                                    min={0.1}
+                                    step={0.1}
+                                    style={{ width: '100%' }}
+                                    placeholder="5.0"
+                                    addonAfter="cm"
+                                  />
                                 </Form.Item>
                               </div>
                               <div className="mb-3 flex items-center gap-3">
@@ -594,27 +803,55 @@ function ProductModal({
                                   style={{ width: previewW, height: previewH }}
                                 />
                                 <div className="flex flex-col gap-1">
-                                  <span className={`text-xs font-medium ${isPortrait ? 'text-green-600' : 'text-orange-500'}`}>
+                                  <span
+                                    className={`text-xs font-medium ${isPortrait ? 'text-green-600' : 'text-orange-500'}`}
+                                  >
                                     {isPortrait ? '↕  Dọc (portrait)' : '↔  Ngang (landscape)'}
                                   </span>
-                                  {w && h && <span className="text-xs text-gray-400">{w} × {h} cm</span>}
+                                  {w && h && (
+                                    <span className="text-xs text-gray-400">
+                                      {w} × {h} cm
+                                    </span>
+                                  )}
                                 </div>
-                                <Button size="small" onClick={swap} title="Đổi dọc/ngang">⇄ Đổi chiều</Button>
+                                <Button size="small" onClick={swap} title="Đổi dọc/ngang">
+                                  ⇄ Đổi chiều
+                                </Button>
                               </div>
                             </>
                           );
                         }
                         if (shape === 'square') {
                           return (
-                            <Form.Item label="Cạnh (cm)" name={['printConfig', 'width']} rules={[{ required: true, message: 'Nhập độ dài cạnh' }]}>
-                              <InputNumber min={0.1} step={0.1} style={{ width: '100%' }} placeholder="5.0" addonAfter="cm" />
+                            <Form.Item
+                              label="Cạnh (cm)"
+                              name={['printConfig', 'width']}
+                              rules={[{ required: true, message: 'Nhập độ dài cạnh' }]}
+                            >
+                              <InputNumber
+                                min={0.1}
+                                step={0.1}
+                                style={{ width: '100%' }}
+                                placeholder="5.0"
+                                addonAfter="cm"
+                              />
                             </Form.Item>
                           );
                         }
                         if (shape === 'circle') {
                           return (
-                            <Form.Item label="Đường kính (cm)" name={['printConfig', 'diameter']} rules={[{ required: true, message: 'Nhập đường kính' }]}>
-                              <InputNumber min={0.1} step={0.1} style={{ width: '100%' }} placeholder="5.0" addonAfter="cm" />
+                            <Form.Item
+                              label="Đường kính (cm)"
+                              name={['printConfig', 'diameter']}
+                              rules={[{ required: true, message: 'Nhập đường kính' }]}
+                            >
+                              <InputNumber
+                                min={0.1}
+                                step={0.1}
+                                style={{ width: '100%' }}
+                                placeholder="5.0"
+                                addonAfter="cm"
+                              />
                             </Form.Item>
                           );
                         }
@@ -634,20 +871,31 @@ function ProductModal({
             {(fields, { add, remove }) => (
               <div className="space-y-2">
                 {fields.map(({ key, name }) => {
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  const formAny = form as unknown as { getFieldValue: (p: (string | number)[]) => unknown };
-                  const enabled = !!formAny.getFieldValue(['variantRows', name, 'printConfig', 'enabled']);
-                  const shape = formAny.getFieldValue(['variantRows', name, 'printConfig', 'shape']) as PrintShape | undefined;
+                  const formAny = form as unknown as {
+                    getFieldValue: (p: (string | number)[]) => unknown;
+                  };
+                  const enabled = !!formAny.getFieldValue([
+                    'variantRows',
+                    name,
+                    'printConfig',
+                    'enabled',
+                  ]);
+                  const shape = formAny.getFieldValue([
+                    'variantRows',
+                    name,
+                    'printConfig',
+                    'shape',
+                  ]) as PrintShape | undefined;
 
                   return (
-                    <div key={key} className="rounded-lg border border-divider bg-gray-50 p-3">
+                    <div key={key} className="border-divider rounded-lg border bg-gray-50 p-3">
                       {/* Hidden _id field */}
-                      <Form.Item name={[name, '_id']} className="hidden mb-0">
+                      <Form.Item name={[name, '_id']} className="mb-0 hidden">
                         <Input />
                       </Form.Item>
 
                       {/* Main row */}
-                      <div className="grid grid-cols-12 gap-2 items-start">
+                      <div className="grid grid-cols-12 items-start gap-2">
                         <Form.Item
                           name={[name, 'name']}
                           className="col-span-5 mb-0"
@@ -656,7 +904,11 @@ function ProductModal({
                           <Input placeholder="Tên biến thể" size="small" />
                         </Form.Item>
 
-                        <Form.Item name={[name, 'price']} className="col-span-3 mb-0" rules={[{ required: true }]}>
+                        <Form.Item
+                          name={[name, 'price']}
+                          className="col-span-3 mb-0"
+                          rules={[{ required: true }]}
+                        >
                           <InputNumber
                             min={0}
                             size="small"
@@ -668,35 +920,66 @@ function ProductModal({
                         </Form.Item>
 
                         <Form.Item name={[name, 'stock']} className="col-span-2 mb-0">
-                          <InputNumber min={0} size="small" style={{ width: '100%' }} placeholder="∞" />
+                          <InputNumber
+                            min={0}
+                            size="small"
+                            style={{ width: '100%' }}
+                            placeholder="∞"
+                          />
                         </Form.Item>
 
                         <div className="col-span-1 flex items-center justify-center pt-1">
-                          <Form.Item name={[name, 'isNfc']} valuePropName="checked" className="mb-0">
+                          <Form.Item
+                            name={[name, 'isNfc']}
+                            valuePropName="checked"
+                            className="mb-0"
+                          >
                             <Switch size="small" checkedChildren="📡" unCheckedChildren="—" />
                           </Form.Item>
                         </div>
 
                         <div className="col-span-1 flex items-center justify-end pt-1">
                           {fields.length > 1 && (
-                            <Button type="text" danger size="small" icon={<DeleteOutlined />} onClick={() => remove(name)} />
+                            <Button
+                              type="text"
+                              danger
+                              size="small"
+                              icon={<DeleteOutlined />}
+                              onClick={() => remove(name)}
+                            />
                           )}
                         </div>
                       </div>
 
-                      <div className="mt-1 grid grid-cols-3 gap-1 text-center">
-                        <Text type="secondary" className="text-[10px]">Tên biến thể</Text>
-                        <Text type="secondary" className="text-[10px]">Giá (đ)</Text>
-                        <Text type="secondary" className="text-[10px]">Kho · NFC · Xóa</Text>
+                      <div className="mb-1 grid grid-cols-12 gap-2 px-3">
+                        <Text type="secondary" className="col-span-5 text-[10px]">
+                          Tên biến thể
+                        </Text>
+                        <Text type="secondary" className="col-span-3 text-[10px]">
+                          Giá (đ)
+                        </Text>
+                        <Text type="secondary" className="col-span-2 text-[10px]">
+                          Kho
+                        </Text>
+                        <Text type="secondary" className="col-span-1 text-center text-[10px]">
+                          NFC
+                        </Text>
+                        <Text type="secondary" className="col-span-1 text-[10px]"></Text>
                       </div>
 
                       {/* Print config per variant */}
                       <div className="mt-2 border-t border-gray-200 pt-2">
                         <div className="flex items-center gap-2">
-                          <Form.Item name={[name, 'printConfig', 'enabled']} valuePropName="checked" className="mb-0">
+                          <Form.Item
+                            name={[name, 'printConfig', 'enabled']}
+                            valuePropName="checked"
+                            className="mb-0"
+                          >
                             <Switch size="small" />
                           </Form.Item>
-                          <Text type="secondary" className="text-xs">In ảnh</Text>
+                          <Text type="secondary" className="text-xs">
+                            In ảnh
+                          </Text>
                         </div>
 
                         <Form.Item noStyle shouldUpdate>
@@ -712,9 +995,18 @@ function ProductModal({
                                     size="small"
                                     placeholder="Hình dạng"
                                     onChange={() => {
-                                      form.setFieldValue(['variantRows', name, 'printConfig', 'width'], undefined);
-                                      form.setFieldValue(['variantRows', name, 'printConfig', 'height'], undefined);
-                                      form.setFieldValue(['variantRows', name, 'printConfig', 'diameter'], undefined);
+                                      form.setFieldValue(
+                                        ['variantRows', name, 'printConfig', 'width'],
+                                        undefined,
+                                      );
+                                      form.setFieldValue(
+                                        ['variantRows', name, 'printConfig', 'height'],
+                                        undefined,
+                                      );
+                                      form.setFieldValue(
+                                        ['variantRows', name, 'printConfig', 'diameter'],
+                                        undefined,
+                                      );
                                     }}
                                     options={[
                                       { value: 'rectangle' as PrintShape, label: '▭ Chữ nhật' },
@@ -726,22 +1018,62 @@ function ProductModal({
 
                                 {shape === 'rectangle' && (
                                   <>
-                                    <Form.Item name={[name, 'printConfig', 'width']} className="mb-0" rules={[{ required: true, message: 'Rộng' }]}>
-                                      <InputNumber size="small" min={0.1} step={0.1} placeholder="Rộng cm" style={{ width: '100%' }} />
+                                    <Form.Item
+                                      name={[name, 'printConfig', 'width']}
+                                      className="mb-0"
+                                      rules={[{ required: true, message: 'Rộng' }]}
+                                    >
+                                      <InputNumber
+                                        size="small"
+                                        min={0.1}
+                                        step={0.1}
+                                        placeholder="Rộng cm"
+                                        style={{ width: '100%' }}
+                                      />
                                     </Form.Item>
-                                    <Form.Item name={[name, 'printConfig', 'height']} className="mb-0" rules={[{ required: true, message: 'Cao' }]}>
-                                      <InputNumber size="small" min={0.1} step={0.1} placeholder="Cao cm" style={{ width: '100%' }} />
+                                    <Form.Item
+                                      name={[name, 'printConfig', 'height']}
+                                      className="mb-0"
+                                      rules={[{ required: true, message: 'Cao' }]}
+                                    >
+                                      <InputNumber
+                                        size="small"
+                                        min={0.1}
+                                        step={0.1}
+                                        placeholder="Cao cm"
+                                        style={{ width: '100%' }}
+                                      />
                                     </Form.Item>
                                   </>
                                 )}
                                 {shape === 'square' && (
-                                  <Form.Item name={[name, 'printConfig', 'width']} className="mb-0 col-span-2" rules={[{ required: true, message: 'Cạnh' }]}>
-                                    <InputNumber size="small" min={0.1} step={0.1} placeholder="Cạnh cm" style={{ width: '100%' }} />
+                                  <Form.Item
+                                    name={[name, 'printConfig', 'width']}
+                                    className="col-span-2 mb-0"
+                                    rules={[{ required: true, message: 'Cạnh' }]}
+                                  >
+                                    <InputNumber
+                                      size="small"
+                                      min={0.1}
+                                      step={0.1}
+                                      placeholder="Cạnh cm"
+                                      style={{ width: '100%' }}
+                                    />
                                   </Form.Item>
                                 )}
                                 {shape === 'circle' && (
-                                  <Form.Item name={[name, 'printConfig', 'diameter']} className="mb-0 col-span-2" rules={[{ required: true, message: 'Đường kính' }]}>
-                                    <InputNumber size="small" min={0.1} step={0.1} placeholder="Đường kính cm" style={{ width: '100%' }} />
+                                  <Form.Item
+                                    name={[name, 'printConfig', 'diameter']}
+                                    className="col-span-2 mb-0"
+                                    rules={[{ required: true, message: 'Đường kính' }]}
+                                  >
+                                    <InputNumber
+                                      size="small"
+                                      min={0.1}
+                                      step={0.1}
+                                      placeholder="Đường kính cm"
+                                      style={{ width: '100%' }}
+                                    />
                                   </Form.Item>
                                 )}
                               </div>
@@ -758,7 +1090,14 @@ function ProductModal({
                   block
                   size="small"
                   icon={<PlusOutlined />}
-                  onClick={() => add({ _id: newVariantId(), name: '', price: 0, printConfig: { enabled: false } })}
+                  onClick={() =>
+                    add({
+                      _id: newVariantId(),
+                      name: '',
+                      price: 0,
+                      printConfig: { enabled: false },
+                    })
+                  }
                 >
                   Thêm biến thể
                 </Button>
@@ -767,17 +1106,27 @@ function ProductModal({
           </Form.List>
         )}
 
-        <Divider orientation="left" orientationMargin={0} className="!mb-3 !mt-2 !text-xs !text-gray-400">
+        <Divider
+          orientation="left"
+          orientationMargin={0}
+          className="!mt-2 !mb-3 !text-xs !text-gray-400"
+        >
           Ảnh mẫu in sẵn
         </Divider>
 
         {initial ? (
           <PresetPhotoManager productId={initial.id} />
         ) : (
-          <Text type="secondary" className="text-xs">Lưu sản phẩm trước, sau đó quay lại để thêm ảnh mẫu.</Text>
+          <Text type="secondary" className="text-xs">
+            Lưu sản phẩm trước, sau đó quay lại để thêm ảnh mẫu.
+          </Text>
         )}
 
-        <Divider orientation="left" orientationMargin={0} className="!mb-3 !mt-2 !text-xs !text-gray-400">
+        <Divider
+          orientation="left"
+          orientationMargin={0}
+          className="!mt-2 !mb-3 !text-xs !text-gray-400"
+        >
           Dịch vụ cộng thêm
         </Divider>
 
@@ -787,15 +1136,15 @@ function ProductModal({
           </Text>
         ) : (
           <div className="flex flex-wrap gap-2">
-            {services.map(service => {
+            {services.map((service) => {
               const selected = selectedServiceIds.includes(service.id);
               return (
                 <button
                   key={service.id}
                   type="button"
                   onClick={() =>
-                    setSelectedServiceIds(prev =>
-                      selected ? prev.filter(id => id !== service.id) : [...prev, service.id]
+                    setSelectedServiceIds((prev) =>
+                      selected ? prev.filter((id) => id !== service.id) : [...prev, service.id],
                     )
                   }
                   className={`flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs transition-colors ${
@@ -804,7 +1153,6 @@ function ProductModal({
                       : 'border-gray-200 bg-white text-gray-600 hover:border-gray-400'
                   }`}
                 >
-                  {service.enablesNfc && <span>📡</span>}
                   <span>{service.name}</span>
                   <span className={selected ? 'text-blue-500' : 'text-gray-400'}>
                     +{service.price.toLocaleString('vi-VN')}đ
@@ -816,7 +1164,9 @@ function ProductModal({
         )}
 
         <div className="flex justify-end gap-2 pt-4">
-          <Button onClick={handleClose} disabled={saving}>Hủy</Button>
+          <Button onClick={handleClose} disabled={saving}>
+            Hủy
+          </Button>
           <Button type="primary" htmlType="submit" loading={saving || uploading}>
             {uploading ? 'Đang tải ảnh...' : initial ? 'Cập nhật' : 'Thêm sản phẩm'}
           </Button>
@@ -834,7 +1184,7 @@ function r2KeyFromUrl(url: string): string | null {
 }
 
 function variantPriceRange(variants: Record<string, IProductVariant>): string {
-  const prices = Object.values(variants).map(v => v.price);
+  const prices = Object.values(variants).map((v) => v.price);
   const min = Math.min(...prices);
   const max = Math.max(...prices);
   if (min === max) return `${min.toLocaleString('vi-VN')}đ`;
@@ -842,11 +1192,26 @@ function variantPriceRange(variants: Record<string, IProductVariant>): string {
 }
 
 function variantStockSummary(variants: Record<string, IProductVariant>): React.ReactNode {
-  const tracked = Object.values(variants).filter(v => v.stock !== undefined);
-  if (tracked.length === 0) return <Text type="secondary" className="text-xs">∞</Text>;
+  const tracked = Object.values(variants).filter((v) => v.stock !== undefined);
+  if (tracked.length === 0)
+    return (
+      <Text type="secondary" className="text-xs">
+        ∞
+      </Text>
+    );
   const total = tracked.reduce((s, v) => s + (v.stock ?? 0), 0);
-  if (total === 0) return <Tag color="error" className="text-xs">Hết hàng</Tag>;
-  if (tracked.some(v => (v.stock ?? Infinity) <= 5)) return <Tag color="warning" className="text-xs">{total}</Tag>;
+  if (total === 0)
+    return (
+      <Tag color="error" className="text-xs">
+        Hết hàng
+      </Tag>
+    );
+  if (tracked.some((v) => (v.stock ?? Infinity) <= 5))
+    return (
+      <Tag color="warning" className="text-xs">
+        {total}
+      </Tag>
+    );
   return <Text className="text-xs font-medium">{total}</Text>;
 }
 
@@ -870,11 +1235,22 @@ export default function ProductsPage() {
   const [serviceFormOpen, setServiceFormOpen] = useState(false);
   const [editingService, setEditingService] = useState<IService | null>(null);
 
-  const openCreate = () => { setEditing(null); setModalOpen(true); };
-  const openEdit = (p: IProduct) => { setEditing(p); setModalOpen(true); };
-  const closeModal = () => { setModalOpen(false); setEditing(null); };
+  const openCreate = () => {
+    setEditing(null);
+    setModalOpen(true);
+  };
+  const openEdit = (p: IProduct) => {
+    setEditing(p);
+    setModalOpen(true);
+  };
+  const closeModal = () => {
+    setModalOpen(false);
+    setEditing(null);
+  };
 
-  const handleSave = async (values: Omit<IProduct, 'id' | 'createdAt' | 'updatedAt'>): Promise<void> => {
+  const handleSave = async (
+    values: Omit<IProduct, 'id' | 'createdAt' | 'updatedAt'>,
+  ): Promise<void> => {
     if (editing) {
       await updateProduct({ id: editing.id, data: values });
       notification.success({ message: 'Cập nhật thành công' });
@@ -885,7 +1261,12 @@ export default function ProductsPage() {
     closeModal();
   };
 
-  const handleServiceSave = async (values: { name: string; price: number; enablesNfc?: boolean; description?: string }) => {
+  const handleServiceSave = async (values: {
+    name: string;
+    price: number;
+    imageUrl?: string;
+    description?: string;
+  }) => {
     if (editingService) {
       await updateService({ id: editingService.id, data: values });
       notification.success({ message: 'Đã cập nhật dịch vụ' });
@@ -897,8 +1278,15 @@ export default function ProductsPage() {
     setEditingService(null);
   };
 
-  const handleServiceDelete = async (id: string) => {
-    await deleteService(id);
+  const handleServiceDelete = async (service: IService) => {
+    await deleteService(service.id);
+    if (service.imageUrl && user) {
+      const key = r2KeyFromUrl(service.imageUrl);
+      if (key) {
+        const idToken = await user.getIdToken();
+        deleteProductImage(key, idToken);
+      }
+    }
     notification.success({ message: 'Đã xóa dịch vụ' });
   };
 
@@ -929,7 +1317,9 @@ export default function ProductsPage() {
             <Image src={url} alt="product" fill className="object-cover" sizes="40px" unoptimized />
           </div>
         ) : (
-          <div className="flex h-10 w-10 items-center justify-center rounded bg-gray-100 text-lg">📦</div>
+          <div className="flex h-10 w-10 items-center justify-center rounded bg-gray-100 text-lg">
+            📦
+          </div>
         ),
     },
     {
@@ -937,14 +1327,18 @@ export default function ProductsPage() {
       dataIndex: 'name',
       render: (name: string, record) => (
         <div>
-          <Text strong className="text-sm">{name}</Text>
+          <Text strong className="text-sm">
+            {name}
+          </Text>
           {record.variants && (
             <Text type="secondary" className="block text-xs">
               {Object.keys(record.variants).length} biến thể
             </Text>
           )}
           {!record.variants && record.description && (
-            <Text type="secondary" className="mt-0.5 block text-xs">{record.description}</Text>
+            <Text type="secondary" className="mt-0.5 block text-xs">
+              {record.description}
+            </Text>
           )}
         </div>
       ),
@@ -969,10 +1363,14 @@ export default function ProductsPage() {
       width: 100,
       sorter: (a, b) => {
         const aStock = a.variants
-          ? Object.values(a.variants).filter(v => v.stock !== undefined).reduce((s, v) => s + (v.stock ?? 0), 0)
+          ? Object.values(a.variants)
+              .filter((v) => v.stock !== undefined)
+              .reduce((s, v) => s + (v.stock ?? 0), 0)
           : (a.stock ?? Infinity);
         const bStock = b.variants
-          ? Object.values(b.variants).filter(v => v.stock !== undefined).reduce((s, v) => s + (v.stock ?? 0), 0)
+          ? Object.values(b.variants)
+              .filter((v) => v.stock !== undefined)
+              .reduce((s, v) => s + (v.stock ?? 0), 0)
           : (b.stock ?? Infinity);
         return aStock - bStock;
       },
@@ -990,7 +1388,11 @@ export default function ProductsPage() {
       sorter: (a, b) => a.price - b.price,
       render: (price: number, record: IProduct) => {
         if (record.variants && Object.keys(record.variants).length > 0) {
-          return <Text strong className="text-xs">{variantPriceRange(record.variants)}</Text>;
+          return (
+            <Text strong className="text-xs">
+              {variantPriceRange(record.variants)}
+            </Text>
+          );
         }
         return <Text strong>{price.toLocaleString('vi-VN')}đ</Text>;
       },
@@ -1001,20 +1403,47 @@ export default function ProductsPage() {
       width: 140,
       render: (cfg: IProduct['printConfig'], record: IProduct) => {
         if (record.variants) {
-          const printCount = Object.values(record.variants).filter(v => v.printConfig?.enabled).length;
-          if (printCount === 0) return <Text type="secondary" className="text-xs">—</Text>;
-          return <Tag color="green" className="text-xs">{printCount} biến thể</Tag>;
+          const printCount = Object.values(record.variants).filter(
+            (v) => v.printConfig?.enabled,
+          ).length;
+          if (printCount === 0)
+            return (
+              <Text type="secondary" className="text-xs">
+                —
+              </Text>
+            );
+          return (
+            <Tag color="green" className="text-xs">
+              {printCount} biến thể
+            </Tag>
+          );
         }
-        if (!cfg?.enabled) return <Text type="secondary" className="text-xs">—</Text>;
-        const shapeLabel: Record<string, string> = { rectangle: 'Chữ nhật', square: 'Vuông', circle: 'Tròn' };
+        if (!cfg?.enabled)
+          return (
+            <Text type="secondary" className="text-xs">
+              —
+            </Text>
+          );
+        const shapeLabel: Record<string, string> = {
+          rectangle: 'Chữ nhật',
+          square: 'Vuông',
+          circle: 'Tròn',
+        };
         let sizeStr = '';
         if (cfg.shape === 'circle') sizeStr = cfg.diameter ? `⌀${cfg.diameter}cm` : '';
         else if (cfg.shape === 'square') sizeStr = cfg.width ? `${cfg.width}×${cfg.width}cm` : '';
-        else if (cfg.shape === 'rectangle') sizeStr = (cfg.width && cfg.height) ? `${cfg.width}×${cfg.height}cm` : '';
+        else if (cfg.shape === 'rectangle')
+          sizeStr = cfg.width && cfg.height ? `${cfg.width}×${cfg.height}cm` : '';
         return (
           <div className="flex flex-col gap-0.5">
-            <Tag color="green" className="w-fit text-xs">{shapeLabel[cfg.shape ?? ''] ?? cfg.shape}</Tag>
-            {sizeStr && <Text type="secondary" className="text-xs">{sizeStr}</Text>}
+            <Tag color="green" className="w-fit text-xs">
+              {shapeLabel[cfg.shape ?? ''] ?? cfg.shape}
+            </Tag>
+            {sizeStr && (
+              <Text type="secondary" className="text-xs">
+                {sizeStr}
+              </Text>
+            )}
           </div>
         );
       },
@@ -1033,11 +1462,17 @@ export default function ProductsPage() {
       },
       render: (canBeNfc: boolean, record: IProduct) => {
         if (record.variants && Object.keys(record.variants).length > 0) {
-          const nfcCount = Object.values(record.variants).filter(v => v.isNfc).length;
+          const nfcCount = Object.values(record.variants).filter((v) => v.isNfc).length;
           return (
             <div className="flex flex-col gap-0.5">
-              <Tag color="purple" className="w-fit text-xs">Biến thể</Tag>
-              {nfcCount > 0 && <Tag color="blue" className="w-fit text-xs">📡 {nfcCount} NFC</Tag>}
+              <Tag color="purple" className="w-fit text-xs">
+                Biến thể
+              </Tag>
+              {nfcCount > 0 && (
+                <Tag color="blue" className="w-fit text-xs">
+                  📡 {nfcCount} NFC
+                </Tag>
+              )}
             </div>
           );
         }
@@ -1071,10 +1506,10 @@ export default function ProductsPage() {
   ];
 
   const productList = products as IProduct[];
-  const outOfStockCount = productList.filter(p => {
+  const outOfStockCount = productList.filter((p) => {
     if (p.variants && Object.keys(p.variants).length > 0) {
-      const tracked = Object.values(p.variants).filter(v => v.stock !== undefined);
-      return tracked.length > 0 && tracked.every(v => v.stock === 0);
+      const tracked = Object.values(p.variants).filter((v) => v.stock !== undefined);
+      return tracked.length > 0 && tracked.every((v) => v.stock === 0);
     }
     return p.stock === 0;
   }).length;
@@ -1087,14 +1522,18 @@ export default function ProductsPage() {
             {productList.length} sản phẩm
           </Text>
           {outOfStockCount > 0 && (
-            <Tag color="error" className="text-xs">{outOfStockCount} hết hàng</Tag>
+            <Tag color="error" className="text-xs">
+              {outOfStockCount} hết hàng
+            </Tag>
           )}
         </div>
         <div className="flex gap-2">
           <Button onClick={() => setServiceListOpen(true)}>
             Dịch vụ
             {(services as IService[]).length > 0 && (
-              <span className="ml-1 text-[10px] text-gray-400">({(services as IService[]).length})</span>
+              <span className="ml-1 text-[10px] text-gray-400">
+                ({(services as IService[]).length})
+              </span>
             )}
           </Button>
           <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>
@@ -1112,8 +1551,8 @@ export default function ProductsPage() {
           size="small"
           rowClassName={(record) => {
             if (record.variants && Object.keys(record.variants).length > 0) {
-              const tracked = Object.values(record.variants).filter(v => v.stock !== undefined);
-              return tracked.length > 0 && tracked.every(v => v.stock === 0) ? 'opacity-60' : '';
+              const tracked = Object.values(record.variants).filter((v) => v.stock !== undefined);
+              return tracked.length > 0 && tracked.every((v) => v.stock === 0) ? 'opacity-60' : '';
             }
             return record.stock === 0 ? 'opacity-60' : '';
           }}
@@ -1144,7 +1583,9 @@ export default function ProductsPage() {
       >
         <div className="space-y-3 pt-2">
           {(services as IService[]).length === 0 ? (
-            <Text type="secondary" className="block text-sm">Chưa có dịch vụ nào.</Text>
+            <Text type="secondary" className="block text-sm">
+              Chưa có dịch vụ nào.
+            </Text>
           ) : (
             <Table
               dataSource={services as IService[]}
@@ -1155,9 +1596,22 @@ export default function ProductsPage() {
                 {
                   title: 'Dịch vụ',
                   render: (_: unknown, s: IService) => (
-                    <div>
-                      <Text strong className="text-sm">{s.enablesNfc ? '📡 ' : ''}{s.name}</Text>
-                      {s.description && <Text type="secondary" className="block text-xs">{s.description}</Text>}
+                    <div className="flex items-center gap-2">
+                      {s.imageUrl && (
+                        <div className="relative h-9 w-9 shrink-0 overflow-hidden rounded border border-gray-100">
+                          <Image src={s.imageUrl} alt={s.name} fill className="object-cover" sizes="36px" unoptimized />
+                        </div>
+                      )}
+                      <div>
+                        <Text strong className="text-sm">
+                          {s.name}
+                        </Text>
+                        {s.description && (
+                          <Text type="secondary" className="block text-xs">
+                            {s.description}
+                          </Text>
+                        )}
+                      </div>
                     </div>
                   ),
                 },
@@ -1174,14 +1628,18 @@ export default function ProductsPage() {
                     <span className="flex gap-2 text-xs">
                       <button
                         className="text-primary hover:underline"
-                        onClick={() => { setEditingService(s); setServiceFormOpen(true); }}
+                        onClick={() => {
+                          setEditingService(s);
+                          setServiceFormOpen(true);
+                        }}
                       >
                         <EditOutlined /> Sửa
                       </button>
                       <Popconfirm
                         title="Xóa dịch vụ này?"
-                        onConfirm={() => handleServiceDelete(s.id)}
-                        okText="Xóa" cancelText="Hủy"
+                        onConfirm={() => handleServiceDelete(s)}
+                        okText="Xóa"
+                        cancelText="Hủy"
                         okButtonProps={{ danger: true }}
                       >
                         <button className="text-red-500 hover:underline">
@@ -1195,8 +1653,13 @@ export default function ProductsPage() {
             />
           )}
           <Button
-            type="dashed" block icon={<PlusOutlined />}
-            onClick={() => { setEditingService(null); setServiceFormOpen(true); }}
+            type="dashed"
+            block
+            icon={<PlusOutlined />}
+            onClick={() => {
+              setEditingService(null);
+              setServiceFormOpen(true);
+            }}
           >
             Thêm dịch vụ mới
           </Button>
@@ -1206,10 +1669,12 @@ export default function ProductsPage() {
       <ServiceModal
         open={serviceFormOpen}
         initial={editingService}
-        onClose={() => { setServiceFormOpen(false); setEditingService(null); }}
+        onClose={() => {
+          setServiceFormOpen(false);
+          setEditingService(null);
+        }}
         onSave={handleServiceSave}
       />
-
     </div>
   );
 }

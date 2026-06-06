@@ -52,7 +52,6 @@ export function CreateOrderModal({ onCreated }: Props) {
 
   const { data: rawServices = [] } = useServices();
   const services = rawServices as IService[];
-  const serviceMap = Object.fromEntries(services.map(s => [s.id, s]));
 
   const { data: rawShipping = [] } = useShippingRates();
   const shippingRates = rawShipping as IShippingRate[];
@@ -112,7 +111,6 @@ export function CreateOrderModal({ onCreated }: Props) {
       const idToken = await user.getIdToken();
 
       const itemsWithPrint = values.items.map((item, idx) => {
-        const product = itemProductMap[idx] ? productList.find(p => p.id === itemProductMap[idx]) : null;
         const selectedAddonNames = services
           .filter(s => itemAddonsMap[idx]?.[s.id])
           .map(s => s.name);
@@ -188,13 +186,11 @@ export function CreateOrderModal({ onCreated }: Props) {
 
     recalcPrice(fieldName, basePrice, newMap);
 
-    const hasNfc = services.some(s => s.enablesNfc && newMap[s.id]);
-    form.setFieldValue(['items', fieldName, 'isNfc'], hasNfc);
-    if (!hasNfc) {
-      form.setFieldValue(['items', fieldName, 'templateId'], null);
-    } else if (product?.templateId) {
-      form.setFieldValue(['items', fieldName, 'templateId'], product.templateId);
-    }
+    const selectedVariantId = itemVariantMap[fieldName]?.id;
+    const selectedVariant = selectedVariantId ? product?.variants?.[selectedVariantId] : null;
+    const isNfc = selectedVariant?.isNfc ?? form.getFieldValue(['items', fieldName, 'isNfc']) ?? false;
+    form.setFieldValue(['items', fieldName, 'isNfc'], isNfc);
+    form.setFieldValue(['items', fieldName, 'templateId'], isNfc ? (product?.templateId ?? null) : null);
   };
 
   /* Chọn sản phẩm từ catalog */
@@ -454,13 +450,22 @@ export function CreateOrderModal({ onCreated }: Props) {
                             const isSelected = !!(itemAddonsMap[name]?.[service.id]);
                             return (
                               <Tooltip key={service.id} title={`+${service.price.toLocaleString('vi-VN')}đ`}>
-                                <Switch
-                                  size="small"
-                                  checked={isSelected}
-                                  onChange={(checked) => handleAddonToggle(name, service.id, checked)}
-                                  checkedChildren={`${service.enablesNfc ? '📡 ' : ''}${service.name}`}
-                                  unCheckedChildren={service.name}
-                                />
+                                <div className="flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-1.5 py-1">
+                                  {service.imageUrl && (
+                                    <img
+                                      src={service.imageUrl}
+                                      alt={service.name}
+                                      className="h-6 w-6 rounded-full object-cover"
+                                    />
+                                  )}
+                                  <Switch
+                                    size="small"
+                                    checked={isSelected}
+                                    onChange={(checked) => handleAddonToggle(name, service.id, checked)}
+                                    checkedChildren={service.name}
+                                    unCheckedChildren={service.name}
+                                  />
+                                </div>
                               </Tooltip>
                             );
                           })}

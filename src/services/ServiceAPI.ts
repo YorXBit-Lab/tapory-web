@@ -22,6 +22,7 @@ function toService(id: string, d: Record<string, unknown>): IService {
     name: (d.name as string) ?? '',
     price: (d.price as number) ?? 0,
     enablesNfc: d.enablesNfc as boolean | undefined,
+    imageUrl: d.imageUrl as string | undefined,
     description: d.description as string | undefined,
     createdAt: (d.createdAt as Timestamp)?.toDate?.()?.toISOString(),
     updatedAt: (d.updatedAt as Timestamp)?.toDate?.()?.toISOString(),
@@ -38,6 +39,7 @@ export const ServiceAPI = {
   createOne: async (data: Omit<IService, 'id' | 'createdAt' | 'updatedAt'>): Promise<{ data: { id: string } }> => {
     const payload: Record<string, unknown> = { name: data.name, price: data.price };
     if (data.enablesNfc) payload.enablesNfc = true;
+    if (data.imageUrl) payload.imageUrl = data.imageUrl;
     if (data.description) payload.description = data.description;
     const ref = await addDoc(collection(db, COL), {
       ...payload,
@@ -52,6 +54,7 @@ export const ServiceAPI = {
     if (data.name !== undefined) payload.name = data.name;
     if (data.price !== undefined) payload.price = data.price;
     payload.enablesNfc = data.enablesNfc ?? false;
+    if (data.imageUrl !== undefined) payload.imageUrl = data.imageUrl;
     if (data.description !== undefined) payload.description = data.description;
     await updateDoc(doc(db, COL, id), payload);
     return { data: { id } };

@@ -78,6 +78,8 @@ function toOrder(id: string, d: Record<string, unknown>): IOrder {
     items,
     notes: d.notes as string | undefined,
     customized: (d.customized as boolean) ?? false,
+    shippingFee: d.shippingFee as number | undefined,
+    shippingRateName: d.shippingRateName as string | undefined,
     printPhotos: Array.isArray(d.printPhotos) ? (d.printPhotos as IPrintPhotoSlot[]) : [],
     printedAt: (d.printedAt as Timestamp)?.toDate?.()?.toISOString() ?? (d.printedAt as string | undefined),
     templateId: d.templateId as string | undefined,

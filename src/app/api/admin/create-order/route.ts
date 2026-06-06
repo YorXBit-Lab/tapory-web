@@ -42,9 +42,11 @@ export async function POST(req: NextRequest) {
       address?: string;
       notes?: string;
       items?: IOrderItem[];
+      shippingFee?: number;
+      shippingRateName?: string;
     };
 
-    const { customerName, phone, address, notes, items = [] } = body;
+    const { customerName, phone, address, notes, items = [], shippingFee, shippingRateName } = body;
 
     if (!customerName?.trim()) return NextResponse.json({ error: 'Thiếu tên khách hàng' }, { status: 400 });
     if (items.length === 0) return NextResponse.json({ error: 'Đơn hàng phải có ít nhất 1 sản phẩm' }, { status: 400 });
@@ -66,6 +68,8 @@ export async function POST(req: NextRequest) {
       if (item.variantId) base.variantId = item.variantId;
       if (item.variantName) base.variantName = item.variantName;
       if (item.templateId) base.templateId = item.templateId;
+      if (item.addonNames?.length) base.addonNames = item.addonNames;
+      if (item.presetPhotoUrl) base.presetPhotoUrl = item.presetPhotoUrl;
       if (item.printConfig?.enabled) {
         const cfg: Record<string, unknown> = { enabled: true };
         if (item.printConfig.shape) cfg.shape = item.printConfig.shape;
@@ -77,7 +81,8 @@ export async function POST(req: NextRequest) {
       return base;
     });
 
-    const totalPrice = items.reduce((s, i) => s + i.unitPrice * i.quantity, 0);
+    const subtotal = items.reduce((s, i) => s + i.unitPrice * i.quantity, 0);
+    const totalPrice = subtotal + (shippingFee ?? 0);
     const orderId = generateOrderId();
 
     // Build chip list
@@ -142,6 +147,8 @@ export async function POST(req: NextRequest) {
         phone: (phone ?? '').trim(),
         address: (address ?? '').trim(),
         price: totalPrice,
+        ...(shippingFee !== undefined ? { shippingFee } : {}),
+        ...(shippingRateName ? { shippingRateName } : {}),
         status: 'new',
         source: 'local',
         items: cleanedItems,

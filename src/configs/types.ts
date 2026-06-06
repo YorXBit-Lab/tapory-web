@@ -91,6 +91,7 @@ export interface IService {
   name: string;
   price: number;
   enablesNfc?: boolean;
+  imageUrl?: string;
   description?: string;
   createdAt?: string;
   updatedAt?: string;
