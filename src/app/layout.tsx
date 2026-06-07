@@ -88,6 +88,9 @@ const josefin = Josefin_Sans({
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://goccham.com'),
+  alternates: {
+    canonical: '/',
+  },
   title: {
     default: 'Góc Chạm - Móc khóa in ảnh theo yêu cầu',
     template: '%s | Góc Chạm',
