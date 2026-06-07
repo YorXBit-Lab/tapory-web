@@ -10,7 +10,6 @@ import {
   Descriptions,
   InputNumber,
   Modal,
-  Popconfirm,
   Spin,
   Table,
   Tag,
@@ -34,12 +33,17 @@ const { Text } = Typography;
 function formatDate(iso?: string) {
   if (!iso) return '—';
   const d = new Date(iso);
-  return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
+  return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
 }
 
 /* ── Web NFC types (not in TS stdlib) ── */
-interface NDEFRecord { recordType: string; data: string }
-interface NDEFWriter { write(msg: { records: NDEFRecord[] }): Promise<void> }
+interface NDEFRecord {
+  recordType: string;
+  data: string;
+}
+interface NDEFWriter {
+  write(msg: { records: NDEFRecord[] }): Promise<void>;
+}
 declare const NDEFReader: new () => NDEFWriter;
 
 type NfcStatus = 'idle' | 'waiting' | 'error';
@@ -83,14 +87,21 @@ function NfcWriteButton({ card, onWritten }: { card: ICard; onWritten: () => voi
   if (status === 'error') {
     return (
       <Tooltip title={errMsg}>
-        <button onClick={handleWrite} className="text-xs text-red-500 hover:underline">✗ Lỗi — thử lại</button>
+        <button onClick={handleWrite} className="text-xs text-red-500 hover:underline">
+          ✗ Lỗi — thử lại
+        </button>
       </Tooltip>
     );
   }
 
   return (
     <Tooltip title={nfcUrl}>
-      <Button size="small" icon={<WifiOutlined />} onClick={handleWrite} type={card.nfcWritten ? 'default' : 'primary'}>
+      <Button
+        size="small"
+        icon={<WifiOutlined />}
+        onClick={handleWrite}
+        type={card.nfcWritten ? 'default' : 'primary'}
+      >
         {card.nfcWritten ? 'Ghi lại' : 'Ghi NFC'}
       </Button>
     </Tooltip>
@@ -146,7 +157,7 @@ function AddChipModal({ orderId, onAdded }: { orderId: string; onAdded: () => vo
             min={1}
             max={10}
             value={count}
-            onChange={v => setCount(v ?? 1)}
+            onChange={(v) => setCount(v ?? 1)}
             style={{ width: '100%' }}
           />
         </div>
@@ -220,7 +231,7 @@ export default function OrderDetailPage() {
         return (
           <Text
             copyable={{ text: url, tooltips: ['Copy', 'Đã copy!'] }}
-            className="font-mono text-xs text-content3"
+            className="text-content3 font-mono text-xs"
           >
             /view/{record.id}
           </Text>
@@ -232,11 +243,23 @@ export default function OrderDetailPage() {
       render: (_: unknown, record: ICard) => (
         <span className="flex gap-3 text-xs">
           {record.hasContent ? (
-            <Link href={`/view/${record.id}`} target="_blank" className="text-primary hover:opacity-70">Xem</Link>
+            <Link
+              href={`/view/${record.id}`}
+              target="_blank"
+              className="text-primary hover:opacity-70"
+            >
+              Xem
+            </Link>
           ) : (
-            <span className="text-gray-300 cursor-not-allowed">Xem</span>
+            <span className="cursor-not-allowed text-gray-300">Xem</span>
           )}
-          <Link href={`/edit/${record.id}${record.templateId ? `?template=${record.templateId}` : ''}`} target="_blank" className="text-primary hover:opacity-70">Sửa</Link>
+          <Link
+            href={`/edit/${record.id}${record.templateId ? `?template=${record.templateId}` : ''}`}
+            target="_blank"
+            className="text-primary hover:opacity-70"
+          >
+            Sửa
+          </Link>
         </span>
       ),
     },
@@ -266,13 +289,13 @@ export default function OrderDetailPage() {
   }
 
   const statusTag = STATUS_TAG[order.status];
-  const isLocal = (order.source as OrderSource | undefined ?? 'local') === 'local';
-  const hasNfcItems = order.items.some(i => i.isNfc);
-  const hasPrintItems = order.items.some(i => i.printConfig?.enabled);
+  const isLocal = ((order.source as OrderSource | undefined) ?? 'local') === 'local';
+  const hasNfcItems = order.items.some((i) => i.isNfc);
+  const hasPrintItems = order.items.some((i) => i.printConfig?.enabled);
   const printUploadUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/upload/${orderId}`;
 
   const SOURCE_LABEL: Record<OrderSource, { label: string; color: string }> = {
-    local:  { label: 'Local',  color: 'blue'   },
+    local: { label: 'Local', color: 'blue' },
     tiktok: { label: 'TikTok', color: 'purple' },
     shopee: { label: 'Shopee', color: 'orange' },
   };
@@ -301,7 +324,11 @@ export default function OrderDetailPage() {
       render: (name: string, r: IOrderItem) => (
         <span className="flex items-center gap-1.5">
           {name}
-          {r.isNfc && <Tag color="purple" className="m-0 text-[11px]">NFC</Tag>}
+          {r.isNfc && (
+            <Tag color="purple" className="m-0 text-[11px]">
+              NFC
+            </Tag>
+          )}
         </span>
       ),
     },
@@ -320,7 +347,8 @@ export default function OrderDetailPage() {
     {
       title: 'Thành tiền',
       width: 120,
-      render: (_: unknown, r: IOrderItem) => (r.unitPrice * r.quantity).toLocaleString('vi-VN') + 'đ',
+      render: (_: unknown, r: IOrderItem) =>
+        (r.unitPrice * r.quantity).toLocaleString('vi-VN') + 'đ',
     },
     {
       title: 'Loại / Template',
@@ -331,12 +359,12 @@ export default function OrderDetailPage() {
         return (
           <div className="flex flex-wrap items-center gap-1">
             <Tag color="purple">{tpl ? `${tpl.icon} NFC` : 'NFC'}</Tag>
-            {chipIds.map(chipId => (
+            {chipIds.map((chipId) => (
               <Link
                 key={chipId}
                 href={`/edit/${chipId}${r.templateId ? `?template=${r.templateId}` : ''}`}
                 target="_blank"
-                className="font-mono text-[11px] text-primary hover:opacity-70"
+                className="text-primary font-mono text-[11px] hover:opacity-70"
               >
                 {chipId}
               </Link>
@@ -351,7 +379,9 @@ export default function OrderDetailPage() {
     <div className="flex flex-col gap-6">
       {/* Back + title */}
       <div className="flex items-center gap-3">
-        <Button icon={<ArrowLeftOutlined />} onClick={() => router.push('/dashboard/orders')}>Đơn hàng</Button>
+        <Button icon={<ArrowLeftOutlined />} onClick={() => router.push('/dashboard/orders')}>
+          Đơn hàng
+        </Button>
         <h2 className="text-base font-semibold">Đơn hàng {order.id}</h2>
         <Tag color={statusTag?.color}>{statusTag?.label}</Tag>
         <Tag color={srcInfo.color}>{srcInfo.label}</Tag>
@@ -375,12 +405,16 @@ export default function OrderDetailPage() {
             <Text strong>{order.price.toLocaleString('vi-VN')}đ</Text>
           </Descriptions.Item>
           {isLocal && hasNfcItems && (
-            <Descriptions.Item label="Chip NFC" span={3}>{chips.length} chip</Descriptions.Item>
+            <Descriptions.Item label="Chip NFC" span={3}>
+              {chips.length} chip
+            </Descriptions.Item>
           )}
           {hasPrintItems && (
             <Descriptions.Item label="Link upload ảnh in" span={3}>
               <div className="flex items-center gap-2">
-                <Text copyable={false} className="font-mono text-xs text-blue-600">{printUploadUrl}</Text>
+                <Text copyable={false} className="font-mono text-xs text-blue-600">
+                  {printUploadUrl}
+                </Text>
                 <Button
                   size="small"
                   icon={<CopyOutlined />}
@@ -394,7 +428,11 @@ export default function OrderDetailPage() {
               </div>
             </Descriptions.Item>
           )}
-          {order.notes && <Descriptions.Item label="Ghi chú" span={3}>{order.notes}</Descriptions.Item>}
+          {order.notes && (
+            <Descriptions.Item label="Ghi chú" span={3}>
+              {order.notes}
+            </Descriptions.Item>
+          )}
         </Descriptions>
       </Card>
 
@@ -410,7 +448,9 @@ export default function OrderDetailPage() {
             summary={() => (
               <Table.Summary.Row>
                 <Table.Summary.Cell index={0} colSpan={3} align="right">
-                  <Text type="secondary" className="text-xs">Tổng cộng</Text>
+                  <Text type="secondary" className="text-xs">
+                    Tổng cộng
+                  </Text>
                 </Table.Summary.Cell>
                 <Table.Summary.Cell index={1}>
                   <Text strong>{order.price.toLocaleString('vi-VN')}đ</Text>

@@ -1003,7 +1003,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ────────── FOOTER ────────── */}
       <footer className="bg-elevated border-border border-t pt-16 pb-8">
         <div className="mx-auto max-w-[1240px] px-4 sm:px-6">
           <div className="mb-12 grid gap-8 sm:grid-cols-2 md:grid-cols-[2fr_1fr_1fr_1fr] md:gap-12">
@@ -1013,7 +1012,7 @@ export default function HomePage() {
                 Góc Chạm
               </div>
               <Paragraph className="!text-content3 !mb-0 max-w-[300px] !text-sm">
-                Móc khóa NFC kỷ niệm — thủ công tại Việt Nam, cho những khoảnh khắc đáng giữ.
+                Móc khóa NFC kỷ niệm cho những khoảnh khắc đáng giữ.
               </Paragraph>
             </div>
             {FOOTER_COLS.map((col) => (
@@ -1036,6 +1035,29 @@ export default function HomePage() {
               </div>
             ))}
           </div>
+
+          <div className="border-border bg-surface mb-6 rounded-lg border px-4 py-3">
+            <p className="text-content3 text-xs leading-relaxed">
+              <span className="text-content2 font-semibold">Lưu ý:</span> Website này chỉ dùng để{' '}
+              <span className="font-medium">trưng bày sản phẩm</span>, không thực hiện giao dịch
+              thanh toán trực tuyến. Để đặt hàng, vui lòng truy cập{' '}
+              <a
+                href={'https://tiktok.com/shop'}
+                className="text-primary underline underline-offset-2"
+              >
+                gian hàng chính thức trên TikTok Shop
+              </a>
+              . Nếu có thắc mắc, vui lòng{' '}
+              <a
+                href={'https://tiktok.com/shop'}
+                className="text-primary underline underline-offset-2"
+              >
+                liên hệ với chúng tôi
+              </a>
+              .
+            </p>
+          </div>
+
           <Divider className="border-border mt-0" />
           <div className="flex flex-wrap items-center justify-between gap-2">
             <Text className="text-content3">© 2026 Góc Chạm — Móc khóa kỷ niệm NFC.</Text>
