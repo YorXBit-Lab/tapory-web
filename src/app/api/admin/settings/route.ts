@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAdminAuth, getAdminDb } from '@/libs/firebase-admin';
-import { DEFAULT_NFC_EXTRA_PRICE } from '@/configs/constants';
+// import { DEFAULT_NFC_EXTRA_PRICE } from '@/configs/constants';
 
 async function verifyAdmin(req: NextRequest) {
   const idToken = (req.headers.get('authorization') ?? '').replace(/^Bearer\s+/, '');
@@ -22,7 +22,9 @@ export async function GET(req: NextRequest) {
   }
   const db = getAdminDb();
   const snap = await db.collection('settings').doc('global').get();
-  const data = snap.exists ? snap.data() : { nfcExtraPrice: DEFAULT_NFC_EXTRA_PRICE };
+  // const data = snap.exists ? snap.data() : { nfcExtraPrice: DEFAULT_NFC_EXTRA_PRICE };
+  const data = snap.exists ? snap.data() : {};
+
   return NextResponse.json(data);
 }
 
