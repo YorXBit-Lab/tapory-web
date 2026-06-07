@@ -1,9 +1,15 @@
 import '@ant-design/v5-patch-for-react-19';
 import type { Metadata } from 'next';
 import {
-  Montserrat, Playfair_Display, Dancing_Script,
-  Be_Vietnam_Pro, Lora, Cormorant_Garamond,
-  Raleway, Nunito, Josefin_Sans,
+  Montserrat,
+  Playfair_Display,
+  Dancing_Script,
+  Be_Vietnam_Pro,
+  Lora,
+  Cormorant_Garamond,
+  Raleway,
+  Nunito,
+  Josefin_Sans,
 } from 'next/font/google';
 import './globals.css';
 import { AntdRegistry } from '@ant-design/nextjs-registry';
@@ -81,11 +87,35 @@ const josefin = Josefin_Sans({
 });
 
 export const metadata: Metadata = {
-  title: 'Góc Chạm – Móc Khóa Kỷ Niệm NFC',
-  description: 'Tạo trang kỷ niệm cá nhân hóa được gắn vào móc khóa NFC của bạn',
-  keywords: ['móc khóa NFC', 'kỷ niệm', 'quà tặng', 'cá nhân hóa'],
+  metadataBase: new URL('https://goccham.com'),
+  title: {
+    default: 'Góc Chạm - Móc khóa in ảnh theo yêu cầu',
+    template: '%s | Góc Chạm',
+  },
+  description:
+    'Góc Chạm chuyên móc khóa acrylic in ảnh theo yêu cầu, móc khóa thông điệp, móc khóa NFC cá nhân hóa làm quà tặng dễ thương.',
+  keywords: [
+    'Góc Chạm',
+    'móc khóa góc chạm',
+    'móc khóa in ảnh',
+    'móc khóa theo yêu cầu',
+    'móc khóa acrylic',
+    'móc khóa NFC',
+    'quà tặng cá nhân hóa',
+  ],
+  openGraph: {
+    title: 'Góc Chạm - Móc khóa in ảnh theo yêu cầu',
+    description: 'Móc khóa acrylic, móc khóa NFC, móc khóa thông điệp và quà tặng cá nhân hóa.',
+    url: 'https://goccham.com',
+    siteName: 'Góc Chạm',
+    locale: 'vi_VN',
+    type: 'website',
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
-
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html
