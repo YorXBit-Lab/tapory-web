@@ -1,7 +1,9 @@
 import Link from 'next/link';
+import { noIndexRobots } from '@/libs/seo';
 
 export const metadata = {
   title: 'Không tìm thấy – Góc Chạm',
+  robots: noIndexRobots,
 };
 
 export default function NotFound() {

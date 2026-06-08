@@ -18,6 +18,15 @@ import { ThemeProvider } from '@/libs/ThemeProvider';
 import { AntdProvider } from '@/libs/AntdProvider';
 import { ReduxProvider } from '@/libs/ReduxProvider';
 import { TanstackProvider } from '@/libs/TanstackProvider';
+import { JsonLd } from '@/components/seo/JsonLd';
+import {
+  DEFAULT_DESCRIPTION,
+  DEFAULT_OG_IMAGE,
+  SITE_NAME,
+  SITE_URL,
+  organizationJsonLd,
+  websiteJsonLd,
+} from '@/libs/seo';
 
 const montserrat = Montserrat({
   subsets: ['latin', 'vietnamese'],
@@ -87,16 +96,12 @@ const josefin = Josefin_Sans({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://goccham.com'),
-  alternates: {
-    canonical: '/',
-  },
+  metadataBase: new URL(SITE_URL),
   title: {
     default: 'Góc Chạm - Móc khóa in ảnh theo yêu cầu',
     template: '%s | Góc Chạm',
   },
-  description:
-    'Góc Chạm chuyên móc khóa acrylic in ảnh theo yêu cầu, móc khóa thông điệp, móc khóa NFC cá nhân hóa làm quà tặng dễ thương.',
+  description: DEFAULT_DESCRIPTION,
   keywords: [
     'Góc Chạm',
     'móc khóa góc chạm',
@@ -108,15 +113,36 @@ export const metadata: Metadata = {
   ],
   openGraph: {
     title: 'Góc Chạm - Móc khóa in ảnh theo yêu cầu',
-    description: 'Móc khóa acrylic, móc khóa NFC, móc khóa thông điệp và quà tặng cá nhân hóa.',
-    url: 'https://goccham.com',
-    siteName: 'Góc Chạm',
+    description: DEFAULT_DESCRIPTION,
+    url: SITE_URL,
+    siteName: SITE_NAME,
     locale: 'vi_VN',
     type: 'website',
+    images: [
+      {
+        url: DEFAULT_OG_IMAGE,
+        width: 1200,
+        height: 630,
+        alt: 'Góc Chạm - Móc khóa NFC in ảnh theo yêu cầu',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Góc Chạm - Móc khóa in ảnh theo yêu cầu',
+    description: DEFAULT_DESCRIPTION,
+    images: [DEFAULT_OG_IMAGE],
   },
   robots: {
     index: true,
     follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+      'max-video-preview': -1,
+    },
   },
 };
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -132,6 +158,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <TanstackProvider>
               <AntdRegistry>
                 <AntdProvider>
+                  <JsonLd data={[organizationJsonLd, websiteJsonLd]} />
                   {children}
                   <Toaster richColors position="top-right" />
                 </AntdProvider>
