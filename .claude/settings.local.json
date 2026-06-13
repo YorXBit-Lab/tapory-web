@@ -27,7 +27,26 @@
       "Bash(Start-Sleep -Seconds 5)",
       "Bash(Get-Content \"C:\\\\Users\\\\ADMIN\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\D--YORXBIT-tapory-web\\\\177731ee-8b61-49c9-b609-d2ad36a69998\\\\tasks\\\\b0xnxl0te.output\" -Tail 20)",
       "Bash(Get-ChildItem *)",
-      "Bash(xargs ls -lh)"
+      "Bash(xargs ls -lh)",
+      "Bash(grep -E \"\\\\.\\(ts|tsx\\)$\")",
+      "Bash(python -c ' *)",
+      "Bash(python -)",
+      "Bash(npx next *)",
+      "Bash(npx eslint *)",
+      "Bash(grep -qiE \"ready|started|Local:|error|compiled\" \"C:/Users/ADMIN/AppData/Local/Temp/claude/D--YORXBIT-tapory-web/4d5a5be3-695f-471d-b0e6-cd27e5f4d672/tasks/bwskghit9.output\")",
+      "Bash(break)",
+      "Bash(tail -20 \"C:/Users/ADMIN/AppData/Local/Temp/claude/D--YORXBIT-tapory-web/4d5a5be3-695f-471d-b0e6-cd27e5f4d672/tasks/bwskghit9.output\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000/dashboard/components)",
+      "Bash(head -40 \"src/app/\\(routes\\)/keychain/page.tsx\")",
+      "Bash(ls scripts *)",
+      "PowerShell(yarn dev *)",
+      "PowerShell(node --env-file=.env.local scripts/seed-demo.mjs)",
+      "PowerShell(Invoke-WebRequest -Uri \"http://localhost:3000/\" -UseBasicParsing | Select-Object -ExpandProperty StatusCode)",
+      "PowerShell(Get-Process *)",
+      "PowerShell(Start-Sleep -Seconds 3; Invoke-WebRequest -Uri \"http://localhost:3000/product/moc-khoa-thong-diep\" -UseBasicParsing | Select-Object StatusCode)",
+      "PowerShell(Invoke-WebRequest -Uri \"http://localhost:3000/product/moc-khoa-thong-diep\" -UseBasicParsing | Select-Object StatusCode)",
+      "PowerShell(Invoke-WebRequest -Uri \"http://localhost:3000/\" -UseBasicParsing | Select-Object StatusCode)",
+      "PowerShell(yarn add *)"
     ]
   }
 }

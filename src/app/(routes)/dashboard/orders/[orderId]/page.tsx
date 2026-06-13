@@ -296,6 +296,7 @@ export default function OrderDetailPage() {
 
   const SOURCE_LABEL: Record<OrderSource, { label: string; color: string }> = {
     local: { label: 'Local', color: 'blue' },
+    web: { label: 'Website', color: 'green' },
     tiktok: { label: 'TikTok', color: 'purple' },
     shopee: { label: 'Shopee', color: 'orange' },
   };

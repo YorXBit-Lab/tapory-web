@@ -19,24 +19,27 @@ import {
   Typography,
 } from 'antd';
 import { DeleteOutlined, EditOutlined, PlusOutlined, UploadOutlined } from '@ant-design/icons';
-import { useQueryClient } from '@tanstack/react-query';
 import Image from 'next/image';
 import type { ColumnsType } from 'antd/es/table';
-import { useQuery } from '@tanstack/react-query';
 import { useAdminAuth } from '@/contexts/AdminAuthContext';
 import { useProducts, useCreateProduct, useUpdateProduct, useDeleteProduct } from '@/hooks/product';
 import { useServices, useCreateService, useUpdateService, useDeleteService } from '@/hooks/service';
 import { usePresetPhotos, useCreatePresetPhoto, useDeletePresetPhoto } from '@/hooks/presetPhoto';
-import { TEMPLATE_LIST } from '@/configs/constants';
+import { useComponents } from '@/hooks/component';
+import { PRODUCT_TYPES } from '@/configs/constants';
 import { uploadProductImage, deleteProductImage } from '@/utils/r2-upload';
 import type {
   IProduct,
   IProductVariant,
+  IProductOption,
   IService,
   IPresetPhoto,
   IPrintConfig,
+  IComponent,
+  IBomLine,
   PrintShape,
   ProductStatus,
+  ProductType,
 } from '@/configs/types';
 
 const { Text } = Typography;
@@ -48,24 +51,227 @@ function priceParser(v: string | undefined) {
   return Number((v ?? '').replace(/\./g, '')) as 0;
 }
 
-function newVariantId() {
-  return `v${Math.random().toString(36).slice(2, 7)}`;
+function rid(prefix: string) {
+  return `${prefix}${Math.random().toString(36).slice(2, 7)}`;
 }
 
-interface VariantRow {
-  _id: string;
+/* ── Options → variant model (state-driven) ──
+   Option có createsVariant=true sinh ra biến thể (tổ hợp chéo các value).
+   Option createsVariant=false là cá nhân hóa (customization) — không nhân tồn kho,
+   chỉ lưu định nghĩa để khách chọn lúc đặt hàng. */
+interface OptValueRow {
+  id: string;
+  name: string;
+  priceDelta?: number;    // chỉ dùng khi option.createsVariant
+  componentId?: string;   // linh kiện tiêu hao khi chọn value này (BOM)
+  componentQty?: number;
+}
+interface OptionRow {
+  id: string;
+  name: string;
+  createsVariant: boolean;
+  values: OptValueRow[];
+}
+/** Một biến thể được sinh ra, định danh bằng tổ hợp option (key). */
+interface GenVariant {
+  id: string;           // key trong Record<string, IProductVariant> đã lưu
+  key: string;          // "shape:circle|nfc:yes" — định danh tổ hợp
+  optionValues: string[];
+  valueNames: string[]; // tên các value để hiển thị chip
   name: string;
   price: number;
   stock?: number;
+  sku?: string;
   isNfc?: boolean;
+  imageUrl?: string;
   printConfig?: IPrintConfig;
 }
 
-type ProductFormInternal = Omit<
-  IProduct,
-  'id' | 'createdAt' | 'updatedAt' | 'variants' | 'serviceIds'
-> & {
-  variantRows?: VariantRow[];
+/** Sinh danh sách biến thể từ các option tạo-variant, giữ lại chỉnh sửa cũ theo key. */
+function generateVariants(options: OptionRow[], basePrice: number, prev: GenVariant[]): GenVariant[] {
+  const variantOpts = options.filter((o) => o.createsVariant && o.values.some((v) => v.name.trim()));
+  if (variantOpts.length === 0) return [];
+
+  let combos: { optId: string; val: OptValueRow }[][] = [[]];
+  for (const opt of variantOpts) {
+    const vals = opt.values.filter((v) => v.name.trim());
+    const next: { optId: string; val: OptValueRow }[][] = [];
+    for (const combo of combos) for (const val of vals) next.push([...combo, { optId: opt.id, val }]);
+    combos = next;
+  }
+
+  const prevByKey = new Map(prev.map((v) => [v.key, v]));
+  return combos.map((combo) => {
+    const optionValues = combo.map((c) => `${c.optId}:${c.val.id}`);
+    const valueNames = combo.map((c) => c.val.name.trim());
+    const key = optionValues.join('|');
+    const existing = prevByKey.get(key);
+    const name = valueNames.join(' · ');
+    if (existing) return { ...existing, optionValues, valueNames, name };
+    const price = basePrice + combo.reduce((s, c) => s + (c.val.priceDelta ?? 0), 0);
+    return { id: rid('v'), key, optionValues, valueNames, name, price };
+  });
+}
+
+/** Nạp option của sản phẩm sẵn có vào state form. */
+function loadOptions(p: IProduct): OptionRow[] {
+  return (p.options ?? []).map((o) => ({
+    id: o.id,
+    name: o.name,
+    createsVariant: o.createsVariant,
+    values: o.values.map((v) => ({
+      id: v.id,
+      name: v.name,
+      priceDelta: v.priceDelta,
+      componentId: v.componentId,
+      componentQty: v.componentQty,
+    })),
+  }));
+}
+
+/** Nạp variant của sản phẩm sẵn có vào state form (suy tên value từ option nếu có). */
+function loadVariants(p: IProduct): GenVariant[] {
+  if (!p.variants) return [];
+  const valName = new Map<string, string>();
+  for (const o of p.options ?? []) for (const v of o.values) valName.set(`${o.id}:${v.id}`, v.name);
+  return Object.entries(p.variants).map(([id, v]) => {
+    const optionValues = v.optionValues ?? [];
+    return {
+      id,
+      key: optionValues.length ? optionValues.join('|') : id,
+      optionValues,
+      valueNames: optionValues.map((ov) => valName.get(ov) ?? ov),
+      name: v.name,
+      price: v.price,
+      stock: v.stock,
+      sku: v.sku,
+      isNfc: v.isNfc,
+      imageUrl: v.imageUrl,
+      printConfig: v.printConfig ?? { enabled: false },
+    };
+  });
+}
+
+const SHAPE_OPTIONS = [
+  { value: 'rectangle' as PrintShape, label: '▭ Chữ nhật' },
+  { value: 'square' as PrintShape, label: '▢ Vuông' },
+  { value: 'circle' as PrintShape, label: '○ Tròn' },
+];
+
+/* ── Controlled print-config editor (dùng cho cả simple-mode lẫn từng variant) ── */
+function PrintConfigEditor({
+  value,
+  onChange,
+  compact = false,
+}: {
+  value: IPrintConfig;
+  onChange: (next: IPrintConfig) => void;
+  compact?: boolean;
+}) {
+  const set = (patch: Partial<IPrintConfig>) => onChange({ ...value, ...patch });
+  const numSize = compact ? 'small' : 'middle';
+
+  return (
+    <div>
+      <div className="flex items-center gap-2">
+        <Switch
+          size="small"
+          checked={value.enabled}
+          onChange={(enabled) => set({ enabled })}
+        />
+        <Text type="secondary" className="text-xs">In ảnh</Text>
+      </div>
+
+      {value.enabled && (
+        <div className={compact ? 'mt-2 grid grid-cols-3 gap-2' : 'mt-3 space-y-3'}>
+          <Select
+            size={numSize}
+            placeholder="Hình dạng"
+            value={value.shape}
+            className={compact ? undefined : 'w-full'}
+            style={compact ? { width: '100%' } : { width: '100%' }}
+            onChange={(shape: PrintShape) =>
+              set({ shape, width: undefined, height: undefined, diameter: undefined })
+            }
+            options={SHAPE_OPTIONS}
+          />
+
+          {value.shape === 'rectangle' && (
+            <>
+              <InputNumber
+                size={numSize}
+                min={0.1}
+                step={0.1}
+                placeholder="Rộng cm"
+                style={{ width: '100%' }}
+                addonAfter={compact ? undefined : 'cm'}
+                value={value.width}
+                onChange={(width) => set({ width: width ?? undefined })}
+              />
+              <InputNumber
+                size={numSize}
+                min={0.1}
+                step={0.1}
+                placeholder="Cao cm"
+                style={{ width: '100%' }}
+                addonAfter={compact ? undefined : 'cm'}
+                value={value.height}
+                onChange={(height) => set({ height: height ?? undefined })}
+              />
+            </>
+          )}
+          {value.shape === 'square' && (
+            <InputNumber
+              size={numSize}
+              min={0.1}
+              step={0.1}
+              placeholder="Cạnh cm"
+              className={compact ? 'col-span-2' : ''}
+              style={{ width: '100%' }}
+              addonAfter={compact ? undefined : 'cm'}
+              value={value.width}
+              onChange={(width) => set({ width: width ?? undefined })}
+            />
+          )}
+          {value.shape === 'circle' && (
+            <InputNumber
+              size={numSize}
+              min={0.1}
+              step={0.1}
+              placeholder="Đường kính cm"
+              className={compact ? 'col-span-2' : ''}
+              style={{ width: '100%' }}
+              addonAfter={compact ? undefined : 'cm'}
+              value={value.diameter}
+              onChange={(diameter) => set({ diameter: diameter ?? undefined })}
+            />
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** Chuẩn hóa printConfig trước khi lưu (bỏ nếu không bật / thiếu hình dạng). */
+function cleanPrintConfig(pc?: IPrintConfig): IPrintConfig | undefined {
+  if (!pc?.enabled || !pc.shape) return undefined;
+  const out: IPrintConfig = { enabled: true, shape: pc.shape };
+  if (pc.width != null) out.width = pc.width;
+  if (pc.height != null) out.height = pc.height;
+  if (pc.diameter != null) out.diameter = pc.diameter;
+  return out;
+}
+
+type ProductFormFields = {
+  name: string;
+  type: ProductType;
+  status: ProductStatus;
+  description?: string;
+  imageUrl?: string;
+  price: number;       // simple: đơn giá; variant: giá gốc để tính giá mặc định
+  stock?: number;      // simple-mode
+  canBeNfc: boolean;   // simple-mode
+  nfcExtraPrice?: number;
 };
 
 const PRODUCT_STATUS_CONFIG: Record<ProductStatus, { color: string; label: string }> = {
@@ -459,15 +665,48 @@ function ProductModal({
 }) {
   const { user } = useAdminAuth();
   const { notification } = App.useApp();
-  const [form] = Form.useForm<ProductFormInternal>();
+  const [form] = Form.useForm<ProductFormFields>();
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [useVariants, setUseVariants] = useState(
-    () => !!initial?.variants && Object.keys(initial.variants).length > 0,
-  );
+  const [mode, setMode] = useState<'simple' | 'variants'>('simple');
+  const [options, setOptions] = useState<OptionRow[]>([]);
+  const [variants, setVariants] = useState<GenVariant[]>([]);
+  const [baseComponents, setBaseComponents] = useState<IBomLine[]>([]);
+  const [simplePrint, setSimplePrint] = useState<IPrintConfig>({ enabled: false });
   const [uploadedKey, setUploadedKey] = useState<string | null>(null);
   const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]);
+
+  const { data: rawComponents = [] } = useComponents();
+  const components = rawComponents as IComponent[];
+  const componentOptions = components.map((c) => ({ value: c.id, label: c.name }));
   const imageUrl: string = Form.useWatch('imageUrl', form) ?? '';
+  const basePrice: number = Form.useWatch('price', form) ?? 0;
+
+  // Mọi thay đổi option → tự sinh lại variant, giữ chỉnh sửa cũ theo key tổ hợp.
+  const applyOptions = (next: OptionRow[]) => {
+    setOptions(next);
+    setVariants((prev) => generateVariants(next, basePrice, prev));
+  };
+  const patchVariant = (id: string, patch: Partial<GenVariant>) =>
+    setVariants((prev) => prev.map((v) => (v.id === id ? { ...v, ...patch } : v)));
+
+  const [variantUploadingId, setVariantUploadingId] = useState<string | null>(null);
+  const uploadVariantImage = async (variantId: string, file: File) => {
+    if (!user) return;
+    setVariantUploadingId(variantId);
+    try {
+      const idToken = await user.getIdToken();
+      const { url } = await uploadProductImage(file, idToken);
+      patchVariant(variantId, { imageUrl: url });
+    } catch (err) {
+      notification.error({
+        message: 'Upload ảnh biến thể thất bại',
+        description: err instanceof Error ? err.message : undefined,
+      });
+    } finally {
+      setVariantUploadingId(null);
+    }
+  };
 
   const discardPendingImage = async (key: string | null) => {
     if (!key || !user) return;
@@ -510,28 +749,66 @@ function ProductModal({
     onClose();
   };
 
-  const handleFinish = async (values: ProductFormInternal) => {
+  const handleFinish = async (values: ProductFormFields) => {
     setSaving(true);
     try {
-      const { variantRows, ...rest } = values;
+      const useVariants = mode === 'variants';
+      const { price, stock, canBeNfc, nfcExtraPrice, ...common } = values;
 
-      let variants: IProduct['variants'];
-      if (useVariants && variantRows && variantRows.length > 0) {
-        variants = {};
-        for (const row of variantRows) {
-          if (!row.name?.trim()) continue;
-          const v: IProductVariant = { name: row.name.trim(), price: row.price };
-          if (row.stock != null) v.stock = row.stock;
-          if (row.isNfc) v.isNfc = true;
-          if (row.printConfig?.enabled && row.printConfig.shape) v.printConfig = row.printConfig;
-          variants[row._id] = v;
+      let variantMap: IProduct['variants'];
+      let optionDefs: IProductOption[] | undefined;
+
+      if (useVariants) {
+        const genned = generateVariants(options, price, variants);
+        variantMap = {};
+        for (const v of genned) {
+          const entry: IProductVariant = {
+            name: v.name.trim() || v.valueNames.join(' · '),
+            price: v.price,
+          };
+          if (v.optionValues.length) entry.optionValues = v.optionValues;
+          if (v.sku?.trim()) entry.sku = v.sku.trim();
+          if (v.stock != null) entry.stock = v.stock;
+          if (v.isNfc) entry.isNfc = true;
+          if (v.imageUrl) entry.imageUrl = v.imageUrl;
+          const pc = cleanPrintConfig(v.printConfig);
+          if (pc) entry.printConfig = pc;
+          variantMap[v.id] = entry;
         }
-        if (Object.keys(variants).length === 0) variants = undefined;
+        if (Object.keys(variantMap).length === 0) variantMap = undefined;
+
+        const cleaned = options
+          .map((o) => ({ ...o, values: o.values.filter((vv) => vv.name.trim()) }))
+          .filter((o) => o.name.trim() && o.values.length > 0);
+        optionDefs = cleaned.length
+          ? cleaned.map((o) => ({
+              id: o.id,
+              name: o.name.trim(),
+              createsVariant: o.createsVariant,
+              values: o.values.map((vv) => ({
+                id: vv.id,
+                name: vv.name.trim(),
+                ...(o.createsVariant && vv.priceDelta ? { priceDelta: vv.priceDelta } : {}),
+                ...(o.createsVariant && vv.componentId
+                  ? { componentId: vv.componentId, componentQty: vv.componentQty ?? 1 }
+                  : {}),
+              })),
+            }))
+          : undefined;
       }
 
+      const cleanedBase = baseComponents.filter((b) => b.componentId && b.qty > 0);
+
       await onSave({
-        ...rest,
-        variants,
+        ...common,
+        price,
+        canBeNfc: useVariants ? false : canBeNfc,
+        stock: useVariants ? undefined : stock,
+        nfcExtraPrice: useVariants ? undefined : nfcExtraPrice,
+        printConfig: useVariants ? undefined : cleanPrintConfig(simplePrint),
+        options: optionDefs,
+        baseComponents: cleanedBase.length > 0 ? cleanedBase : undefined,
+        variants: variantMap,
         serviceIds: selectedServiceIds.length > 0 ? selectedServiceIds : undefined,
       });
 
@@ -564,23 +841,18 @@ function ProductModal({
       destroyOnHidden
       width={560}
       afterOpenChange={(vis) => {
-        if (vis && initial) {
-          const variantRows: VariantRow[] = initial.variants
-            ? Object.entries(initial.variants).map(([id, v]) => ({
-                _id: id,
-                name: v.name,
-                price: v.price,
-                stock: v.stock,
-                isNfc: v.isNfc,
-                printConfig: v.printConfig ?? { enabled: false },
-              }))
-            : [];
-          setUseVariants(variantRows.length > 0);
-
+        if (!vis) return;
+        if (initial) {
+          const hasVariants = !!initial.variants && Object.keys(initial.variants).length > 0;
+          setMode(hasVariants ? 'variants' : 'simple');
+          setOptions(loadOptions(initial));
+          setVariants(loadVariants(initial));
+          setBaseComponents(initial.baseComponents ?? []);
+          setSimplePrint(initial.printConfig ?? { enabled: false });
           setSelectedServiceIds(initial.serviceIds ?? []);
-
           form.setFieldsValue({
             name: initial.name,
+            type: initial.type ?? 'keychain',
             price: initial.price,
             status: initial.status,
             stock: initial.stock,
@@ -588,9 +860,14 @@ function ProductModal({
             nfcExtraPrice: initial.nfcExtraPrice,
             description: initial.description,
             imageUrl: initial.imageUrl ?? '',
-            printConfig: initial.printConfig ?? { enabled: false },
-            variantRows,
           });
+        } else {
+          setMode('simple');
+          setOptions([]);
+          setVariants([]);
+          setBaseComponents([]);
+          setSimplePrint({ enabled: false });
+          setSelectedServiceIds([]);
         }
       }}
     >
@@ -599,11 +876,10 @@ function ProductModal({
         layout="vertical"
         initialValues={{
           status: 'draft',
+          type: 'keychain',
           canBeNfc: false,
           price: 0,
           imageUrl: '',
-          printConfig: { enabled: false },
-          variantRows: [],
         }}
         onFinish={handleFinish}
         className="pt-2"
@@ -625,66 +901,51 @@ function ProductModal({
           <Input placeholder="Ví dụ: Móc khóa NFC Premium" />
         </Form.Item>
 
-        <Form.Item label="Trạng thái" name="status" rules={[{ required: true }]}>
-          <Select
-            options={[
-              { value: 'draft', label: '⬜ Draft — chưa bán' },
-              { value: 'active', label: '🟢 Active — đang bán' },
-              { value: 'archived', label: '🔴 Archived — ngừng bán' },
-            ]}
-          />
-        </Form.Item>
+        <div className="grid grid-cols-2 gap-x-3">
+          <Form.Item label="Loại sản phẩm" name="type" rules={[{ required: true }]}>
+            <Select
+              options={(Object.keys(PRODUCT_TYPES) as ProductType[]).map((t) => ({
+                value: t,
+                label: PRODUCT_TYPES[t],
+              }))}
+            />
+          </Form.Item>
+
+          <Form.Item label="Trạng thái" name="status" rules={[{ required: true }]}>
+            <Select
+              options={[
+                { value: 'draft', label: '⬜ Draft — chưa bán' },
+                { value: 'active', label: '🟢 Active — đang bán' },
+                { value: 'archived', label: '🔴 Archived — ngừng bán' },
+              ]}
+            />
+          </Form.Item>
+        </div>
 
         <Form.Item label="Mô tả" name="description">
           <Input.TextArea rows={2} placeholder="Mô tả ngắn..." />
         </Form.Item>
 
-        {/* @ts-expect-error — Antd Orientation type mismatch in this version */}
-        <Divider
-          orientation="left"
-          orientationMargin={0}
-          className="!mt-1 !mb-3 !text-xs !text-gray-400"
-        >
+        <Divider titlePlacement="start" orientationMargin={0} className="!mt-1 !mb-3 !text-xs !text-gray-400">
           Giá & Kho
         </Divider>
 
         <div className="mb-3 flex items-center gap-2">
           <Switch
             size="small"
-            checked={useVariants}
-            onChange={(checked) => {
-              setUseVariants(checked);
-              if (checked) {
-                form.setFieldValue('variantRows', [
-                  { _id: newVariantId(), name: '', price: 0, printConfig: { enabled: false } },
-                ]);
-              } else {
-                form.setFieldValue('variantRows', []);
-              }
-            }}
+            checked={mode === 'variants'}
+            onChange={(checked) => setMode(checked ? 'variants' : 'simple')}
           />
-          <Text className="text-sm">Sử dụng biến thể</Text>
-          <Text type="secondary" className="text-xs">
-            (VD: NFC + In vuong, Chi in, Thuong)
-          </Text>
+          <Text className="text-sm">Có biến thể (theo tùy chọn)</Text>
+          <Text type="secondary" className="text-xs">VD: Hình dạng × NFC × Charm</Text>
         </div>
 
-        {/* ── No-variant mode ── */}
-        {!useVariants && (
+        {/* ── Simple mode ── */}
+        {mode === 'simple' && (
           <>
             <div className="grid grid-cols-2 gap-x-3">
-              <Form.Item
-                label="Đơn giá (đ)"
-                name="price"
-                rules={[{ required: true, message: 'Nhập giá' }]}
-              >
-                <InputNumber
-                  min={0}
-                  style={{ width: '100%' }}
-                  formatter={priceFormatter}
-                  parser={priceParser}
-                  placeholder="189.000"
-                />
+              <Form.Item label="Đơn giá (đ)" name="price" rules={[{ required: true, message: 'Nhập giá' }]}>
+                <InputNumber min={0} style={{ width: '100%' }} formatter={priceFormatter} parser={priceParser} placeholder="189.000" />
               </Form.Item>
 
               <Form.Item label="Tồn kho" name="stock" extra="Để trống = không giới hạn">
@@ -692,424 +953,316 @@ function ProductModal({
               </Form.Item>
             </div>
 
-            {/* @ts-expect-error — Antd Orientation type mismatch in this version */}
-            <Divider
-              orientation="left"
-              orientationMargin={0}
-              className="!mt-1 !mb-3 !text-xs !text-gray-400"
-            >
-              In ảnh
-            </Divider>
-
-            <Form.Item name={['printConfig', 'enabled']} valuePropName="checked" label="Có in ảnh">
-              <Switch />
-            </Form.Item>
-
-            <Form.Item
-              noStyle
-              shouldUpdate={(prev, cur) => prev.printConfig?.enabled !== cur.printConfig?.enabled}
-            >
-              {() =>
-                form.getFieldValue(['printConfig', 'enabled']) ? (
-                  <>
-                    <Form.Item
-                      label="Hình dạng"
-                      name={['printConfig', 'shape']}
-                      rules={[{ required: true, message: 'Chọn hình dạng' }]}
-                    >
-                      <Select
-                        placeholder="Chọn hình dạng"
-                        onChange={() => {
-                          form.setFieldValue(['printConfig', 'width'], undefined);
-                          form.setFieldValue(['printConfig', 'height'], undefined);
-                          form.setFieldValue(['printConfig', 'diameter'], undefined);
-                        }}
-                        options={[
-                          { value: 'rectangle' as PrintShape, label: '▭  Chữ nhật' },
-                          { value: 'square' as PrintShape, label: '▢  Hình vuông' },
-                          { value: 'circle' as PrintShape, label: '○  Hình tròn' },
-                        ]}
-                      />
+            <div className="mb-3 flex items-center gap-3">
+              <Form.Item name="canBeNfc" valuePropName="checked" className="!mb-0">
+                <Switch size="small" />
+              </Form.Item>
+              <Text className="text-sm">Có thể gắn NFC</Text>
+              <Form.Item noStyle shouldUpdate={(p, c) => p.canBeNfc !== c.canBeNfc}>
+                {() =>
+                  form.getFieldValue('canBeNfc') ? (
+                    <Form.Item name="nfcExtraPrice" className="!mb-0">
+                      <InputNumber size="small" min={0} formatter={priceFormatter} parser={priceParser} addonBefore="+ NFC" addonAfter="đ" placeholder="0" />
                     </Form.Item>
+                  ) : null
+                }
+              </Form.Item>
+            </div>
 
-                    <Form.Item
-                      noStyle
-                      shouldUpdate={(prev, cur) =>
-                        prev.printConfig?.shape !== cur.printConfig?.shape ||
-                        prev.printConfig?.width !== cur.printConfig?.width ||
-                        prev.printConfig?.height !== cur.printConfig?.height
-                      }
-                    >
-                      {() => {
-                        const shape: PrintShape | undefined = form.getFieldValue([
-                          'printConfig',
-                          'shape',
-                        ]);
-                        if (shape === 'rectangle') {
-                          const w: number | undefined = form.getFieldValue([
-                            'printConfig',
-                            'width',
-                          ]);
-                          const h: number | undefined = form.getFieldValue([
-                            'printConfig',
-                            'height',
-                          ]);
-                          const isPortrait = !w || !h || h >= w;
-                          const MAX = 48;
-                          const ratio = w && h ? w / h : 0.6;
-                          const previewW = isPortrait ? Math.round(MAX * ratio) : MAX;
-                          const previewH = isPortrait ? MAX : Math.round(MAX / ratio);
-
-                          const swap = () => {
-                            const curW = form.getFieldValue(['printConfig', 'width']);
-                            const curH = form.getFieldValue(['printConfig', 'height']);
-                            form.setFieldValue(['printConfig', 'width'], curH);
-                            form.setFieldValue(['printConfig', 'height'], curW);
-                          };
-
-                          return (
-                            <>
-                              <div className="grid grid-cols-2 gap-x-3">
-                                <Form.Item
-                                  label="Chiều rộng — ngang (cm)"
-                                  name={['printConfig', 'width']}
-                                  rules={[{ required: true, message: 'Nhập chiều rộng' }]}
-                                >
-                                  <InputNumber
-                                    min={0.1}
-                                    step={0.1}
-                                    style={{ width: '100%' }}
-                                    placeholder="3.4"
-                                    addonAfter="cm"
-                                  />
-                                </Form.Item>
-                                <Form.Item
-                                  label="Chiều cao — dọc (cm)"
-                                  name={['printConfig', 'height']}
-                                  rules={[{ required: true, message: 'Nhập chiều cao' }]}
-                                >
-                                  <InputNumber
-                                    min={0.1}
-                                    step={0.1}
-                                    style={{ width: '100%' }}
-                                    placeholder="5.0"
-                                    addonAfter="cm"
-                                  />
-                                </Form.Item>
-                              </div>
-                              <div className="mb-3 flex items-center gap-3">
-                                <div
-                                  className="flex-shrink-0 rounded border-2 border-blue-400 bg-blue-50"
-                                  style={{ width: previewW, height: previewH }}
-                                />
-                                <div className="flex flex-col gap-1">
-                                  <span
-                                    className={`text-xs font-medium ${isPortrait ? 'text-green-600' : 'text-orange-500'}`}
-                                  >
-                                    {isPortrait ? '↕  Dọc (portrait)' : '↔  Ngang (landscape)'}
-                                  </span>
-                                  {w && h && (
-                                    <span className="text-xs text-gray-400">
-                                      {w} × {h} cm
-                                    </span>
-                                  )}
-                                </div>
-                                <Button size="small" onClick={swap} title="Đổi dọc/ngang">
-                                  ⇄ Đổi chiều
-                                </Button>
-                              </div>
-                            </>
-                          );
-                        }
-                        if (shape === 'square') {
-                          return (
-                            <Form.Item
-                              label="Cạnh (cm)"
-                              name={['printConfig', 'width']}
-                              rules={[{ required: true, message: 'Nhập độ dài cạnh' }]}
-                            >
-                              <InputNumber
-                                min={0.1}
-                                step={0.1}
-                                style={{ width: '100%' }}
-                                placeholder="5.0"
-                                addonAfter="cm"
-                              />
-                            </Form.Item>
-                          );
-                        }
-                        if (shape === 'circle') {
-                          return (
-                            <Form.Item
-                              label="Đường kính (cm)"
-                              name={['printConfig', 'diameter']}
-                              rules={[{ required: true, message: 'Nhập đường kính' }]}
-                            >
-                              <InputNumber
-                                min={0.1}
-                                step={0.1}
-                                style={{ width: '100%' }}
-                                placeholder="5.0"
-                                addonAfter="cm"
-                              />
-                            </Form.Item>
-                          );
-                        }
-                        return null;
-                      }}
-                    </Form.Item>
-                  </>
-                ) : null
-              }
-            </Form.Item>
+            <div className="rounded-lg border border-divider p-3">
+              <PrintConfigEditor value={simplePrint} onChange={setSimplePrint} />
+            </div>
           </>
         )}
 
-        {/* ── Variant mode ── */}
-        {useVariants && (
-          <Form.List name="variantRows">
-            {(fields, { add, remove }) => (
-              <div className="space-y-2">
-                {fields.map(({ key, name }) => {
-                  const formAny = form as unknown as {
-                    getFieldValue: (p: (string | number)[]) => unknown;
-                  };
-                  const enabled = !!formAny.getFieldValue([
-                    'variantRows',
-                    name,
-                    'printConfig',
-                    'enabled',
-                  ]);
-                  const shape = formAny.getFieldValue([
-                    'variantRows',
-                    name,
-                    'printConfig',
-                    'shape',
-                  ]) as PrintShape | undefined;
+        {/* ── Variant mode: Options → tự sinh biến thể ── */}
+        {mode === 'variants' && (
+          <>
+            <Form.Item
+              label="Giá gốc (đ)"
+              name="price"
+              rules={[{ required: true, message: 'Nhập giá gốc' }]}
+              extra="Giá mặc định của biến thể mới = giá gốc + chênh lệch của tùy chọn"
+            >
+              <InputNumber min={0} style={{ width: '100%' }} formatter={priceFormatter} parser={priceParser} placeholder="189.000" />
+            </Form.Item>
 
-                  return (
-                    <div key={key} className="border-divider rounded-lg border bg-gray-50 p-3">
-                      {/* Hidden _id field */}
-                      <Form.Item name={[name, '_id']} className="mb-0 hidden">
-                        <Input />
-                      </Form.Item>
+            <Text type="secondary" className="mb-1 block text-xs font-medium">Tùy chọn</Text>
+            <div className="space-y-2">
+              {options.map((o) => (
+                <div key={o.id} className="rounded-lg border border-divider p-3">
+                  <div className="flex items-center gap-2">
+                    <Input
+                      size="small"
+                      placeholder="Tên tùy chọn (VD: Hình dạng)"
+                      value={o.name}
+                      className="flex-1"
+                      onChange={(e) =>
+                        applyOptions(options.map((x) => (x.id === o.id ? { ...x, name: e.target.value } : x)))
+                      }
+                    />
+                    <Switch
+                      size="small"
+                      checked={o.createsVariant}
+                      checkedChildren="Biến thể"
+                      unCheckedChildren="Cá nhân hóa"
+                      onChange={(c) =>
+                        applyOptions(options.map((x) => (x.id === o.id ? { ...x, createsVariant: c } : x)))
+                      }
+                    />
+                    <Button
+                      type="text"
+                      danger
+                      size="small"
+                      icon={<DeleteOutlined />}
+                      onClick={() => applyOptions(options.filter((x) => x.id !== o.id))}
+                    />
+                  </div>
 
-                      {/* Main row */}
-                      <div className="grid grid-cols-12 items-start gap-2">
-                        <Form.Item
-                          name={[name, 'name']}
-                          className="col-span-5 mb-0"
-                          rules={[{ required: true, message: 'Nhập tên' }]}
-                        >
-                          <Input placeholder="Tên biến thể" size="small" />
-                        </Form.Item>
-
-                        <Form.Item
-                          name={[name, 'price']}
-                          className="col-span-3 mb-0"
-                          rules={[{ required: true }]}
-                        >
-                          <InputNumber
-                            min={0}
+                  <div className="mt-2 space-y-1">
+                    {o.values.map((val) => {
+                      const setVal = (patch: Partial<OptValueRow>) =>
+                        applyOptions(
+                          options.map((x) =>
+                            x.id === o.id
+                              ? { ...x, values: x.values.map((y) => (y.id === val.id ? { ...y, ...patch } : y)) }
+                              : x,
+                          ),
+                        );
+                      return (
+                        <div key={val.id} className="flex flex-wrap items-center gap-2">
+                          <Input
                             size="small"
-                            style={{ width: '100%' }}
-                            placeholder="Giá"
-                            formatter={priceFormatter}
-                            parser={priceParser}
+                            placeholder="Giá trị (VD: Tròn)"
+                            value={val.name}
+                            style={{ width: 140 }}
+                            onChange={(e) => setVal({ name: e.target.value })}
                           />
-                        </Form.Item>
-
-                        <Form.Item name={[name, 'stock']} className="col-span-2 mb-0">
-                          <InputNumber
-                            min={0}
-                            size="small"
-                            style={{ width: '100%' }}
-                            placeholder="∞"
-                          />
-                        </Form.Item>
-
-                        <div className="col-span-1 flex items-center justify-center pt-1">
-                          <Form.Item
-                            name={[name, 'isNfc']}
-                            valuePropName="checked"
-                            className="mb-0"
-                          >
-                            <Switch size="small" checkedChildren="📡" unCheckedChildren="—" />
-                          </Form.Item>
-                        </div>
-
-                        <div className="col-span-1 flex items-center justify-end pt-1">
-                          {fields.length > 1 && (
-                            <Button
-                              type="text"
-                              danger
-                              size="small"
-                              icon={<DeleteOutlined />}
-                              onClick={() => remove(name)}
-                            />
+                          {o.createsVariant && (
+                            <>
+                              <InputNumber
+                                size="small"
+                                placeholder="+ giá"
+                                style={{ width: 100 }}
+                                formatter={priceFormatter}
+                                parser={priceParser}
+                                value={val.priceDelta}
+                                onChange={(n) => setVal({ priceDelta: n ?? undefined })}
+                              />
+                              <Select
+                                size="small"
+                                placeholder="Trừ linh kiện"
+                                style={{ width: 150 }}
+                                allowClear
+                                showSearch
+                                optionFilterProp="label"
+                                value={val.componentId ?? undefined}
+                                options={componentOptions}
+                                onChange={(cid?: string) =>
+                                  setVal({ componentId: cid, componentQty: cid ? (val.componentQty ?? 1) : undefined })
+                                }
+                              />
+                              {val.componentId && (
+                                <InputNumber
+                                  size="small"
+                                  min={1}
+                                  style={{ width: 56 }}
+                                  value={val.componentQty ?? 1}
+                                  onChange={(n) => setVal({ componentQty: n ?? 1 })}
+                                />
+                              )}
+                            </>
                           )}
+                          <Button
+                            type="text"
+                            danger
+                            size="small"
+                            icon={<DeleteOutlined />}
+                            onClick={() =>
+                              applyOptions(
+                                options.map((x) =>
+                                  x.id === o.id ? { ...x, values: x.values.filter((y) => y.id !== val.id) } : x,
+                                ),
+                              )
+                            }
+                          />
+                        </div>
+                      );
+                    })}
+                    <Button
+                      type="dashed"
+                      size="small"
+                      icon={<PlusOutlined />}
+                      onClick={() =>
+                        applyOptions(
+                          options.map((x) =>
+                            x.id === o.id ? { ...x, values: [...x.values, { id: rid('o'), name: '' }] } : x,
+                          ),
+                        )
+                      }
+                    >
+                      Thêm giá trị
+                    </Button>
+                  </div>
+                </div>
+              ))}
+
+              <Button
+                type="dashed"
+                block
+                icon={<PlusOutlined />}
+                onClick={() =>
+                  applyOptions([
+                    ...options,
+                    { id: rid('opt'), name: '', createsVariant: true, values: [{ id: rid('o'), name: '' }] },
+                  ])
+                }
+              >
+                Thêm tùy chọn
+              </Button>
+            </div>
+
+            {variants.length > 0 && (
+              <>
+                <Divider titlePlacement="start" orientationMargin={0} className="!mt-4 !mb-2 !text-xs !text-gray-400">
+                  Biến thể ({variants.length}) — tự sinh từ tùy chọn tạo-biến-thể
+                </Divider>
+
+                <div className="mb-1 grid grid-cols-12 gap-2 px-1">
+                  <Text type="secondary" className="col-span-4 text-[10px]">Giá (đ)</Text>
+                  <Text type="secondary" className="col-span-3 text-[10px]">Kho</Text>
+                  <Text type="secondary" className="col-span-3 text-[10px]">SKU</Text>
+                  <Text type="secondary" className="col-span-2 text-center text-[10px]">NFC</Text>
+                </div>
+
+                <div className="space-y-2">
+                  {variants.map((v) => (
+                    <div key={v.id} className="rounded-lg border border-divider bg-gray-50 p-3">
+                      <div className="mb-2 flex flex-wrap gap-1">
+                        {v.valueNames.map((n, i) => (
+                          <Tag key={i} className="text-[10px]">{n || '—'}</Tag>
+                        ))}
+                      </div>
+
+                      <div className="mb-2">
+                        <ImageUploader
+                          value={v.imageUrl}
+                          uploading={variantUploadingId === v.id}
+                          onUpload={(file) => uploadVariantImage(v.id, file)}
+                          onRemove={() => patchVariant(v.id, { imageUrl: undefined })}
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-12 items-center gap-2">
+                        <InputNumber
+                          className="col-span-4"
+                          size="small"
+                          min={0}
+                          style={{ width: '100%' }}
+                          formatter={priceFormatter}
+                          parser={priceParser}
+                          value={v.price}
+                          onChange={(n) => patchVariant(v.id, { price: n ?? 0 })}
+                        />
+                        <InputNumber
+                          className="col-span-3"
+                          size="small"
+                          min={0}
+                          style={{ width: '100%' }}
+                          placeholder="∞"
+                          value={v.stock}
+                          onChange={(n) => patchVariant(v.id, { stock: n ?? undefined })}
+                        />
+                        <Input
+                          className="col-span-3"
+                          size="small"
+                          placeholder="SKU"
+                          value={v.sku}
+                          onChange={(e) => patchVariant(v.id, { sku: e.target.value })}
+                        />
+                        <div className="col-span-2 flex items-center justify-center">
+                          <Switch
+                            size="small"
+                            checkedChildren="📡"
+                            unCheckedChildren="—"
+                            checked={!!v.isNfc}
+                            onChange={(c) => patchVariant(v.id, { isNfc: c })}
+                          />
                         </div>
                       </div>
 
-                      <div className="mb-1 grid grid-cols-12 gap-2 px-3">
-                        <Text type="secondary" className="col-span-5 text-[10px]">
-                          Tên biến thể
-                        </Text>
-                        <Text type="secondary" className="col-span-3 text-[10px]">
-                          Giá (đ)
-                        </Text>
-                        <Text type="secondary" className="col-span-2 text-[10px]">
-                          Kho
-                        </Text>
-                        <Text type="secondary" className="col-span-1 text-center text-[10px]">
-                          NFC
-                        </Text>
-                        <Text type="secondary" className="col-span-1 text-[10px]"></Text>
-                      </div>
-
-                      {/* Print config per variant */}
                       <div className="mt-2 border-t border-gray-200 pt-2">
-                        <div className="flex items-center gap-2">
-                          <Form.Item
-                            name={[name, 'printConfig', 'enabled']}
-                            valuePropName="checked"
-                            className="mb-0"
-                          >
-                            <Switch size="small" />
-                          </Form.Item>
-                          <Text type="secondary" className="text-xs">
-                            In ảnh
-                          </Text>
-                        </div>
-
-                        <Form.Item noStyle shouldUpdate>
-                          {() =>
-                            enabled ? (
-                              <div className="mt-2 grid grid-cols-3 gap-2">
-                                <Form.Item
-                                  name={[name, 'printConfig', 'shape']}
-                                  className="mb-0"
-                                  rules={[{ required: true, message: 'Chọn hình' }]}
-                                >
-                                  <Select
-                                    size="small"
-                                    placeholder="Hình dạng"
-                                    onChange={() => {
-                                      form.setFieldValue(
-                                        ['variantRows', name, 'printConfig', 'width'],
-                                        undefined,
-                                      );
-                                      form.setFieldValue(
-                                        ['variantRows', name, 'printConfig', 'height'],
-                                        undefined,
-                                      );
-                                      form.setFieldValue(
-                                        ['variantRows', name, 'printConfig', 'diameter'],
-                                        undefined,
-                                      );
-                                    }}
-                                    options={[
-                                      { value: 'rectangle' as PrintShape, label: '▭ Chữ nhật' },
-                                      { value: 'square' as PrintShape, label: '▢ Vuông' },
-                                      { value: 'circle' as PrintShape, label: '○ Tròn' },
-                                    ]}
-                                  />
-                                </Form.Item>
-
-                                {shape === 'rectangle' && (
-                                  <>
-                                    <Form.Item
-                                      name={[name, 'printConfig', 'width']}
-                                      className="mb-0"
-                                      rules={[{ required: true, message: 'Rộng' }]}
-                                    >
-                                      <InputNumber
-                                        size="small"
-                                        min={0.1}
-                                        step={0.1}
-                                        placeholder="Rộng cm"
-                                        style={{ width: '100%' }}
-                                      />
-                                    </Form.Item>
-                                    <Form.Item
-                                      name={[name, 'printConfig', 'height']}
-                                      className="mb-0"
-                                      rules={[{ required: true, message: 'Cao' }]}
-                                    >
-                                      <InputNumber
-                                        size="small"
-                                        min={0.1}
-                                        step={0.1}
-                                        placeholder="Cao cm"
-                                        style={{ width: '100%' }}
-                                      />
-                                    </Form.Item>
-                                  </>
-                                )}
-                                {shape === 'square' && (
-                                  <Form.Item
-                                    name={[name, 'printConfig', 'width']}
-                                    className="col-span-2 mb-0"
-                                    rules={[{ required: true, message: 'Cạnh' }]}
-                                  >
-                                    <InputNumber
-                                      size="small"
-                                      min={0.1}
-                                      step={0.1}
-                                      placeholder="Cạnh cm"
-                                      style={{ width: '100%' }}
-                                    />
-                                  </Form.Item>
-                                )}
-                                {shape === 'circle' && (
-                                  <Form.Item
-                                    name={[name, 'printConfig', 'diameter']}
-                                    className="col-span-2 mb-0"
-                                    rules={[{ required: true, message: 'Đường kính' }]}
-                                  >
-                                    <InputNumber
-                                      size="small"
-                                      min={0.1}
-                                      step={0.1}
-                                      placeholder="Đường kính cm"
-                                      style={{ width: '100%' }}
-                                    />
-                                  </Form.Item>
-                                )}
-                              </div>
-                            ) : null
-                          }
-                        </Form.Item>
+                        <PrintConfigEditor
+                          compact
+                          value={v.printConfig ?? { enabled: false }}
+                          onChange={(pc) => patchVariant(v.id, { printConfig: pc })}
+                        />
                       </div>
                     </div>
-                  );
-                })}
-
-                <Button
-                  type="dashed"
-                  block
-                  size="small"
-                  icon={<PlusOutlined />}
-                  onClick={() =>
-                    add({
-                      _id: newVariantId(),
-                      name: '',
-                      price: 0,
-                      printConfig: { enabled: false },
-                    })
-                  }
-                >
-                  Thêm biến thể
-                </Button>
-              </div>
+                  ))}
+                </div>
+              </>
             )}
-          </Form.List>
+          </>
+        )}
+
+        <Divider titlePlacement="start" orientationMargin={0} className="!mt-4 !mb-3 !text-xs !text-gray-400">
+          Linh kiện nền (luôn trừ kho mỗi sản phẩm)
+        </Divider>
+
+        {components.length === 0 ? (
+          <Text type="secondary" className="text-xs">
+            Chưa có linh kiện nào. Tạo ở trang <b>Kho linh kiện</b> trước để gắn định mức trừ kho.
+          </Text>
+        ) : (
+          <div className="space-y-1.5">
+            {baseComponents.map((line, idx) => (
+              <div key={idx} className="flex items-center gap-2">
+                <Select
+                  size="small"
+                  placeholder="Chọn linh kiện"
+                  className="flex-1"
+                  showSearch
+                  optionFilterProp="label"
+                  value={line.componentId || undefined}
+                  options={componentOptions}
+                  onChange={(cid: string) =>
+                    setBaseComponents((prev) => prev.map((b, i) => (i === idx ? { ...b, componentId: cid } : b)))
+                  }
+                />
+                <InputNumber
+                  size="small"
+                  min={1}
+                  style={{ width: 64 }}
+                  value={line.qty}
+                  onChange={(n) =>
+                    setBaseComponents((prev) => prev.map((b, i) => (i === idx ? { ...b, qty: n ?? 1 } : b)))
+                  }
+                />
+                <Button
+                  type="text"
+                  danger
+                  size="small"
+                  icon={<DeleteOutlined />}
+                  onClick={() => setBaseComponents((prev) => prev.filter((_, i) => i !== idx))}
+                />
+              </div>
+            ))}
+            <Button
+              type="dashed"
+              size="small"
+              icon={<PlusOutlined />}
+              onClick={() => setBaseComponents((prev) => [...prev, { componentId: '', qty: 1 }])}
+            >
+              Thêm linh kiện nền
+            </Button>
+          </div>
         )}
 
         <Divider
-          orientation="left"
+          titlePlacement="start"
           orientationMargin={0}
-          className="!mt-2 !mb-3 !text-xs !text-gray-400"
+          className="!mt-4 !mb-3 !text-xs !text-gray-400"
         >
           Ảnh mẫu in sẵn
         </Divider>
@@ -1123,7 +1276,7 @@ function ProductModal({
         )}
 
         <Divider
-          orientation="left"
+          titlePlacement="start"
           orientationMargin={0}
           className="!mt-2 !mb-3 !text-xs !text-gray-400"
         >
@@ -1327,9 +1480,12 @@ export default function ProductsPage() {
       dataIndex: 'name',
       render: (name: string, record) => (
         <div>
-          <Text strong className="text-sm">
-            {name}
-          </Text>
+          <div className="flex items-center gap-1.5">
+            <Text strong className="text-sm">
+              {name}
+            </Text>
+            <Tag className="!m-0 text-[10px]">{PRODUCT_TYPES[record.type ?? 'keychain']}</Tag>
+          </div>
           {record.variants && (
             <Text type="secondary" className="block text-xs">
               {Object.keys(record.variants).length} biến thể

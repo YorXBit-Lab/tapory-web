@@ -5,6 +5,7 @@ import Link from 'next/link';
 import NextImage from 'next/image';
 import { Button, Tag, Typography, Divider, Image, Dropdown } from 'antd';
 import { useProducts } from '@/hooks/product';
+import { toSlug } from '@/utils/slug';
 import type { IProduct } from '@/configs/types';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 
@@ -678,14 +679,14 @@ export default function HomePage() {
               <Text className="!text-content3">Chưa có sản phẩm nào.</Text>
             </div>
           ) : (
-            <Image.PreviewGroup>
-              <div className="grid gap-6 md:grid-cols-3">
-                {(products as IProduct[]).map((p) => (
-                  <div
+            <div className="grid gap-6 md:grid-cols-3">
+              {(products as IProduct[]).map((p) => (
+                  <Link
                     key={p.id}
-                    className="bg-background border-border relative rounded-2xl border px-5 py-8 text-center transition-all duration-200 hover:-translate-y-1 hover:shadow-xl md:px-7 md:py-12"
+                    href={`/product/${toSlug(p.name)}`}
+                    className="bg-background border-border relative flex flex-col items-center rounded-2xl border px-5 py-8 text-center no-underline transition-all duration-200 hover:-translate-y-1 hover:shadow-xl md:px-7 md:py-12"
                   >
-                    {p.isNfc && (
+                    {p.canBeNfc && (
                       <Tag
                         color="#8B6B52"
                         className="!absolute !top-4 !right-4 !text-[10px] !font-bold !tracking-widest !uppercase"
@@ -706,7 +707,6 @@ export default function HomePage() {
                             overflow: 'hidden',
                             boxShadow:
                               '0 10px 15px -3px rgba(0,0,0,.1),0 4px 6px -4px rgba(0,0,0,.1)',
-                            cursor: 'pointer',
                           }}
                         />
                       ) : (
@@ -725,14 +725,16 @@ export default function HomePage() {
                       {p.price.toLocaleString('vi-VN')}đ
                     </Text>
                     {p.description && (
-                      <Paragraph className="!text-content3 !mb-0 !text-sm">
+                      <Paragraph className="!text-content3 !mb-3 !text-sm">
                         {p.description}
                       </Paragraph>
                     )}
-                  </div>
+                    <span className="bg-primary mt-auto inline-block rounded-lg px-5 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-90">
+                      Xem chi tiết
+                    </span>
+                  </Link>
                 ))}
-              </div>
-            </Image.PreviewGroup>
+            </div>
           )}
         </div>
       </section>

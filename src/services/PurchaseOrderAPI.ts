@@ -20,10 +20,8 @@ const COL = FIRESTORE_COLLECTIONS.PURCHASE_ORDERS;
 function toItem(raw: unknown): IPurchaseOrderItem {
   const r = raw as Record<string, unknown>;
   return {
-    productId: (r.productId as string) ?? '',
-    productName: (r.productName as string) ?? '',
-    variantId: r.variantId as string | undefined,
-    variantName: r.variantName as string | undefined,
+    componentId: (r.componentId as string) ?? '',
+    componentName: (r.componentName as string) ?? '',
     quantity: (r.quantity as number) ?? 0,
     unitCost: (r.unitCost as number) ?? 0,
   };

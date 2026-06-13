@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
 
     const orderData = orderSnap.data() as {
       status: string;
-      items: Array<{ productId: string; variantId?: string; quantity: number }>;
+      items: Array<{ componentId: string; quantity: number }>;
     };
 
     if (orderData.status === 'received') {
@@ -33,15 +33,13 @@ export async function POST(req: NextRequest) {
     const now = new Date();
     const batch = adminDb.batch();
 
+    // Cộng tồn linh kiện theo từng dòng nhập
     for (const item of orderData.items) {
-      if (!item.productId || !item.quantity) continue;
-      const updateData: Record<string, unknown> = { updatedAt: now };
-      if (item.variantId) {
-        updateData[`variants.${item.variantId}.stock`] = FieldValue.increment(item.quantity);
-      } else {
-        updateData.stock = FieldValue.increment(item.quantity);
-      }
-      batch.update(adminDb.collection('products').doc(item.productId), updateData);
+      if (!item.componentId || !item.quantity) continue;
+      batch.update(adminDb.collection('components').doc(item.componentId), {
+        stock: FieldValue.increment(item.quantity),
+        updatedAt: now,
+      });
     }
 
     batch.update(orderRef, {

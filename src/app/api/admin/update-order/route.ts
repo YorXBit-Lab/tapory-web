@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { FieldValue } from 'firebase-admin/firestore';
 import { getAdminAuth, getAdminDb } from '@/libs/firebase-admin';
+import { stockKey, resolveProductBom } from '@/utils/bom';
 import type { StatusKey } from '@/components/dashboard';
 import type { IOrderItem } from '@/services/OrderAPI';
 
@@ -18,10 +19,6 @@ interface StockTarget {
   productId: string;
   variantId?: string;
   qty: number;
-}
-
-function stockKey(productId: string, variantId?: string) {
-  return variantId ? `${productId}::${variantId}` : productId;
 }
 
 /** Map compound-key → stock held by this order (empty when cancelled) */
@@ -91,9 +88,28 @@ export async function POST(req: NextRequest) {
         : [];
       const productSnapMap = new Map(uniqueProductIds.map((id, i) => [id, productSnaps[i]]));
 
-      // Phase 2: Validate deductions
-      for (const [, { productId, variantId, delta }] of deltaMap) {
-        if (delta >= 0) continue;
+      // Gom chênh lệch BOM → linh kiện (cùng dấu delta). Target có BOM bỏ qua tồn thành phẩm.
+      const componentDelta = new Map<string, number>();
+      const bomKeys = new Set<string>();
+      for (const [key, { productId, variantId, delta }] of deltaMap) {
+        const snap = productSnapMap.get(productId);
+        if (!snap?.exists) continue;
+        const bom = resolveProductBom(snap.data()!, variantId);
+        if (bom.length === 0) continue;
+        bomKeys.add(key);
+        for (const line of bom) {
+          componentDelta.set(line.componentId, (componentDelta.get(line.componentId) ?? 0) + line.qty * delta);
+        }
+      }
+      const componentIds = [...componentDelta.keys()];
+      const componentSnaps = componentIds.length > 0
+        ? await Promise.all(componentIds.map(id => txn.get(adminDb.collection('components').doc(id))))
+        : [];
+      const componentSnapMap = new Map(componentIds.map((id, i) => [id, componentSnaps[i]]));
+
+      // Phase 2: Validate deductions (tồn thành phẩm cho target không BOM)
+      for (const [key, { productId, variantId, delta }] of deltaMap) {
+        if (delta >= 0 || bomKeys.has(key)) continue;
         const snap = productSnapMap.get(productId);
         if (!snap?.exists) continue;
         const d = snap.data()!;
@@ -108,10 +124,21 @@ export async function POST(req: NextRequest) {
           }
         }
       }
+      // Validate linh kiện khi cần trừ thêm (delta âm)
+      for (const [componentId, delta] of componentDelta) {
+        if (delta >= 0) continue;
+        const snap = componentSnapMap.get(componentId);
+        if (!snap?.exists) continue;
+        const cd = snap.data()!;
+        if (((cd.stock as number) ?? 0) + delta < 0) {
+          throw new Error(`Không đủ linh kiện "${cd.name}": còn ${cd.stock ?? 0}`);
+        }
+      }
 
       // Phase 3: Aggregate updates per product document (avoid transaction conflicts)
       const productUpdateMap = new Map<string, Record<string, unknown>>();
-      for (const [, { productId, variantId, delta }] of deltaMap) {
+      for (const [key, { productId, variantId, delta }] of deltaMap) {
+        if (bomKeys.has(key)) continue;
         const snap = productSnapMap.get(productId);
         if (!snap?.exists) continue;
         const d = snap.data()!;
@@ -128,6 +155,15 @@ export async function POST(req: NextRequest) {
       }
       for (const [pid, updates] of productUpdateMap) {
         txn.update(adminDb.collection('products').doc(pid), updates);
+      }
+
+      // Áp chênh lệch tồn linh kiện (BOM)
+      for (const [componentId, delta] of componentDelta) {
+        if (delta === 0) continue;
+        txn.update(adminDb.collection('components').doc(componentId), {
+          stock: FieldValue.increment(delta),
+          updatedAt: new Date(),
+        });
       }
 
       // Phase 4: Update order document

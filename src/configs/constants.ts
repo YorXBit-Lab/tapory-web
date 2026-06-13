@@ -1,4 +1,17 @@
-import type { IEffect, IFrame, IIntro, ITemplate, TemplateId } from './types';
+import type { IEffect, IFrame, IIntro, ITemplate, TemplateId, ProductType } from './types';
+
+/** Phụ phí NFC mặc định khi chưa cấu hình settings/global. */
+export const DEFAULT_NFC_EXTRA_PRICE = 0;
+
+/** Nhãn hiển thị cho từng loại sản phẩm vật lý. Thêm dòng hàng mới = thêm một entry. */
+export const PRODUCT_TYPES: Record<ProductType, string> = {
+  keychain: 'Móc khóa',
+  plush: 'Gấu bông',
+  'photo-frame': 'Khung ảnh',
+  standee: 'Standee',
+  card: 'Thẻ / Card',
+  other: 'Khác',
+};
 
 export const TEMPLATES: Record<TemplateId, ITemplate> = {
   graduation: {
@@ -157,6 +170,7 @@ export const FIRESTORE_COLLECTIONS = {
   ORDERS: 'orders',
   ADMINS: 'admins',
   PRODUCTS: 'products',
+  COMPONENTS: 'components',
   PURCHASE_ORDERS: 'purchase_orders',
   SERVICES: 'services',
   PRESET_PHOTOS: 'preset_photos',

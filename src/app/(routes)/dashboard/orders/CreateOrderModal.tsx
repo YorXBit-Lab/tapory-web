@@ -114,13 +114,29 @@ export function CreateOrderModal({ onCreated }: Props) {
         const selectedAddonNames = services
           .filter(s => itemAddonsMap[idx]?.[s.id])
           .map(s => s.name);
+        const product = itemProductMap[idx] ? productList.find(p => p.id === itemProductMap[idx]) : null;
+        const variantInfo = itemVariantMap[idx];
+        const variant = variantInfo && product?.variants?.[variantInfo.id];
         return {
           ...item,
           ...(itemPrintConfigMap[idx]?.enabled ? { printConfig: itemPrintConfigMap[idx] } : {}),
           ...(itemProductMap[idx] ? { productId: itemProductMap[idx] } : {}),
-          ...(itemVariantMap[idx] ? { variantId: itemVariantMap[idx]!.id, variantName: itemVariantMap[idx]!.name } : {}),
+          ...(variantInfo ? { variantId: variantInfo.id, variantName: variantInfo.name } : {}),
           ...(selectedAddonNames.length > 0 ? { addonNames: selectedAddonNames } : {}),
           ...(itemPresetMap[idx] ? { presetPhotoUrl: itemPresetMap[idx] } : {}),
+          ...(variant
+            ? {
+                variantSnapshot: {
+                  variantId: variantInfo!.id,
+                  name: variant.name,
+                  unitPrice: item.unitPrice,
+                  ...(variant.sku ? { sku: variant.sku } : {}),
+                  ...(variant.optionValues?.length ? { optionValues: variant.optionValues } : {}),
+                  ...(variant.isNfc ? { isNfc: true } : {}),
+                  ...(variant.printConfig?.enabled ? { printConfig: variant.printConfig } : {}),
+                },
+              }
+            : {}),
         };
       });
 
@@ -427,15 +443,30 @@ export function CreateOrderModal({ onCreated }: Props) {
                               const outOfStock = v.stock === 0;
                               return (
                                 <Select.Option key={id} value={id} disabled={outOfStock}>
-                                  <span style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                                    {v.isNfc ? '📡 ' : ''}{v.name}
-                                    <span style={{ color: '#888', fontSize: 12 }}>{v.price.toLocaleString('vi-VN')}đ</span>
-                                    {v.stock !== undefined && (
-                                      <span style={{ fontSize: 11, color: outOfStock ? '#f5222d' : v.stock <= 5 ? '#fa8c16' : '#52c41a' }}>
-                                        {outOfStock ? '· Hết' : `· Còn ${v.stock}`}
-                                      </span>
-                                    )}
-                                  </span>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                    {v.imageUrl ? (
+                                      <img
+                                        src={v.imageUrl}
+                                        alt={v.name}
+                                        style={{ width: 24, height: 24, borderRadius: 4, objectFit: 'cover', flexShrink: 0 }}
+                                      />
+                                    ) : catalogProduct?.imageUrl ? (
+                                      <img
+                                        src={catalogProduct.imageUrl}
+                                        alt={v.name}
+                                        style={{ width: 24, height: 24, borderRadius: 4, objectFit: 'cover', flexShrink: 0, opacity: 0.4 }}
+                                      />
+                                    ) : null}
+                                    <span style={{ flex: 1, minWidth: 0 }}>
+                                      {v.isNfc ? '📡 ' : ''}{v.name}
+                                      <span style={{ color: '#888', marginLeft: 6, fontSize: 12 }}>{v.price.toLocaleString('vi-VN')}đ</span>
+                                      {v.stock !== undefined && (
+                                        <span style={{ marginLeft: 4, fontSize: 11, color: outOfStock ? '#f5222d' : v.stock <= 5 ? '#fa8c16' : '#52c41a' }}>
+                                          {outOfStock ? '· Hết' : `· Còn ${v.stock}`}
+                                        </span>
+                                      )}
+                                    </span>
+                                  </div>
                                 </Select.Option>
                               );
                             })}

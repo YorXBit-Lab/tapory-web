@@ -53,6 +53,7 @@ function exportCsv(rows: IOrder[]) {
 
 const SOURCE_TAG: Record<OrderSource, { label: string; color: string }> = {
   local:  { label: 'Local',  color: 'blue'   },
+  web:    { label: 'Website', color: 'green' },
   tiktok: { label: 'TikTok', color: 'purple' },
   shopee: { label: 'Shopee', color: 'orange' },
 };
@@ -132,11 +133,28 @@ export default function OrdersPage() {
 
   const handleDelete = async (orderId: string) => {
     try {
-      await OrderAPI.delete(orderId);
+      const { auth } = await import('@/libs/firebase');
+      const currentUser = auth.currentUser;
+      if (!currentUser) throw new Error('Chưa đăng nhập');
+      const idToken = await currentUser.getIdToken();
+
+      const res = await fetch('/api/admin/delete-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${idToken}` },
+        body: JSON.stringify({ orderId }),
+      });
+      const json = await res.json() as { error?: string };
+      if (!res.ok) throw new Error(json.error ?? 'Xóa đơn hàng thất bại');
+
       queryClient.invalidateQueries({ queryKey: ['orders'] });
-      notification.success({ message: `Đã xóa đơn ${orderId}` });
-    } catch {
-      notification.error({ message: 'Xóa đơn hàng thất bại' });
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+      queryClient.invalidateQueries({ queryKey: ['components'] });
+      notification.success({ message: `Đã xóa đơn ${orderId} và hoàn kho` });
+    } catch (err) {
+      notification.error({
+        message: 'Xóa đơn hàng thất bại',
+        description: err instanceof Error ? err.message : undefined,
+      });
     }
   };
 

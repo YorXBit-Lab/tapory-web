@@ -1,7 +1,6 @@
 import {
   collection,
   doc,
-  deleteDoc,
   deleteField,
   getDoc,
   getDocs,
@@ -14,11 +13,10 @@ import {
 } from 'firebase/firestore';
 import { db } from '@/libs/firebase';
 import { FIRESTORE_COLLECTIONS } from '@/configs/constants';
-import { CardAPI } from '@/services/CardAPI';
 import type { StatusKey } from '@/components/dashboard';
-import type { IPrintConfig, IPrintPhotoSlot } from '@/configs/types';
+import type { IPrintConfig, IPrintPhotoSlot, IItemCustomization, IVariantSnapshot } from '@/configs/types';
 
-export type OrderSource = 'local' | 'tiktok' | 'shopee';
+export type OrderSource = 'local' | 'web' | 'tiktok' | 'shopee';
 
 export interface IOrderItem {
   productId?: string;
@@ -32,6 +30,13 @@ export interface IOrderItem {
   printConfig?: IPrintConfig;
   addonNames?: string[];
   presetPhotoUrl?: string;   // URL ảnh mẫu đã chọn sẵn (không cần link upload)
+  /**
+   * Snapshot biến thể tại thời điểm đặt — đơn cũ đọc giá/tên/option từ đây,
+   * không phụ thuộc Variant hiện tại. Xem IVariantSnapshot.
+   */
+  variantSnapshot?: IVariantSnapshot;
+  /** Nội dung cá nhân hóa (JSON, không nhân tồn kho). Xem IItemCustomization. */
+  customization?: IItemCustomization;
 }
 
 export interface IOrder {
@@ -51,21 +56,12 @@ export interface IOrder {
   printedAt?: string;
   createdAt?: string;
   updatedAt?: string;
-  /** @deprecated dùng items thay thế */
-  templateId?: string;
-  /** @deprecated dùng items thay thế */
-  quantity?: number;
 }
 
 const COL = FIRESTORE_COLLECTIONS.ORDERS;
 
 function toOrder(id: string, d: Record<string, unknown>): IOrder {
-  const rawItems = d.items as IOrderItem[] | undefined;
-  const items: IOrderItem[] = rawItems?.length
-    ? rawItems
-    : d.templateId
-      ? [{ productName: 'Móc khóa NFC', quantity: (d.quantity as number) ?? 1, unitPrice: (d.price as number) ?? 189000, isNfc: true, templateId: d.templateId as string }]
-      : [];
+  const items = Array.isArray(d.items) ? (d.items as IOrderItem[]) : [];
 
   return {
     id,
@@ -82,8 +78,6 @@ function toOrder(id: string, d: Record<string, unknown>): IOrder {
     shippingRateName: d.shippingRateName as string | undefined,
     printPhotos: Array.isArray(d.printPhotos) ? (d.printPhotos as IPrintPhotoSlot[]) : [],
     printedAt: (d.printedAt as Timestamp)?.toDate?.()?.toISOString() ?? (d.printedAt as string | undefined),
-    templateId: d.templateId as string | undefined,
-    quantity: d.quantity as number | undefined,
     createdAt: (d.createdAt as Timestamp)?.toDate?.()?.toISOString(),
     updatedAt: (d.updatedAt as Timestamp)?.toDate?.()?.toISOString(),
   };
@@ -106,12 +100,6 @@ export const OrderAPI = {
       payload.printedAt = deleteField();
     }
     await updateDoc(doc(db, COL, orderId), payload);
-  },
-
-  delete: async (orderId: string): Promise<void> => {
-    await CardAPI.deleteByOrder(orderId);
-    await deleteDoc(doc(db, FIRESTORE_COLLECTIONS.MEMORIALS, orderId)).catch(() => null);
-    await deleteDoc(doc(db, COL, orderId));
   },
 
   list: async (limitCount = 200): Promise<IOrder[]> => {
