@@ -10,7 +10,7 @@ type CrudService = {
 
 export const useFetchList = (queryKey: any[], service: CrudService, params?: any) =>
   useQuery({
-    queryKey: [...queryKey, params],
+    queryKey: params !== undefined ? [...queryKey, params] : queryKey,
     queryFn: () => service.getAll!(params),
     enabled: !!service.getAll,
   });
@@ -27,12 +27,7 @@ export const useFetchOne = (
     enabled: options?.enabled !== false && !!id,
   });
 
-export const useCreateItem = (
-  queryKey: any[],
-  service: CrudService,
-  _successMsg = 'Tạo thành công!',
-  _errorMsg = 'Tạo thất bại!',
-) => {
+export const useCreateItem = (queryKey: any[], service: CrudService) => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (data: any) => service.createOne!(data),

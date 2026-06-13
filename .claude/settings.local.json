@@ -48,7 +48,8 @@
       "PowerShell(Invoke-WebRequest -Uri \"http://localhost:3000/\" -UseBasicParsing | Select-Object StatusCode)",
       "PowerShell(yarn add *)",
       "Skill(run)",
-      "PowerShell(cd D:\\\\YORXBIT\\\\tapory-web; Start-Process -NoNewWindow -FilePath \"yarn\" -ArgumentList \"dev\" -PassThru | Select-Object Id; Start-Sleep -Seconds 10; $r = Invoke-WebRequest -Uri \"http://localhost:3000\" -UseBasicParsing -TimeoutSec 15; $r.StatusCode)"
+      "PowerShell(cd D:\\\\YORXBIT\\\\tapory-web; Start-Process -NoNewWindow -FilePath \"yarn\" -ArgumentList \"dev\" -PassThru | Select-Object Id; Start-Sleep -Seconds 10; $r = Invoke-WebRequest -Uri \"http://localhost:3000\" -UseBasicParsing -TimeoutSec 15; $r.StatusCode)",
+      "Bash(xargs wc -l)"
     ]
   }
 }

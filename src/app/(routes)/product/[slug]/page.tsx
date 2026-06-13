@@ -13,15 +13,10 @@ import { toSlug } from '@/utils/slug';
 import type { IProduct, IProductVariant, IComponent, IPresetPhoto } from '@/configs/types';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
+import { CONTACT_LINKS } from '@/libs/seo';
 
 const fmt = (n: number) => n.toLocaleString('vi-VN') + 'đ';
 
-const CONTACT_LINKS = [
-  { key: 'zalo',     label: 'Zalo',     href: '#', color: '#0068FF' },
-  { key: 'facebook', label: 'Facebook', href: '#', color: '#1877F2' },
-  { key: 'tiktok',   label: 'TikTok',   href: '#', color: '#010101' },
-  { key: 'shopee',   label: 'Shopee',   href: '#', color: '#EE4D2D' },
-];
 
 function contactMenuItems() {
   return CONTACT_LINKS.map(({ key, label, href, color }) => ({

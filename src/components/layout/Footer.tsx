@@ -1,3 +1,5 @@
+'use client';
+
 import { Divider, Typography } from 'antd';
 import { ORDER_URL } from '@/libs/seo';
 
@@ -7,23 +9,23 @@ const FOOTER_COLS = [
   {
     h: 'Sản phẩm',
     links: [
-      { label: 'Móc khóa cá nhân hóa', href: '/moc-khoa' },
-      { label: 'Móc khóa in ảnh', href: '/moc-khoa-in-anh-theo-yeu-cau' },
-      { label: 'Móc khóa NFC', href: '/moc-khoa-nfc' },
-      { label: 'Mẫu thiết kế', href: '/templates' },
+      { label: 'Móc khóa cá nhân hóa', href: '/product/moc-khoa-ca-nhan-hoa' },
+      { label: 'Móc khóa in ảnh', href: '/product/moc-khoa-in-anh' },
+      { label: 'Móc khóa NFC', href: '/product/moc-khoa-nfc' },
+      { label: 'Xem tất cả mẫu', href: '/templates' },
     ],
   },
   {
     h: 'Hỗ trợ',
     links: [
-      { label: 'Hướng dẫn sử dụng', href: '#how' },
-      { label: 'Tư vấn qua email', href: 'mailto:yorxbit@gmail.com' },
+      { label: 'Hướng dẫn sử dụng', href: '/#how' },
+      { label: 'Chính sách không bảo hành', href: '/#no-warranty' },
     ],
   },
   {
     h: 'Kết nối',
     links: [
-      { label: 'yorxbit@gmail.com', href: 'mailto:yorxbit@gmail.com' },
+      { label: 'goccham.sg@gmail.com', href: 'mailto:goccham.sg@gmail.com' },
     ],
   },
 ];
@@ -63,7 +65,7 @@ export function Footer() {
           ))}
         </div>
 
-        <div className="border-border mb-6 rounded-lg border px-4 py-3">
+        <div className="border-border bg-surface mb-6 rounded-lg border px-4 py-3">
           <p className="text-content3 text-xs leading-relaxed">
             <span className="text-content2 font-semibold">Lưu ý:</span> Website này chỉ dùng để{' '}
             <span className="font-medium">trưng bày sản phẩm</span>, không thực hiện giao dịch

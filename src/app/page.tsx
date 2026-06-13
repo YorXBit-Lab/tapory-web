@@ -8,6 +8,8 @@ import { useProducts } from '@/hooks/product';
 import { toSlug } from '@/utils/slug';
 import type { IProduct } from '@/configs/types';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
+import { CONTACT_LINKS } from '@/libs/seo';
+import { Footer } from '@/components/layout/Footer';
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -21,11 +23,6 @@ const ArrowRight = () => (
     strokeWidth="2.5"
   >
     <path d="M5 12h14M13 5l7 7-7 7" />
-  </svg>
-);
-const MoonIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
   </svg>
 );
 const HamburgerIcon = ({ open }: { open: boolean }) => (
@@ -77,12 +74,6 @@ const HERO_STATS = [
   { num: '2s', lab: 'CHẠM LÀ XEM' },
 ];
 
-const CONTACT_LINKS = [
-  { key: 'zalo', label: 'Zalo', href: '#', color: '#0068FF' },
-  { key: 'facebook', label: 'Facebook', href: '#', color: '#1877F2' },
-  { key: 'tiktok', label: 'TikTok', href: '#', color: '#010101' },
-  { key: 'shopee', label: 'Shopee', href: '#', color: '#EE4D2D' },
-];
 
 const HOW_STEPS = [
   {
@@ -281,33 +272,6 @@ const PRICING = [
   },
 ];
 
-const FOOTER_COLS = [
-  {
-    h: 'Sản phẩm',
-    links: [
-      { label: 'Móc hình chữ nhật', href: '#products' },
-      { label: 'Móc hình vuông', href: '#products' },
-      { label: 'Móc hình tròn', href: '#products' },
-      { label: 'Bộ cặp đôi', href: '#products' },
-    ],
-  },
-  {
-    h: 'Hỗ trợ',
-    links: [
-      { label: 'Hướng dẫn sử dụng', href: '#how' },
-      { label: 'Chính sách không bảo hành', href: '#no-warranty' },
-    ],
-  },
-  {
-    h: 'Kết nối',
-    links: [
-      // { label: 'Instagram', href: '#' },
-      // { label: 'TikTok', href: '#' },
-      // { label: 'Facebook', href: '#' },
-      { label: 'yorxbit@gmail.com', href: 'mailto:yorxbit@gmail.com' },
-    ],
-  },
-];
 
 /* ─── Heart SVG keychain ─── */
 const HeartKey = ({ size = 160 }: { size?: number }) => (
@@ -1005,68 +969,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <footer className="bg-elevated border-border border-t pt-16 pb-8">
-        <div className="mx-auto max-w-[1240px] px-4 sm:px-6">
-          <div className="mb-12 grid gap-8 sm:grid-cols-2 md:grid-cols-[2fr_1fr_1fr_1fr] md:gap-12">
-            <div>
-              <div className="text-primary mb-2 flex items-center gap-2 text-2xl font-bold">
-                <span className="bg-primary h-2 w-2 rounded-full" />
-                Góc Chạm
-              </div>
-              <Paragraph className="!text-content3 !mb-0 max-w-[300px] !text-sm">
-                Móc khóa NFC kỷ niệm cho những khoảnh khắc đáng giữ.
-              </Paragraph>
-            </div>
-            {FOOTER_COLS.map((col) => (
-              <div key={col.h}>
-                <Text className="text-content3 mb-4 block text-[11px] font-semibold tracking-[0.14em] uppercase">
-                  {col.h}
-                </Text>
-                <ul className="m-0 flex list-none flex-col gap-2.5 p-0">
-                  {col.links.map((l) => (
-                    <li key={l.label}>
-                      <a
-                        href={l.href}
-                        className="text-content2 hover:text-primary text-sm transition-colors"
-                      >
-                        {l.label}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
-
-          <div className="border-border bg-surface mb-6 rounded-lg border px-4 py-3">
-            <p className="text-content3 text-xs leading-relaxed">
-              <span className="text-content2 font-semibold">Lưu ý:</span> Website này chỉ dùng để{' '}
-              <span className="font-medium">trưng bày sản phẩm</span>, không thực hiện giao dịch
-              thanh toán trực tuyến. Để đặt hàng, vui lòng truy cập{' '}
-              <a
-                href={'https://tiktok.com/shop'}
-                className="text-primary underline underline-offset-2"
-              >
-                gian hàng chính thức trên TikTok Shop
-              </a>
-              . Nếu có thắc mắc, vui lòng{' '}
-              <a
-                href={'https://tiktok.com/shop'}
-                className="text-primary underline underline-offset-2"
-              >
-                liên hệ với chúng tôi
-              </a>
-              .
-            </p>
-          </div>
-
-          <Divider className="border-border mt-0" />
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <Text className="text-content3">© 2026 Góc Chạm — Móc khóa kỷ niệm NFC.</Text>
-            <Text className="text-content3">Crafted in Vietnam ♥</Text>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }

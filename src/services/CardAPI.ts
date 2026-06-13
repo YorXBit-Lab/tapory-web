@@ -4,6 +4,7 @@ import {
   getDocs,
   updateDoc,
   serverTimestamp,
+  increment,
   collection,
   addDoc,
   query,
@@ -103,17 +104,12 @@ export const CardAPI = {
       isOwnerView,
     });
 
-    // Best-effort increment on cards doc (may not exist yet)
+    // Atomic increment — no extra read, no race condition
     try {
-      const ref = doc(db, CARDS, cardId);
-      const snap = await getDoc(ref);
-      if (snap.exists()) {
-        const cur = snap.data().stats?.totalViews ?? 0;
-        await updateDoc(ref, {
-          'stats.totalViews': cur + 1,
-          'stats.lastViewedAt': serverTimestamp(),
-        });
-      }
+      await updateDoc(doc(db, CARDS, cardId), {
+        'stats.totalViews': increment(1),
+        'stats.lastViewedAt': serverTimestamp(),
+      });
     } catch {
       // cards doc might not exist — fine
     }

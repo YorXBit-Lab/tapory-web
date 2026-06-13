@@ -19,20 +19,11 @@ import {
   useDeletePurchaseOrder,
 } from '@/hooks/purchaseOrder';
 import { useComponents, useCreateComponent } from '@/hooks/component';
-import { uploadProductImage, deleteProductImage } from '@/utils/r2-upload';
+import { uploadProductImage, deleteProductImage, r2KeyFromUrl } from '@/utils/r2-upload';
+import { fmtVnd, fmtDate } from '@/utils/format';
 import type { IPurchaseOrder, IComponent, PurchaseOrderStatus } from '@/configs/types';
 
 const { Text } = Typography;
-const R2_BASE = (process.env.NEXT_PUBLIC_R2_PUBLIC_URL ?? '').replace(/\/$/, '');
-
-function fmtVnd(n: number) {
-  return n.toLocaleString('vi-VN') + 'đ';
-}
-
-function fmtDate(iso?: string) {
-  if (!iso) return '—';
-  return new Date(iso).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
-}
 
 const STATUS_CONFIG: Record<PurchaseOrderStatus, { color: string; label: string }> = {
   planned:  { color: 'default',   label: 'Kế hoạch' },
@@ -348,13 +339,11 @@ function OrderModal({
 
   const handleRemoveImage = async (index: number) => {
     const url = imageUrls[index];
-    if (R2_BASE && url.startsWith(R2_BASE)) {
-      const key = url.slice(R2_BASE.length + 1);
-      if (pendingKeys.includes(key) && user) {
-        const idToken = await user.getIdToken();
-        deleteProductImage(key, idToken);
-        setPendingKeys(prev => prev.filter(k => k !== key));
-      }
+    const key = r2KeyFromUrl(url);
+    if (key && pendingKeys.includes(key) && user) {
+      const idToken = await user.getIdToken();
+      deleteProductImage(key, idToken);
+      setPendingKeys(prev => prev.filter(k => k !== key));
     }
     setImageUrls(prev => prev.filter((_, i) => i !== index));
   };

@@ -85,6 +85,14 @@ export async function uploadPrintPhoto(
   return { url: json.url!, key: json.key! };
 }
 
+const R2_BASE = (process.env.NEXT_PUBLIC_R2_PUBLIC_URL ?? '').replace(/\/$/, '');
+
+/** Lấy R2 object key từ public URL. Trả về null nếu URL không phải R2. */
+export function r2KeyFromUrl(url: string): string | null {
+  if (!R2_BASE || !url.startsWith(R2_BASE)) return null;
+  return url.slice(R2_BASE.length + 1);
+}
+
 /** Best-effort — không throw, chỉ log nếu lỗi */
 export async function deleteProductImage(key: string, idToken: string): Promise<void> {
   try {

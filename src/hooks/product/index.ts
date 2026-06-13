@@ -5,7 +5,7 @@ const PRODUCT_KEY = ['products'];
 
 export const useProducts = () => useFetchList(PRODUCT_KEY, ProductAPI);
 
-export const useCreateProduct = () => useCreateItem(PRODUCT_KEY, ProductAPI, 'Tạo sản phẩm thành công!', 'Tạo sản phẩm thất bại!');
+export const useCreateProduct = () => useCreateItem(PRODUCT_KEY, ProductAPI);
 
 export const useUpdateProduct = () => useUpdateItem(PRODUCT_KEY, ProductAPI);
 

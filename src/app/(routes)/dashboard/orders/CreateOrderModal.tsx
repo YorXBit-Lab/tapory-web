@@ -17,6 +17,7 @@ import { useAllPresetPhotos } from '@/hooks/presetPhoto';
 import { useShippingRates } from '@/hooks/shippingRate';
 import type { IOrderItem } from '@/services/OrderAPI';
 import type { IProduct, IService, IPresetPhoto, IShippingRate, IPrintConfig } from '@/configs/types';
+import { priceFormatter, priceParser } from '@/utils/format';
 
 const { Text } = Typography;
 
@@ -30,13 +31,6 @@ interface FormValues {
 
 interface Props {
   onCreated: (orderId: string) => void;
-}
-
-function priceFormatter(v: number | string | undefined) {
-  return `${v ?? ''}`.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-}
-function priceParser(v: string | undefined) {
-  return Number((v ?? '').replace(/\./g, '')) as 0;
 }
 
 export function CreateOrderModal({ onCreated }: Props) {

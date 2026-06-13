@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 
 export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://goccham.com';
 export const SITE_NAME = 'Góc Chạm';
-export const CONTACT_EMAIL = 'yorxbit@gmail.com';
+export const CONTACT_EMAIL = 'goccham.sg@gmail.com';
 export const ORDER_URL = 'https://tiktok.com/shop';
 export const DEFAULT_OG_IMAGE = '/opengraph-image';
 
@@ -105,3 +105,10 @@ export const websiteJsonLd = {
     'query-input': 'required name=search_term_string',
   },
 };
+
+export const CONTACT_LINKS = [
+  { key: 'zalo',     label: 'Zalo',     href: '#', color: '#0068FF' },
+  { key: 'facebook', label: 'Facebook', href: '#', color: '#1877F2' },
+  { key: 'tiktok',   label: 'TikTok',   href: '#', color: '#010101' },
+  { key: 'shopee',   label: 'Shopee',   href: '#', color: '#EE4D2D' },
+];
