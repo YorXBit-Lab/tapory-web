@@ -118,7 +118,7 @@ function TiktokCard() {
     : 'Chưa sync lần nào';
 
   return (
-    <div className="rounded-lg border border-gray-100 bg-white p-5">
+    <div className="rounded-lg border border-border bg-elevated p-5">
       <div className="mb-4 flex items-center justify-between">
         <div className="flex items-center gap-2.5">
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-black text-white text-sm font-bold">T</div>
@@ -137,7 +137,7 @@ function TiktokCard() {
       </div>
 
       {status?.connected && (
-        <div className="mb-4 rounded-md bg-gray-50 px-3 py-2 text-xs text-gray-500">
+        <div className="mb-4 rounded-md bg-background px-3 py-2 text-xs text-content2">
           {status.shop_id && <span>Shop ID: <code>{status.shop_id}</code> · </span>}
           Sync lần cuối: {lastSync}
         </div>
@@ -167,7 +167,7 @@ function TiktokCard() {
           form={manualForm}
           layout="vertical"
           onFinish={handleSaveToken}
-          className="mt-4 border-t border-gray-100 pt-4"
+          className="mt-4 border-t border-border pt-4"
           initialValues={{ expires_in_hours: 24 }}
         >
           <Form.Item name="access_token" label="Access Token" rules={[{ required: true, message: 'Nhập access token' }]}>
@@ -189,7 +189,7 @@ function TiktokCard() {
       )}
 
       {status?.connected && (
-        <p className="mt-3 text-[11px] text-gray-400">
+        <p className="mt-3 text-[11px] text-content3">
           Đơn TikTok được đánh dấu <code>source: tiktok</code> — không thể sửa từ dashboard. Sản phẩm tên có chứa "NFC" / "móc khóa" sẽ tự nhận diện có chip NFC.
         </p>
       )}
@@ -204,7 +204,7 @@ function ComingSoonItem({ icon, name, desc }: { icon: React.ReactNode; name: str
   return (
     <div className="flex items-center justify-between py-3">
       <div className="flex items-center gap-3">
-        <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-gray-100 text-base">
+        <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-elevated text-base">
           {icon}
         </div>
         <div>
@@ -432,7 +432,7 @@ export default function SettingsPage() {
         <Title level={5} className="mb-3">Tích hợp sàn thương mại</Title>
         <div className="space-y-3">
           <TiktokCard />
-          <div className="rounded-lg border border-dashed border-gray-200 bg-gray-50 p-5">
+          <div className="rounded-lg border border-dashed border-border bg-elevated p-5">
             <ComingSoonItem icon="🛍️" name="Shopee" desc="Đồng bộ đơn hàng từ Shopee Mall" />
             <Divider style={{ margin: 0 }} />
             <ComingSoonItem icon="📦" name="Lazada" desc="Đồng bộ đơn hàng từ Lazada" />

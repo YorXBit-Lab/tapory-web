@@ -7,6 +7,7 @@ import { uploadPrintPhoto } from '@/utils/r2-upload';
 import type { IPrintConfig, IPrintPhotoSlot } from '@/configs/types';
 import { PrintPhotoEditor, cfgToDims } from './PrintPhotoEditor';
 import type { PhotoEditorState } from './PrintPhotoEditorCanvas';
+import { Spinner } from '@/components/ui/Spinner';
 
 const { Text } = Typography;
 
@@ -38,7 +39,7 @@ function ShapePlaceholder({ cfg }: { cfg: IPrintConfig }) {
 
   return (
     <div
-      className={`flex flex-shrink-0 items-center justify-center border-2 border-dashed border-amber-300 bg-amber-50 text-[10px] font-medium text-amber-400 ${isCircle ? 'rounded-full' : 'rounded-md'}`}
+      className={`flex flex-shrink-0 items-center justify-center border-2 border-dashed border-warning/50 bg-warning/5 text-[10px] font-medium text-warning ${isCircle ? 'rounded-full' : 'rounded-md'}`}
       style={{ width: W, height: H }}
     >
       {label}
@@ -122,34 +123,34 @@ export default function UploadForm({ orderId, customerName, printItems, initialP
   const allDone = uploadedCount >= totalSlots;
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-6">
+    <div className="min-h-screen bg-background p-4 md:p-6">
       <div className="mx-auto max-w-xl space-y-5">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">Upload ảnh in ấn</h1>
-          <p className="text-sm text-gray-500">
+          <h1 className="text-2xl font-bold text-content1">Upload ảnh in ấn</h1>
+          <p className="text-sm text-content2">
             Đơn <span className="font-mono font-semibold">{orderId}</span> — {customerName}
           </p>
         </div>
 
         {allDone && (
-          <div className="flex items-center gap-2 rounded-xl bg-green-50 p-4 text-green-700 shadow-sm">
+          <div className="flex items-center gap-2 rounded-xl bg-success/10 p-4 text-success shadow-sm">
             <CheckCircleOutlined className="text-xl" />
-            <Text className="text-sm text-green-700">Tất cả ảnh đã được gửi thành công. Cảm ơn bạn!</Text>
+            <Text className="text-sm text-success">Tất cả ảnh đã được gửi thành công. Cảm ơn bạn!</Text>
           </div>
         )}
 
         <div className="space-y-4">
           {printItems.map((item) => (
-            <section key={item.itemIndex} className="rounded-xl bg-white p-5 shadow-sm">
+            <section key={item.itemIndex} className="rounded-xl bg-elevated p-5 shadow-sm">
               <div className="mb-4 flex items-start gap-4">
                 <ShapePlaceholder cfg={item.printConfig} />
                 <div className="min-w-0">
-                  <p className="font-semibold text-gray-800">{item.productName}</p>
-                  <p className="mt-0.5 text-xs text-gray-500">{shapeLabel(item.printConfig)}</p>
-                  <p className="mt-0.5 text-xs text-gray-400">
+                  <p className="font-semibold text-content1">{item.productName}</p>
+                  <p className="mt-0.5 text-xs text-content2">{shapeLabel(item.printConfig)}</p>
+                  <p className="mt-0.5 text-xs text-content3">
                     {item.quantity > 1 ? `${item.quantity} sản phẩm · ` : ''}In 2 mặt — upload Mặt A và Mặt B, hoặc dùng cùng 1 ảnh
                   </p>
-                  <div className="mt-1.5 text-xs font-medium text-amber-600">
+                  <div className="mt-1.5 text-xs font-medium text-warning">
                     {uploadedCount}/{totalSlots} ảnh đã upload
                   </div>
                 </div>
@@ -171,7 +172,7 @@ export default function UploadForm({ orderId, customerName, printItems, initialP
                         </Text>
                       )}
 
-                      <label className="mb-2 flex cursor-pointer items-center gap-2 text-xs text-gray-500 select-none">
+                      <label className="mb-2 flex cursor-pointer items-center gap-2 text-xs text-content2 select-none">
                         <input
                           type="checkbox"
                           checked={same}
@@ -232,7 +233,7 @@ export default function UploadForm({ orderId, customerName, printItems, initialP
           ))}
         </div>
 
-        <p className="text-center text-xs text-gray-400">
+        <p className="text-center text-xs text-content3">
           Ảnh gửi trực tiếp cho bên in ấn · JPEG · PNG · WebP · tối đa 10 MB
         </p>
       </div>
@@ -282,12 +283,12 @@ function UploadSlot({
           type="button"
           onClick={onTrigger}
           disabled={isUploading}
-          className={`flex flex-col items-center justify-center gap-1 border-2 border-dashed border-gray-300 bg-gray-50 text-gray-400 transition-colors hover:border-blue-400 hover:text-blue-400 disabled:opacity-50 ${isCircle ? 'rounded-full' : 'rounded-md'}`}
+          className={`flex flex-col items-center justify-center gap-1 border-2 border-dashed border-border bg-elevated text-content3 transition-colors hover:border-primary hover:text-primary disabled:opacity-50 ${isCircle ? 'rounded-full' : 'rounded-md'}`}
           style={{ width: W, height: H }}
         >
           {isUploading
-            ? <div className="h-5 w-5 animate-spin rounded-full border-2 border-gray-200 border-t-blue-500" />
-            : <><UploadOutlined style={{ fontSize: 18 }} /><span className="text-[10px]">Chọn ảnh</span></>
+            ? <Spinner size="sm" />
+            : <><UploadOutlined className="text-lg" /><span className="text-[10px]">Chọn ảnh</span></>
           }
         </button>
       )}
@@ -297,12 +298,12 @@ function UploadSlot({
         {hasImage && (
           <>
             <button type="button" onClick={() => zoom(1 / 1.15)}
-              className="flex h-5 w-5 items-center justify-center rounded-full border border-gray-200 bg-white text-xs text-gray-500 shadow-sm hover:bg-gray-50">
+              className="flex h-5 w-5 items-center justify-center rounded-full border border-border bg-background text-xs text-content2 shadow-sm hover:bg-elevated">
               −
             </button>
-            <span className="text-[10px] text-gray-400">Kéo · zoom</span>
+            <span className="text-[10px] text-content3">Kéo · zoom</span>
             <button type="button" onClick={() => zoom(1.15)}
-              className="flex h-5 w-5 items-center justify-center rounded-full border border-gray-200 bg-white text-xs text-gray-500 shadow-sm hover:bg-gray-50">
+              className="flex h-5 w-5 items-center justify-center rounded-full border border-border bg-background text-xs text-content2 shadow-sm hover:bg-elevated">
               +
             </button>
           </>

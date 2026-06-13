@@ -279,8 +279,8 @@ function PhoneGate({
 
 function LoadingScreen() {
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-white">
-      <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-100 border-t-indigo-500" />
+    <div className="fixed inset-0 flex items-center justify-center bg-background">
+      <div className="h-8 w-8 animate-spin rounded-full border-2 border-border border-t-primary" />
     </div>
   );
 }

@@ -88,8 +88,8 @@ function DashboardInner({ children }: { children: React.ReactNode }) {
 
   if (isLoading) {
     return (
-      <div className="flex h-screen items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-100 border-t-indigo-500" />
+      <div className="flex h-screen items-center justify-center bg-background">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-border border-t-primary" />
       </div>
     );
   }
@@ -210,7 +210,7 @@ function DashboardInner({ children }: { children: React.ReactNode }) {
             <button
               onClick={() => logout().then(() => router.replace('/dashboard/login'))}
               title="Đăng xuất"
-              className="text-gray-400 hover:text-gray-600"
+              className="text-content3 hover:text-content1"
             >
               <svg
                 width="14"

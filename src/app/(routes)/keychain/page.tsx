@@ -26,7 +26,7 @@ function LayoutInfo({ template }: { template: KeychainTemplate }) {
   const cols   = Math.max(1, Math.floor((A4_W_PT - 2 * margin + gap) / (itemW + gap)))
   const rows   = Math.max(1, Math.floor((A4_H_PT - 2 * margin + gap) / (itemH + gap)))
   return (
-    <p className="text-xs text-gray-400">
+    <p className="text-xs text-content3">
       {template.widthCm}×{template.heightCm} cm · gap {gapMm}mm →&nbsp;
       {cols}×{rows} = <strong>{cols * rows}</strong> cái / trang A4
     </p>
@@ -69,30 +69,28 @@ export default function KeychainPage() {
 
   const readyCount = unprintedImages.filter((i) => i.editorState !== null).length
 
-  // Summary of how many images per template type
   const templateSummary = KEYCHAIN_TEMPLATES
     .map((t) => ({ t, count: images.filter((i) => i.template.id === t.id && !i.printed).length }))
     .filter(({ count }) => count > 0)
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-6">
+    <div className="min-h-screen bg-background p-4 md:p-6">
       <div className="mx-auto max-w-4xl space-y-5">
 
         {/* Header */}
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">In ảnh móc khóa</h1>
-          <p className="text-sm text-gray-500">Upload ảnh · Chọn template từng ảnh · Chỉnh sửa · Xuất PDF 300 DPI</p>
+          <h1 className="text-2xl font-bold text-content1">In ảnh móc khóa</h1>
+          <p className="text-sm text-content2">Upload ảnh · Chọn template từng ảnh · Chỉnh sửa · Xuất PDF 300 DPI</p>
         </div>
 
         {/* Step 1 — Upload + default template */}
-        <section className="rounded-xl bg-white p-6 shadow-sm">
-          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-500">
+        <section className="rounded-xl bg-elevated p-6 shadow-sm">
+          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-content2">
             1. Upload ảnh
           </h2>
 
-          {/* Default template for new uploads */}
           <div className="mb-3 flex flex-wrap items-center gap-2">
-            <span className="text-xs text-gray-400">Template mặc định khi upload:</span>
+            <span className="text-xs text-content3">Template mặc định khi upload:</span>
             {KEYCHAIN_TEMPLATES.map((t) => (
               <button
                 key={t.id}
@@ -100,8 +98,8 @@ export default function KeychainPage() {
                 className={clsx(
                   'rounded-md border px-3 py-1 text-xs font-medium transition',
                   defaultTemplate.id === t.id
-                    ? 'border-blue-500 bg-blue-50 text-blue-700'
-                    : 'border-gray-200 text-gray-500 hover:border-gray-300',
+                    ? 'border-primary bg-primary/10 text-primary'
+                    : 'border-border text-content2 hover:border-primary/50',
                 )}
               >
                 {t.label}
@@ -110,14 +108,14 @@ export default function KeychainPage() {
           </div>
 
           <div
-            className="flex cursor-pointer flex-col items-center gap-2 rounded-xl border-2 border-dashed border-gray-300 p-8 transition hover:border-blue-400 hover:bg-blue-50/30"
+            className="flex cursor-pointer flex-col items-center gap-2 rounded-xl border-2 border-dashed border-border p-8 transition hover:border-primary hover:bg-primary/5"
             onClick={() => inputRef.current?.click()}
             onDragOver={(e) => e.preventDefault()}
             onDrop={(e) => { e.preventDefault(); addImages(Array.from(e.dataTransfer.files), defaultTemplate) }}
           >
-            <Upload size={28} className="text-gray-400" />
-            <p className="text-sm text-gray-500">Kéo thả hoặc click để chọn nhiều ảnh</p>
-            <p className="text-xs text-gray-400">JPG · PNG · WEBP</p>
+            <Upload size={28} className="text-content3" />
+            <p className="text-sm text-content2">Kéo thả hoặc click để chọn nhiều ảnh</p>
+            <p className="text-xs text-content3">JPG · PNG · WEBP</p>
             <input
               ref={inputRef}
               type="file"
@@ -137,12 +135,12 @@ export default function KeychainPage() {
                       ? setSelectedIds(new Set())
                       : setSelectedIds(new Set(images.map((i) => i.id)))
                   }
-                  className="text-xs text-violet-600 hover:underline"
+                  className="text-xs text-primary hover:underline"
                 >
                   {selectedIds.size === images.length ? 'Bỏ chọn tất cả' : 'Chọn tất cả'}
                 </button>
-                <span className="text-xs text-gray-300">·</span>
-                <span className="text-xs text-gray-400">{images.length} ảnh</span>
+                <span className="text-xs text-content4">·</span>
+                <span className="text-xs text-content3">{images.length} ảnh</span>
               </div>
               <div className="flex flex-wrap gap-2">
                 {images.map((img) => {
@@ -153,10 +151,10 @@ export default function KeychainPage() {
                       className={clsx(
                         'relative cursor-pointer overflow-hidden rounded-lg border-2 transition',
                         isSelected
-                          ? 'border-violet-500 ring-2 ring-violet-200'
+                          ? 'border-primary ring-2 ring-primary/30'
                           : activeId === img.id
-                            ? 'border-blue-500 ring-2 ring-blue-200'
-                            : 'border-transparent hover:border-gray-300',
+                            ? 'border-primary/60 ring-2 ring-primary/20'
+                            : 'border-transparent hover:border-border',
                       )}
                       style={{ width: 72, height: 72 }}
                       onClick={() => setActiveId(img.id)}
@@ -169,7 +167,7 @@ export default function KeychainPage() {
                         className={clsx(
                           'absolute left-0.5 top-0.5 flex h-4 w-4 items-center justify-center rounded border transition',
                           isSelected
-                            ? 'border-violet-500 bg-violet-500 text-white'
+                            ? 'border-primary bg-primary text-background'
                             : 'border-white/70 bg-black/30 text-transparent hover:bg-black/50',
                         )}
                         onClick={(e) => { e.stopPropagation(); toggleSelect(img.id) }}
@@ -187,7 +185,7 @@ export default function KeychainPage() {
                           className={clsx(
                             'rounded px-1 text-[9px] font-bold leading-4 transition',
                             img.duplex
-                              ? 'bg-yellow-400 text-black'
+                              ? 'bg-warning text-background'
                               : 'text-white/60 hover:text-white',
                           )}
                           onClick={(e) => { e.stopPropagation(); toggleDuplex(img.id) }}
@@ -199,7 +197,7 @@ export default function KeychainPage() {
 
                       {img.printed && (
                         <div className="absolute inset-0 flex items-center justify-center bg-black/40">
-                          <CheckCircle2 size={20} className="text-green-400" />
+                          <CheckCircle2 size={20} className="text-success" />
                         </div>
                       )}
                       <button
@@ -215,22 +213,22 @@ export default function KeychainPage() {
 
               {/* Batch action bar */}
               {selectedIds.size > 0 && (
-                <div className="flex flex-wrap items-center gap-2 rounded-lg bg-violet-50 px-3 py-2 text-sm">
-                  <span className="font-medium text-violet-700">{selectedIds.size} ảnh đã chọn</span>
-                  <span className="text-violet-300">·</span>
-                  <span className="text-violet-500">Áp dụng scale:</span>
+                <div className="flex flex-wrap items-center gap-2 rounded-lg bg-primary/10 px-3 py-2 text-sm">
+                  <span className="font-medium text-primary">{selectedIds.size} ảnh đã chọn</span>
+                  <span className="text-content3">·</span>
+                  <span className="text-content2">Áp dụng scale:</span>
                   {(['cover', 'contain', 'stretch'] as FitMode[]).map((mode) => (
                     <button
                       key={mode}
                       onClick={() => handleBatchFit(mode)}
-                      className="rounded-md border border-violet-300 bg-white px-2.5 py-0.5 text-xs font-medium text-violet-700 transition hover:bg-violet-100"
+                      className="rounded-md border border-primary/30 bg-background px-2.5 py-0.5 text-xs font-medium text-primary transition hover:bg-primary/10"
                     >
                       {FIT_LABELS[mode]}
                     </button>
                   ))}
                   <button
                     onClick={() => setSelectedIds(new Set())}
-                    className="ml-auto text-violet-400 hover:text-violet-600"
+                    className="ml-auto text-content3 hover:text-content1"
                   >
                     <X size={14} />
                   </button>
@@ -240,16 +238,15 @@ export default function KeychainPage() {
           )}
         </section>
 
-        {/* Step 2 — Editor (template selector is per image, inside this section) */}
+        {/* Step 2 — Editor */}
         {activeImage ? (
-          <section className="rounded-xl bg-white p-6 shadow-sm">
-            <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-gray-500">
+          <section className="rounded-xl bg-elevated p-6 shadow-sm">
+            <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-content2">
               2. Chỉnh sửa ảnh
             </h2>
 
-            {/* Per-image template selector */}
             <div className="mb-4 flex flex-wrap items-center gap-2">
-              <span className="text-xs text-gray-400">Khung ảnh này:</span>
+              <span className="text-xs text-content3">Khung ảnh này:</span>
               {KEYCHAIN_TEMPLATES.map((t) => (
                 <button
                   key={t.id}
@@ -257,8 +254,8 @@ export default function KeychainPage() {
                   className={clsx(
                     'rounded-lg border-2 px-3 py-1.5 text-sm font-medium transition',
                     activeImage.template.id === t.id
-                      ? 'border-blue-500 bg-blue-50 text-blue-700'
-                      : 'border-gray-200 text-gray-600 hover:border-gray-300',
+                      ? 'border-primary bg-primary/10 text-primary'
+                      : 'border-border text-content2 hover:border-primary/50',
                   )}
                 >
                   {t.label}
@@ -275,31 +272,30 @@ export default function KeychainPage() {
             />
           </section>
         ) : images.length > 0 ? (
-          <section className="rounded-xl bg-white p-6 shadow-sm">
-            <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-500">
+          <section className="rounded-xl bg-elevated p-6 shadow-sm">
+            <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-content2">
               2. Chỉnh sửa ảnh
             </h2>
-            <p className="text-sm text-gray-400">Chọn một ảnh ở trên để bắt đầu chỉnh sửa</p>
+            <p className="text-sm text-content3">Chọn một ảnh ở trên để bắt đầu chỉnh sửa</p>
           </section>
         ) : null}
 
         {/* Step 3 — Export */}
         {images.length > 0 && (
-          <section className="rounded-xl bg-white p-6 shadow-sm">
-            <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-gray-500">
+          <section className="rounded-xl bg-elevated p-6 shadow-sm">
+            <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-content2">
               3. Xuất PDF
             </h2>
 
-            {/* Summary per template */}
             {templateSummary.length > 0 && (
               <div className="mb-4 flex flex-wrap gap-2">
                 {templateSummary.map(({ t, count }) => (
-                  <span key={t.id} className="rounded-md bg-gray-100 px-2 py-1 text-xs text-gray-600">
+                  <span key={t.id} className="rounded-md bg-divider px-2 py-1 text-xs text-content2">
                     {t.label}: <strong>{count}</strong> ảnh
                   </span>
                 ))}
                 {templateSummary.length > 1 && (
-                  <span className="text-xs text-gray-400 self-center">→ xuất thành {templateSummary.length} nhóm trang riêng</span>
+                  <span className="self-center text-xs text-content3">→ xuất thành {templateSummary.length} nhóm trang riêng</span>
                 )}
               </div>
             )}
@@ -308,7 +304,7 @@ export default function KeychainPage() {
               <button
                 onClick={() => exportPDF(images, markPrinted)}
                 disabled={readyCount === 0 || exporting}
-                className="flex items-center gap-2 rounded-lg bg-blue-600 px-6 py-3 font-medium text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex items-center gap-2 rounded-lg bg-primary px-6 py-3 font-medium text-background transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {exporting
                   ? <Loader2 size={18} className="animate-spin" />
@@ -321,17 +317,17 @@ export default function KeychainPage() {
               </button>
 
               {images.filter((i) => i.printed).length > 0 && (
-                <span className="text-sm text-green-600">
+                <span className="text-sm text-success">
                   ✓ {images.filter((i) => i.printed).length} ảnh đã in
                 </span>
               )}
               {unprintedImages.length === 0 && images.length > 0 && (
-                <span className="text-sm font-medium text-green-600">Tất cả đã in xong!</span>
+                <span className="text-sm font-medium text-success">Tất cả đã in xong!</span>
               )}
             </div>
 
             {readyCount === 0 && unprintedImages.length > 0 && (
-              <p className="mt-2 text-xs text-gray-400">
+              <p className="mt-2 text-xs text-content3">
                 Chọn ảnh và điều chỉnh vị trí trước khi xuất
               </p>
             )}

@@ -38,7 +38,7 @@ export function PrintPhotoEditor({ imageUrl, cfg, state, onChange }: Props) {
 
   return (
     <div
-      className={`overflow-hidden shadow-sm ${isCircle ? 'rounded-full' : 'rounded-md'}`}
+      className={`overflow-hidden shadow-sm ring-1 ring-border ${isCircle ? 'rounded-full' : 'rounded-md'}`}
       style={{ width: W, height: H }}
     >
       <Canvas imageUrl={imageUrl} W={W} H={H} isCircle={isCircle} state={state} onChange={onChange} />

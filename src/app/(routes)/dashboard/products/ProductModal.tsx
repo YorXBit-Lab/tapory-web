@@ -322,7 +322,7 @@ export function ProductModal({ open, initial, services, onClose, onSave }: Produ
           <Input.TextArea rows={2} placeholder="Mô tả ngắn..." />
         </Form.Item>
 
-        <Divider titlePlacement="start" orientationMargin={0} className="!mt-1 !mb-3 !text-xs !text-gray-400">
+        <Divider titlePlacement="start" orientationMargin={0} className="!mt-1 !mb-3 !text-xs !text-content3">
           Giá & Kho
         </Divider>
 
@@ -518,7 +518,7 @@ export function ProductModal({ open, initial, services, onClose, onSave }: Produ
 
             {variants.length > 0 && (
               <>
-                <Divider titlePlacement="start" orientationMargin={0} className="!mt-4 !mb-2 !text-xs !text-gray-400">
+                <Divider titlePlacement="start" orientationMargin={0} className="!mt-4 !mb-2 !text-xs !text-content3">
                   Biến thể ({variants.length}) — tự sinh từ tùy chọn tạo-biến-thể
                 </Divider>
 
@@ -531,7 +531,7 @@ export function ProductModal({ open, initial, services, onClose, onSave }: Produ
 
                 <div className="space-y-2">
                   {variants.map((v) => (
-                    <div key={v.id} className="rounded-lg border border-divider bg-gray-50 p-3">
+                    <div key={v.id} className="rounded-lg border border-divider bg-elevated p-3">
                       <div className="mb-2 flex flex-wrap gap-1">
                         {v.valueNames.map((n, i) => (
                           <Tag key={i} className="text-[10px]">{n || '—'}</Tag>
@@ -585,7 +585,7 @@ export function ProductModal({ open, initial, services, onClose, onSave }: Produ
                         </div>
                       </div>
 
-                      <div className="mt-2 border-t border-gray-200 pt-2">
+                      <div className="mt-2 border-t border-border pt-2">
                         <PrintConfigEditor
                           compact
                           value={v.printConfig ?? { enabled: false }}
@@ -600,7 +600,7 @@ export function ProductModal({ open, initial, services, onClose, onSave }: Produ
           </>
         )}
 
-        <Divider titlePlacement="start" orientationMargin={0} className="!mt-4 !mb-3 !text-xs !text-gray-400">
+        <Divider titlePlacement="start" orientationMargin={0} className="!mt-4 !mb-3 !text-xs !text-content3">
           Linh kiện nền (luôn trừ kho mỗi sản phẩm)
         </Divider>
 
@@ -656,7 +656,7 @@ export function ProductModal({ open, initial, services, onClose, onSave }: Produ
         <Divider
           titlePlacement="start"
           orientationMargin={0}
-          className="!mt-4 !mb-3 !text-xs !text-gray-400"
+          className="!mt-4 !mb-3 !text-xs !text-content3"
         >
           Ảnh mẫu in sẵn
         </Divider>
@@ -672,7 +672,7 @@ export function ProductModal({ open, initial, services, onClose, onSave }: Produ
         <Divider
           titlePlacement="start"
           orientationMargin={0}
-          className="!mt-2 !mb-3 !text-xs !text-gray-400"
+          className="!mt-2 !mb-3 !text-xs !text-content3"
         >
           Dịch vụ cộng thêm
         </Divider>
@@ -696,12 +696,12 @@ export function ProductModal({ open, initial, services, onClose, onSave }: Produ
                   }
                   className={`flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs transition-colors ${
                     selected
-                      ? 'border-blue-400 bg-blue-50 text-blue-700'
-                      : 'border-gray-200 bg-white text-gray-600 hover:border-gray-400'
+                      ? 'border-primary bg-primary/10 text-primary'
+                      : 'border-border bg-background text-content2 hover:border-primary/50'
                   }`}
                 >
                   <span>{service.name}</span>
-                  <span className={selected ? 'text-blue-500' : 'text-gray-400'}>
+                  <span className={selected ? 'text-primary' : 'text-content3'}>
                     +{service.price.toLocaleString('vi-VN')}đ
                   </span>
                 </button>
@@ -713,7 +713,7 @@ export function ProductModal({ open, initial, services, onClose, onSave }: Produ
         <Divider
           titlePlacement="start"
           orientationMargin={0}
-          className="!mt-2 !mb-3 !text-xs !text-gray-400"
+          className="!mt-2 !mb-3 !text-xs !text-content3"
         >
           Bài viết chi tiết
         </Divider>

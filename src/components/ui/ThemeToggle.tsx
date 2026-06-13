@@ -13,7 +13,7 @@ export function ThemeToggle() {
   return (
     <button
       onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
-      className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors text-gray-600 dark:text-gray-400"
+      className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-foreground/5 transition-colors text-content2"
       aria-label="Chuyển chế độ sáng/tối"
     >
       {resolvedTheme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}

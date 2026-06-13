@@ -183,7 +183,7 @@ export default function MemoriesPage() {
 
         <div className="flex flex-wrap items-center justify-between gap-2">
           <Input
-            prefix={<SearchOutlined className="text-gray-400" />}
+            prefix={<SearchOutlined className="text-content3" />}
             placeholder="Tìm khách hàng, tiêu đề, link..."
             allowClear
             onChange={e => setSearch(e.target.value)}
@@ -191,16 +191,16 @@ export default function MemoriesPage() {
             style={{ width: 280 }}
           />
           <div className="flex items-center gap-2">
-            <span className="text-xs text-gray-400">Hiển thị</span>
+            <span className="text-xs text-content3">Hiển thị</span>
             <input
               type="number"
               min={1}
               max={500}
               value={pageSize}
               onChange={e => setPageSize(Number(e.target.value) || 10)}
-              className="w-14 rounded border border-gray-200 px-2 py-0.5 text-center text-xs"
+              className="w-14 rounded border border-border px-2 py-0.5 text-center text-xs"
             />
-            <span className="text-xs text-gray-400">dòng</span>
+            <span className="text-xs text-content3">dòng</span>
           </div>
         </div>
 
@@ -221,13 +221,13 @@ export default function MemoriesPage() {
       </div>
 
       {templateStats.length > 0 && (
-        <div className="rounded-lg border border-gray-100 bg-white p-4">
-          <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-gray-400">Template phổ biến</p>
+        <div className="rounded-lg border border-border bg-elevated p-4">
+          <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-content3">Template phổ biến</p>
           <div className="space-y-2.5">
             {templateStats.map(({ id, label, count, color }) => (
               <div key={id} className="flex items-center gap-3">
                 <Text type="secondary" className="w-36 flex-shrink-0 text-xs">{label}</Text>
-                <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-gray-100">
+                <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-elevated">
                   <div className="h-full rounded-full" style={{ width: `${(count / maxCount) * 100}%`, background: color }} />
                 </div>
                 <Text strong className="w-6 text-right text-xs">{count}</Text>

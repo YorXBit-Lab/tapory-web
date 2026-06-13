@@ -288,8 +288,8 @@ export function CreateOrderModal({ onCreated }: Props) {
       >
         <div className="space-y-3 py-2">
           <Text>Đơn có sản phẩm cần in ảnh. Gửi link sau cho khách hàng để họ upload ảnh:</Text>
-          <div className="flex items-center gap-2 rounded-lg border border-dashed border-blue-300 bg-blue-50 p-3">
-            <Text className="flex-1 break-all font-mono text-xs text-blue-700">{printUploadLink}</Text>
+          <div className="flex items-center gap-2 rounded-lg border border-dashed border-primary/50 bg-primary/5 p-3">
+            <Text className="flex-1 break-all font-mono text-xs text-primary">{printUploadLink}</Text>
             <Button
               size="small"
               icon={<CopyOutlined />}
@@ -367,7 +367,7 @@ export function CreateOrderModal({ onCreated }: Props) {
                     : null;
 
                   return (
-                    <div key={key} className="rounded-lg border border-divider bg-gray-50 p-3">
+                    <div key={key} className="rounded-lg border border-divider bg-elevated p-3">
 
                       {/* Dropdown chọn từ catalog */}
                       {productList.length > 0 && (
@@ -475,7 +475,7 @@ export function CreateOrderModal({ onCreated }: Props) {
                             const isSelected = !!(itemAddonsMap[name]?.[service.id]);
                             return (
                               <Tooltip key={service.id} title={`+${service.price.toLocaleString('vi-VN')}đ`}>
-                                <div className="flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-1.5 py-1">
+                                <div className="flex items-center gap-1.5 rounded-full border border-border bg-background px-1.5 py-1">
                                   {service.imageUrl && (
                                     <img
                                       src={service.imageUrl}
@@ -508,8 +508,8 @@ export function CreateOrderModal({ onCreated }: Props) {
                               onClick={() => setItemPresetMap(prev => { const n = { ...prev }; delete n[name]; return n; })}
                               className={`flex h-14 w-14 items-center justify-center rounded-lg border-2 text-[10px] transition-colors ${
                                 !itemPresetMap[name]
-                                  ? 'border-blue-400 bg-blue-50 text-blue-600'
-                                  : 'border-gray-200 bg-white text-gray-400 hover:border-gray-400'
+                                  ? 'border-primary bg-primary/10 text-primary'
+                                  : 'border-border bg-background text-content3 hover:border-primary/50'
                               }`}
                             >
                               Tự<br />upload
@@ -523,13 +523,13 @@ export function CreateOrderModal({ onCreated }: Props) {
                                 onClick={() => setItemPresetMap(prev => ({ ...prev, [name]: preset.url }))}
                                 className={`relative h-14 w-14 overflow-hidden rounded-lg border-2 transition-colors ${
                                   itemPresetMap[name] === preset.url
-                                    ? 'border-blue-400'
-                                    : 'border-gray-200 hover:border-gray-400'
+                                    ? 'border-primary'
+                                    : 'border-border hover:border-primary/50'
                                 }`}
                               >
                                 <img src={preset.url} alt="preset" className="h-full w-full object-cover" />
                                 {itemPresetMap[name] === preset.url && (
-                                  <div className="absolute inset-0 flex items-center justify-center bg-blue-400/30">
+                                  <div className="absolute inset-0 flex items-center justify-center bg-primary/30">
                                     <span className="text-white text-lg font-bold">✓</span>
                                   </div>
                                 )}
@@ -662,8 +662,8 @@ export function CreateOrderModal({ onCreated }: Props) {
                   onClick={() => setSelectedShipping(null)}
                   className={`rounded-lg border px-3 py-1.5 text-xs transition-colors ${
                     !selectedShipping
-                      ? 'border-blue-400 bg-blue-50 text-blue-700'
-                      : 'border-gray-200 text-gray-500 hover:border-gray-400'
+                      ? 'border-primary bg-primary/10 text-primary'
+                      : 'border-border text-content2 hover:border-primary/50'
                   }`}
                 >
                   Chưa tính phí
@@ -675,15 +675,15 @@ export function CreateOrderModal({ onCreated }: Props) {
                     onClick={() => setSelectedShipping(rate)}
                     className={`rounded-lg border px-3 py-1.5 text-xs transition-colors ${
                       selectedShipping?.id === rate.id
-                        ? 'border-blue-400 bg-blue-50 text-blue-700'
-                        : 'border-gray-200 text-gray-500 hover:border-gray-400'
+                        ? 'border-primary bg-primary/10 text-primary'
+                        : 'border-border text-content2 hover:border-primary/50'
                     }`}
                   >
                     <span className="font-medium">{rate.name}</span>
-                    <span className="ml-1.5 text-gray-400">
+                    <span className="ml-1.5 text-content3">
                       {rate.price === 0 ? 'Miễn phí' : `+${rate.price.toLocaleString('vi-VN')}đ`}
                     </span>
-                    {rate.estimatedDays && <span className="ml-1 text-gray-400">· {rate.estimatedDays}</span>}
+                    {rate.estimatedDays && <span className="ml-1 text-content3">· {rate.estimatedDays}</span>}
                   </button>
                 ))}
               </div>
@@ -691,14 +691,14 @@ export function CreateOrderModal({ onCreated }: Props) {
           )}
 
           {/* Tổng */}
-          <div className="mt-3 space-y-1 border-t border-gray-100 pt-3">
+          <div className="mt-3 space-y-1 border-t border-border pt-3">
             {selectedShipping && (
               <>
-                <div className="flex justify-between text-sm text-gray-500">
+                <div className="flex justify-between text-sm text-content2">
                   <span>Tạm tính</span>
                   <span>{totalPrice.toLocaleString('vi-VN')}đ</span>
                 </div>
-                <div className="flex justify-between text-sm text-gray-500">
+                <div className="flex justify-between text-sm text-content2">
                   <span>Vận chuyển ({selectedShipping.name})</span>
                   <span>{selectedShipping.price === 0 ? 'Miễn phí' : `${selectedShipping.price.toLocaleString('vi-VN')}đ`}</span>
                 </div>

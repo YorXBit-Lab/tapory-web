@@ -65,7 +65,7 @@ export function Footer() {
           ))}
         </div>
 
-        <div className="border-border bg-surface mb-6 rounded-lg border px-4 py-3">
+        <div className="border-border bg-elevated mb-6 rounded-lg border px-4 py-3">
           <p className="text-content3 text-xs leading-relaxed">
             <span className="text-content2 font-semibold">Lưu ý:</span> Website này chỉ dùng để{' '}
             <span className="font-medium">trưng bày sản phẩm</span>, không thực hiện giao dịch

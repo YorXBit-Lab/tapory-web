@@ -263,7 +263,7 @@ export default function OrdersPage() {
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex flex-wrap items-center gap-2">
           <Input
-            prefix={<SearchOutlined className="text-gray-400" />}
+            prefix={<SearchOutlined className="text-content3" />}
             placeholder="Tìm mã đơn, khách hàng, SĐT..."
             allowClear
             onChange={e => setSearch(e.target.value)}
@@ -280,16 +280,16 @@ export default function OrdersPage() {
           />
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-xs text-gray-400">Hiển thị</span>
+          <span className="text-xs text-content3">Hiển thị</span>
           <input
             type="number"
             min={1}
             max={500}
             value={pageSize}
             onChange={e => setPageSize(Number(e.target.value) || 10)}
-            className="w-14 rounded border border-gray-200 px-2 py-0.5 text-center text-xs"
+            className="w-14 rounded border border-border px-2 py-0.5 text-center text-xs"
           />
-          <span className="text-xs text-gray-400">dòng</span>
+          <span className="text-xs text-content3">dòng</span>
           <Button size="small" icon={<DownloadOutlined />} onClick={() => exportCsv(visible)}>
             Xuất CSV
           </Button>

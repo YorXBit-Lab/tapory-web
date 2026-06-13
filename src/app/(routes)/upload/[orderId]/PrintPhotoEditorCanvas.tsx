@@ -29,15 +29,14 @@ export function PrintPhotoEditorCanvas({ imageUrl, W, H, isCircle, state, onChan
   const [image, status] = useImage(imageUrl)
   const initialized = useRef(false)
   const onChangeRef = useRef(onChange)
-  onChangeRef.current = onChange
 
+  useEffect(() => { onChangeRef.current = onChange })
   useEffect(() => { initialized.current = false }, [imageUrl])
 
   useEffect(() => {
     if (status !== 'loaded' || !image || initialized.current) return
     initialized.current = true
     onChangeRef.current(computeCover(image.naturalWidth, image.naturalHeight, W, H))
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status, image, W, H])
 
   const handleDragEnd = (e: Konva.KonvaEventObject<DragEvent>) =>
@@ -54,10 +53,9 @@ export function PrintPhotoEditorCanvas({ imageUrl, W, H, isCircle, state, onChan
     onChange({ scale: newScale, x: px - (px - state.x) * ratio, y: py - (py - state.y) * ratio })
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const clipFn = isCircle
-    ? (ctx: any) => { ctx.arc(W / 2, H / 2, W / 2, 0, Math.PI * 2) }
-    : (ctx: any) => { ctx.rect(0, 0, W, H) }
+    ? (ctx: CanvasRenderingContext2D) => { ctx.arc(W / 2, H / 2, W / 2, 0, Math.PI * 2) }
+    : (ctx: CanvasRenderingContext2D) => { ctx.rect(0, 0, W, H) }
 
   return (
     <Stage width={W} height={H} onWheel={handleWheel} style={{ cursor: 'grab', display: 'block' }}>

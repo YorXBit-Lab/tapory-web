@@ -78,7 +78,7 @@ function NfcWriteButton({ card, onWritten }: { card: ICard; onWritten: () => voi
 
   if (status === 'waiting') {
     return (
-      <div className="flex items-center gap-2 text-xs text-blue-500">
+      <div className="flex items-center gap-2 text-xs text-primary">
         <Spin size="small" />
         <span>Đặt chip vào thiết bị…</span>
       </div>
@@ -251,7 +251,7 @@ export default function OrderDetailPage() {
               Xem
             </Link>
           ) : (
-            <span className="cursor-not-allowed text-gray-300">Xem</span>
+            <span className="cursor-not-allowed text-content4">Xem</span>
           )}
           <Link
             href={`/edit/${record.id}${record.templateId ? `?template=${record.templateId}` : ''}`}
@@ -413,7 +413,7 @@ export default function OrderDetailPage() {
           {hasPrintItems && (
             <Descriptions.Item label="Link upload ảnh in" span={3}>
               <div className="flex items-center gap-2">
-                <Text copyable={false} className="font-mono text-xs text-blue-600">
+                <Text copyable={false} className="font-mono text-xs text-primary">
                   {printUploadUrl}
                 </Text>
                 <Button

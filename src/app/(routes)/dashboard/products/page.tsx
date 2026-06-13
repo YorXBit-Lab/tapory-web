@@ -136,7 +136,7 @@ export default function ProductsPage() {
             <Image src={url} alt="product" fill className="object-cover" sizes="40px" unoptimized />
           </div>
         ) : (
-          <div className="flex h-10 w-10 items-center justify-center rounded bg-gray-100 text-lg">📦</div>
+          <div className="flex h-10 w-10 items-center justify-center rounded bg-elevated text-lg">📦</div>
         ),
     },
     {
@@ -258,7 +258,7 @@ export default function ProductsPage() {
           <button className="text-primary hover:underline" onClick={() => openEdit(record)}>
             <EditOutlined /> Sửa
           </button>
-          <span className="text-gray-300">·</span>
+          <span className="text-content4">·</span>
           <Popconfirm
             title="Xóa sản phẩm này?"
             description="Đơn hàng đã tạo sẽ không bị ảnh hưởng."
@@ -298,7 +298,7 @@ export default function ProductsPage() {
           <Button onClick={() => setServiceListOpen(true)}>
             Dịch vụ
             {(services as IService[]).length > 0 && (
-              <span className="ml-1 text-[10px] text-gray-400">({(services as IService[]).length})</span>
+              <span className="ml-1 text-[10px] text-content3">({(services as IService[]).length})</span>
             )}
           </Button>
           <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>
@@ -360,7 +360,7 @@ export default function ProductsPage() {
                   render: (_: unknown, s: IService) => (
                     <div className="flex items-center gap-2">
                       {s.imageUrl && (
-                        <div className="relative h-9 w-9 shrink-0 overflow-hidden rounded border border-gray-100">
+                        <div className="relative h-9 w-9 shrink-0 overflow-hidden rounded border border-border">
                           <Image src={s.imageUrl} alt={s.name} fill className="object-cover" sizes="36px" unoptimized />
                         </div>
                       )}

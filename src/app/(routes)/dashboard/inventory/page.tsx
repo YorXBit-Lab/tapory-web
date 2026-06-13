@@ -125,7 +125,7 @@ function OrderImageUploader({
   return (
     <div className="flex flex-wrap gap-2">
       {imageUrls.map((url, i) => (
-        <div key={url + i} className="group relative h-20 w-20 overflow-hidden rounded-lg border border-gray-200">
+        <div key={url + i} className="group relative h-20 w-20 overflow-hidden rounded-lg border border-border">
           <Image src={url} alt={`Ảnh ${i + 1}`} fill className="object-cover" sizes="80px" unoptimized />
           <button
             type="button"
@@ -139,15 +139,15 @@ function OrderImageUploader({
 
       <button
         type="button"
-        className="flex h-20 w-20 flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 text-gray-400 transition-colors hover:border-blue-400 hover:text-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
+        className="flex h-20 w-20 flex-col items-center justify-center rounded-lg border-2 border-dashed border-border bg-elevated text-content3 transition-colors hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-50"
         onClick={() => inputRef.current?.click()}
         disabled={uploading}
       >
         {uploading ? (
-          <div className="h-5 w-5 animate-spin rounded-full border-2 border-gray-200 border-t-blue-500" />
+          <div className="h-5 w-5 animate-spin rounded-full border-2 border-border border-t-primary" />
         ) : (
           <>
-            <PlusOutlined style={{ fontSize: 18 }} />
+            <PlusOutlined className="text-lg" />
             <span className="mt-1 text-[10px]">Thêm ảnh</span>
           </>
         )}
@@ -189,7 +189,7 @@ function ItemsTable({
       {(fields, { add, remove }, { errors }) => (
         <div className="space-y-2">
           {fields.map(({ key, name }) => (
-            <div key={key} className="grid grid-cols-12 items-start gap-2 rounded-lg border border-gray-200 bg-gray-50 p-2">
+            <div key={key} className="grid grid-cols-12 items-start gap-2 rounded-lg border border-border bg-elevated p-2">
               <Form.Item
                 name={[name, 'componentId']}
                 className="col-span-5 mb-0"
@@ -261,7 +261,7 @@ function ItemsTable({
           </Button>
 
           {itemValues.length > 0 && (
-            <div className="flex justify-end border-t border-gray-200 pt-2">
+            <div className="flex justify-end border-t border-border pt-2">
               <Text strong>
                 Tổng:{' '}
                 {fmtVnd(itemValues.reduce((s, i) => s + (i?.quantity ?? 0) * (i?.unitCost ?? 0), 0))}
@@ -428,7 +428,7 @@ function OrderModal({
             <ItemsTable form={form} components={components} onRequestCreate={handleRequestCreate} />
           </Form.Item>
 
-          <Divider titlePlacement="start" orientationMargin={0} className="!mb-3 !mt-1 !text-xs !text-gray-400">
+          <Divider titlePlacement="start" orientationMargin={0} className="!mb-3 !mt-1 !text-xs !text-content3">
             Ảnh đính kèm (hoá đơn, phiếu giao hàng...)
           </Divider>
 
@@ -465,7 +465,7 @@ function ItemsDetail({ items, imageUrls }: { items: IPurchaseOrder['items']; ima
     <div className="px-8 py-2">
       <table className="w-full text-xs">
         <thead>
-          <tr className="border-b text-left text-gray-500">
+          <tr className="border-b text-left text-content2">
             <th className="pb-1 font-medium">Linh kiện</th>
             <th className="pb-1 text-right font-medium">SL</th>
             <th className="pb-1 text-right font-medium">Đơn giá nhập</th>
@@ -485,12 +485,12 @@ function ItemsDetail({ items, imageUrls }: { items: IPurchaseOrder['items']; ima
       </table>
 
       {imageUrls && imageUrls.length > 0 && (
-        <div className="mt-3 border-t border-gray-100 pt-3">
+        <div className="mt-3 border-t border-border pt-3">
           <Text type="secondary" className="mb-2 block text-xs">Ảnh đính kèm</Text>
           <div className="flex flex-wrap gap-2">
             {imageUrls.map((url, i) => (
               <a key={i} href={url} target="_blank" rel="noopener noreferrer">
-                <div className="relative h-16 w-16 overflow-hidden rounded-lg border border-gray-200 transition-colors hover:border-blue-400">
+                <div className="relative h-16 w-16 overflow-hidden rounded-lg border border-border transition-colors hover:border-primary">
                   <Image src={url} alt={`Ảnh ${i + 1}`} fill className="object-cover" sizes="64px" unoptimized />
                 </div>
               </a>
@@ -694,7 +694,7 @@ export default function InventoryPage() {
                 <button className="text-primary hover:underline" onClick={() => openEdit(record)}>
                   <EditOutlined /> Sửa
                 </button>
-                <span className="text-gray-300">·</span>
+                <span className="text-content4">·</span>
                 <Popconfirm
                   title="Xác nhận đã nhận hàng?"
                   description="Tồn kho sẽ được cộng theo số lượng trong phiếu."
@@ -703,13 +703,13 @@ export default function InventoryPage() {
                   cancelText="Hủy"
                 >
                   <button
-                    className="text-green-600 hover:underline disabled:opacity-50"
+                    className="text-success hover:underline disabled:opacity-50"
                     disabled={confirming === record.id}
                   >
                     <CheckOutlined /> Đã nhận
                   </button>
                 </Popconfirm>
-                <span className="text-gray-300">·</span>
+                <span className="text-content4">·</span>
               </>
             )}
             {!isReceived && (

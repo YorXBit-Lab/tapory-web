@@ -57,7 +57,7 @@ export function PresetPhotoManager({ productId }: { productId: string }) {
     <div>
       <div className="flex flex-wrap gap-2">
         {list.map((preset) => (
-          <div key={preset.id} className="group relative h-20 w-20 overflow-hidden rounded-lg border border-gray-200">
+          <div key={preset.id} className="group relative h-20 w-20 overflow-hidden rounded-lg border border-border">
             <Image src={preset.url} alt="preset" fill className="object-cover" sizes="80px" unoptimized />
             <button
               type="button"
@@ -74,13 +74,13 @@ export function PresetPhotoManager({ productId }: { productId: string }) {
             type="button"
             disabled={uploading}
             onClick={() => inputRef.current?.click()}
-            className="flex h-20 w-20 flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 text-gray-400 transition-colors hover:border-blue-400 hover:text-blue-500 disabled:opacity-50"
+            className="flex h-20 w-20 flex-col items-center justify-center rounded-lg border-2 border-dashed border-border bg-elevated text-content3 transition-colors hover:border-primary hover:text-primary disabled:opacity-50"
           >
             {uploading ? (
-              <div className="h-5 w-5 animate-spin rounded-full border-2 border-gray-200 border-t-blue-500" />
+              <div className="h-5 w-5 animate-spin rounded-full border-2 border-border border-t-primary" />
             ) : (
               <>
-                <PlusOutlined style={{ fontSize: 18 }} />
+                <PlusOutlined className="text-lg" />
                 <span className="mt-1 text-[10px]">Thêm ảnh</span>
               </>
             )}

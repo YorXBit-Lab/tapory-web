@@ -16,9 +16,9 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         className={clsx(
           'inline-flex items-center justify-center rounded-md font-medium transition-colors focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50',
           {
-            'bg-slate-900 text-white hover:bg-slate-800': variant === 'default',
-            'border border-slate-200 bg-white hover:bg-slate-100 hover:text-slate-900': variant === 'outline',
-            'hover:bg-slate-100 hover:text-slate-900': variant === 'ghost',
+            'bg-primary text-background hover:bg-primary/90': variant === 'default',
+            'border border-border bg-background text-content1 hover:bg-elevated': variant === 'outline',
+            'text-content1 hover:bg-elevated': variant === 'ghost',
           },
           {
             'h-10 px-4 py-2 text-sm': size === 'default',

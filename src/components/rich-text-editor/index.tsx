@@ -378,8 +378,8 @@ export default function RichTextEditor({ content, onChange, uploadFn }: RichText
       <EditorContent editor={editor} />
 
       {isUploading && (
-        <div className="mt-2 flex items-center gap-2 text-sm text-blue-600">
-          <div className="h-4 w-4 animate-spin rounded-full border-2 border-blue-600 border-t-transparent" />
+        <div className="mt-2 flex items-center gap-2 text-sm text-primary">
+          <div className="h-4 w-4 animate-spin rounded-full border-2 border-border border-t-primary" />
           Đang tải ảnh lên...
         </div>
       )}

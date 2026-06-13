@@ -155,7 +155,7 @@ export function EditOrderModal({ order, onUpdated, asButton = false }: Props) {
           </Form.Item>
 
           {/* ── Sản phẩm ── */}
-          <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-gray-400">
+          <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-content3">
             Sản phẩm
           </p>
           <Form.List name="items">

@@ -54,20 +54,20 @@ function ImageUploader({
   return (
     <div className="flex items-start gap-3">
       <div
-        className="relative flex h-16 w-16 flex-shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 transition-colors hover:border-blue-400"
+        className="relative flex h-16 w-16 flex-shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-lg border-2 border-dashed border-border bg-elevated transition-colors hover:border-primary"
         onClick={() => inputRef.current?.click()}
       >
         {value ? (
           <Image src={value} alt="linh kiện" fill className="object-cover" sizes="64px" unoptimized />
         ) : (
-          <div className="flex flex-col items-center gap-1 text-gray-400">
+          <div className="flex flex-col items-center gap-1 text-content3">
             <UploadOutlined style={{ fontSize: 18 }} />
             <span className="text-[10px]">Tải ảnh</span>
           </div>
         )}
         {uploading && (
-          <div className="absolute inset-0 flex items-center justify-center bg-white/70">
-            <div className="h-5 w-5 animate-spin rounded-full border-2 border-gray-200 border-t-blue-500" />
+          <div className="absolute inset-0 flex items-center justify-center bg-background/70">
+            <div className="h-5 w-5 animate-spin rounded-full border-2 border-border border-t-primary" />
           </div>
         )}
       </div>
@@ -255,11 +255,11 @@ export default function ComponentsPage() {
       dataIndex: 'name',
       render: (name: string, c) => (
         <div className="flex items-center gap-2.5">
-          <div className="relative h-9 w-9 flex-shrink-0 overflow-hidden rounded-md border border-gray-200 bg-gray-50">
+          <div className="relative h-9 w-9 flex-shrink-0 overflow-hidden rounded-md border border-border bg-elevated">
             {c.imageUrl ? (
               <Image src={c.imageUrl} alt={name} fill className="object-cover" sizes="36px" unoptimized />
             ) : (
-              <span className="flex h-full w-full items-center justify-center text-[10px] text-gray-300">—</span>
+              <span className="flex h-full w-full items-center justify-center text-[10px] text-content4">—</span>
             )}
           </div>
           <div className="min-w-0">
@@ -296,7 +296,7 @@ export default function ComponentsPage() {
           <button className="text-primary hover:underline" onClick={() => { setEditing(c); setModalOpen(true); }}>
             <EditOutlined /> Sửa
           </button>
-          <span className="text-gray-300">·</span>
+          <span className="text-content4">·</span>
           <Popconfirm
             title="Xóa linh kiện này?"
             description="Sản phẩm đang dùng linh kiện này sẽ không trừ kho được."
