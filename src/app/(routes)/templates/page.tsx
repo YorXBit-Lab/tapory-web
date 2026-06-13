@@ -1,15 +1,53 @@
+import type { Metadata } from 'next';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
+import { JsonLd } from '@/components/seo/JsonLd';
 import { TEMPLATE_LIST } from '@/configs/constants';
+import { absoluteUrl, createPageMetadata } from '@/libs/seo';
 import { TemplateCard } from './TemplateCard';
 
-export const metadata = {
-  title: 'Chọn mẫu – Góc Chạm',
+export const metadata: Metadata = createPageMetadata({
+  title: 'Mẫu thiết kế trang kỷ niệm NFC',
+  description:
+    'Chọn mẫu thiết kế trang kỷ niệm Góc Chạm cho sinh nhật, đám cưới, tốt nghiệp, âm nhạc, mạng xã hội và quà tặng cá nhân hóa.',
+  path: '/templates',
+});
+
+const templatesJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'ItemList',
+  name: 'Mẫu thiết kế trang kỷ niệm Góc Chạm',
+  itemListElement: TEMPLATE_LIST.map((tpl, index) => ({
+    '@type': 'ListItem',
+    position: index + 1,
+    name: tpl.name,
+    url: absoluteUrl('/templates'),
+  })),
+};
+
+const breadcrumbJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    {
+      '@type': 'ListItem',
+      position: 1,
+      name: 'Trang chủ',
+      item: absoluteUrl('/'),
+    },
+    {
+      '@type': 'ListItem',
+      position: 2,
+      name: 'Mẫu thiết kế',
+      item: absoluteUrl('/templates'),
+    },
+  ],
 };
 
 export default function TemplatesPage() {
   return (
     <>
+      <JsonLd data={[templatesJsonLd, breadcrumbJsonLd]} />
       <Header />
       <main className="flex-1">
         {/* Hero */}

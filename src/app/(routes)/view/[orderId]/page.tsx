@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { getAdminDb } from '@/libs/firebase-admin';
 import { FIRESTORE_COLLECTIONS, TEMPLATES } from '@/configs/constants';
+import { noIndexRobots } from '@/libs/seo';
 import { ViewClient } from './ViewClient';
 
 /* ── Dynamic OpenGraph metadata ─────────────────────────────────────────────── */
@@ -18,6 +19,7 @@ export async function generateMetadata(
       return {
         title: 'Góc Chạm',
         description: 'Trang kỷ niệm NFC cá nhân',
+        robots: noIndexRobots,
       };
     }
 
@@ -54,11 +56,13 @@ export async function generateMetadata(
         description,
         images:      [ogImageUrl],
       },
+      robots: noIndexRobots,
     };
   } catch {
     return {
       title: 'Góc Chạm',
       description: 'Trang kỷ niệm NFC cá nhân',
+      robots: noIndexRobots,
     };
   }
 }

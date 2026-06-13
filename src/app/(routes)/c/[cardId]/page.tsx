@@ -1,32 +1,33 @@
-'use client';
+import type { Metadata } from 'next';
+import { redirect } from 'next/navigation';
+import { FIRESTORE_COLLECTIONS } from '@/configs/constants';
+import { getAdminDb } from '@/libs/firebase-admin';
+import { noIndexRobots } from '@/libs/seo';
 
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { CardAPI } from '@/services/CardAPI';
+export const runtime = 'nodejs';
 
-export default function NfcRedirectPage({ params }: { params: { cardId: string } }) {
-  const { cardId } = params;
-  const router = useRouter();
+export const metadata: Metadata = {
+  title: 'Đang mở Góc Chạm',
+  robots: noIndexRobots,
+};
 
-  useEffect(() => {
-    CardAPI.getOne(cardId).then((card) => {
-      if (!card || !card.hasContent) {
-        router.replace(`/edit/${cardId}`);
-      } else if (card.status === 'locked' || card.status === 'expired') {
-        router.replace(`/view/${cardId}`);
-      } else {
-        router.replace(`/view/${cardId}`);
-      }
-    }).catch(() => {
-      // Card doc not found → treat as new card
-      router.replace(`/edit/${cardId}`);
-    });
-  }, [cardId, router]);
+export default async function NfcRedirectPage({
+  params,
+}: {
+  params: Promise<{ cardId: string }>;
+}) {
+  const { cardId } = await params;
 
-  return (
-    <div className="fixed inset-0 flex flex-col items-center justify-center gap-3 bg-white">
-      <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-100 border-t-indigo-500" />
-      <p className="text-sm text-gray-400">Đang tải…</p>
-    </div>
-  );
+  try {
+    const snap = await getAdminDb().collection(FIRESTORE_COLLECTIONS.CARDS).doc(cardId).get();
+    const card = snap.exists ? snap.data() : null;
+
+    if (!card || !card.hasContent) {
+      redirect(`/edit/${cardId}`);
+    }
+  } catch {
+    redirect(`/edit/${cardId}`);
+  }
+
+  redirect(`/view/${cardId}`);
 }

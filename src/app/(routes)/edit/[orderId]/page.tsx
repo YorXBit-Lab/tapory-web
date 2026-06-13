@@ -2,10 +2,12 @@ import { notFound } from 'next/navigation';
 import { Header } from '@/components/layout/Header';
 import { EditClient } from './EditClient';
 import { getAdminDb } from '@/libs/firebase-admin';
+import { noIndexRobots } from '@/libs/seo';
 import type { TemplateId } from '@/configs/types';
 
 export const metadata = {
   title: 'Chỉnh sửa kỷ niệm – Góc Chạm',
+  robots: noIndexRobots,
 };
 
 const VALID_TEMPLATES: TemplateId[] = [

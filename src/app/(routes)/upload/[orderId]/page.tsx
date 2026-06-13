@@ -1,8 +1,15 @@
+import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { getAdminDb } from '@/libs/firebase-admin';
+import { noIndexRobots } from '@/libs/seo';
 import UploadForm from './UploadForm';
 import type { IPrintConfig, IPrintPhotoSlot } from '@/configs/types';
 import type { IOrderItem } from '@/services/OrderAPI';
+
+export const metadata: Metadata = {
+  title: 'Upload ảnh in móc khóa - Góc Chạm',
+  robots: noIndexRobots,
+};
 
 interface PageProps {
   params: Promise<{ orderId: string }>;

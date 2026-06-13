@@ -5,6 +5,23 @@ const nextConfig: NextConfig = {
 
   allowedDevOrigins: ['192.168.1.40'],
 
+  async headers() {
+    const noIndexHeader = {
+      key: 'X-Robots-Tag',
+      value: 'noindex, nofollow, noarchive',
+    };
+
+    return [
+      { source: '/dashboard', headers: [noIndexHeader] },
+      { source: '/dashboard/:path*', headers: [noIndexHeader] },
+      { source: '/edit/:path*', headers: [noIndexHeader] },
+      { source: '/upload/:path*', headers: [noIndexHeader] },
+      { source: '/keychain', headers: [noIndexHeader] },
+      { source: '/c/:path*', headers: [noIndexHeader] },
+      { source: '/view/:path*', headers: [noIndexHeader] },
+    ];
+  },
+
   images: {
     remotePatterns: [
       {
