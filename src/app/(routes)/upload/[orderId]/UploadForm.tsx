@@ -24,25 +24,32 @@ interface Props {
 }
 
 function shapeLabel(cfg: IPrintConfig) {
-  if (cfg.shape === 'circle') return `Hình tròn • ⌀${cfg.diameter} cm`;
-  if (cfg.shape === 'square') return `Hình vuông • ${cfg.width} × ${cfg.width} cm`;
-  return `Chữ nhật • ${cfg.width} × ${cfg.height} cm`;
+  if (cfg.shape === 'circle') return `Hình tròn • ⌀${cfg.diameter ?? 3} cm`;
+  if (cfg.shape === 'square') return `Hình vuông • ${cfg.width ?? 3.35} × ${cfg.width ?? 3.35} cm`;
+  return `Chữ nhật • ${cfg.width ?? 3.2} × ${cfg.height ?? 5} cm`;
 }
 
+const MAX_PREVIEW_H = 96;
+
 function ShapePreview({ cfg }: { cfg: IPrintConfig }) {
-  const base = 'bg-blue-50 border-2 border-dashed border-blue-300 flex items-center justify-center';
+  const base = 'bg-amber-50 border-2 border-dashed border-amber-300 flex items-center justify-center text-amber-300 text-xs font-medium';
+
   if (cfg.shape === 'circle') {
-    return <div className={`${base} rounded-full`} style={{ width: 80, height: 80 }} />;
+    const d = cfg.diameter ?? 3;
+    const px = MAX_PREVIEW_H;
+    return <div className={`${base} rounded-full flex-shrink-0`} style={{ width: px, height: px }} >⌀{d}cm</div>;
   }
-  if (cfg.shape === 'square') {
-    return <div className={`${base} rounded`} style={{ width: 80, height: 80 }} />;
-  }
-  const w = cfg.width ?? 5;
-  const h = cfg.height ?? 7;
-  const ratio = h / w;
-  const previewW = 70;
-  const previewH = Math.round(previewW * ratio);
-  return <div className={`${base} rounded`} style={{ width: previewW, height: Math.min(previewH, 100) }} />;
+
+  const wCm = cfg.width ?? (cfg.shape === 'square' ? 3.35 : 3.2);
+  const hCm = cfg.shape === 'square' ? wCm : (cfg.height ?? 5);
+  const scale = MAX_PREVIEW_H / hCm;
+  const previewW = Math.round(wCm * scale);
+
+  return (
+    <div className={`${base} rounded-md flex-shrink-0`} style={{ width: previewW, height: MAX_PREVIEW_H }}>
+      {wCm}×{hCm}cm
+    </div>
+  );
 }
 
 // Key for photos map: `${itemIndex}-${slotIndex}-${side}`
@@ -124,32 +131,37 @@ export default function UploadForm({ orderId, customerName, printItems, initialP
   const allDone = uploadedCount >= totalSlots;
 
   return (
-    <div className="mx-auto max-w-xl px-4 py-8">
+    <div className="min-h-screen bg-gray-50 p-4 md:p-6">
+      <div className="mx-auto max-w-xl space-y-5">
       {/* Header */}
-      <div className="mb-6 text-center">
-        <Text strong className="text-lg">Upload ảnh in ấn</Text>
-        <div className="mt-1 text-sm text-gray-500">Đơn hàng <span className="font-mono font-semibold">{orderId}</span> — {customerName}</div>
-        <div className="mt-2 text-xs text-gray-400">{uploadedCount}/{totalSlots} ảnh đã upload</div>
+      <div>
+        <h1 className="text-2xl font-bold text-gray-800">Upload ảnh in ấn</h1>
+        <p className="text-sm text-gray-500">
+          Đơn <span className="font-mono font-semibold">{orderId}</span> — {customerName}
+        </p>
       </div>
 
       {allDone && (
-        <div className="mb-6 flex items-center gap-2 rounded-lg bg-green-50 p-4 text-green-700">
+        <div className="flex items-center gap-2 rounded-xl bg-green-50 p-4 text-green-700 shadow-sm">
           <CheckCircleOutlined className="text-xl" />
           <Text className="text-sm text-green-700">Tất cả ảnh đã được gửi thành công. Cảm ơn bạn!</Text>
         </div>
       )}
 
-      <div className="space-y-6">
+      <div className="space-y-4">
         {printItems.map((item) => (
-          <div key={item.itemIndex} className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-            <div className="mb-3 flex items-start gap-3">
+          <section key={item.itemIndex} className="rounded-xl bg-white p-5 shadow-sm">
+            <div className="mb-4 flex items-start gap-4">
               <ShapePreview cfg={item.printConfig} />
-              <div>
-                <Text strong className="block">{item.productName}</Text>
-                <Text type="secondary" className="text-xs">{shapeLabel(item.printConfig)}</Text>
-                <Text type="secondary" className="block text-xs mt-0.5">
+              <div className="min-w-0">
+                <p className="font-semibold text-gray-800">{item.productName}</p>
+                <p className="mt-0.5 text-xs text-gray-500">{shapeLabel(item.printConfig)}</p>
+                <p className="mt-0.5 text-xs text-gray-400">
                   {item.quantity > 1 ? `${item.quantity} sản phẩm · ` : ''}In 2 mặt — upload ảnh Mặt A và Mặt B, hoặc dùng cùng 1 ảnh
-                </Text>
+                </p>
+                <div className="mt-1.5 text-xs font-medium text-amber-600">
+                  {uploadedCount}/{totalSlots} ảnh đã upload
+                </div>
               </div>
             </div>
 
@@ -212,13 +224,14 @@ export default function UploadForm({ orderId, customerName, printItems, initialP
                 </div>
               ))}
             </div>
-          </div>
+          </section>
         ))}
       </div>
 
-      <p className="mt-8 text-center text-xs text-gray-400">
-        Ảnh được gửi trực tiếp cho bên in ấn. Chấp nhận JPEG · PNG · WebP · tối đa 10 MB.
+      <p className="text-center text-xs text-gray-400">
+        Ảnh gửi trực tiếp cho bên in ấn · JPEG · PNG · WebP · tối đa 10 MB
       </p>
+      </div>
     </div>
   );
 }

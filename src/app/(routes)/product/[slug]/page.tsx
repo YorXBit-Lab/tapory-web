@@ -11,6 +11,8 @@ import { useComponents } from '@/hooks/component';
 import { componentAvailable } from '@/services/ComponentAPI';
 import { toSlug } from '@/utils/slug';
 import type { IProduct, IProductVariant, IComponent, IPresetPhoto } from '@/configs/types';
+import { Header } from '@/components/layout/Header';
+import { Footer } from '@/components/layout/Footer';
 
 const fmt = (n: number) => n.toLocaleString('vi-VN') + 'đ';
 
@@ -94,6 +96,16 @@ export default function ProductDetailPage() {
     }
   }
 
+  const selectedValueImage = useMemo(() => {
+    for (const opt of variantOptions) {
+      const valId = selection[opt.id];
+      if (!valId) continue;
+      const img = opt.values.find((v) => v.id === valId)?.imageUrl;
+      if (img) return img;
+    }
+    return null;
+  }, [variantOptions, selection]);
+
   if (isLoading) {
     return <div className="flex min-h-[60vh] items-center justify-center"><Spin size="large" /></div>;
   }
@@ -108,27 +120,27 @@ export default function ProductDetailPage() {
 
   const hasVariants = variantOptions.length > 0;
   const unitPrice = resolvedVariant?.price ?? product.price;
-  const mainImage = resolvedVariant?.imageUrl || product.imageUrl;
+  const mainImage = resolvedVariant?.imageUrl || selectedValueImage || product.imageUrl;
   const available = hasVariants && !resolvedVariant
     ? null
     : availableFor(product, resolvedVariant?.id, componentsById);
   const outOfStock = available !== null && available <= 0;
 
   return (
-    <div className="bg-background text-content1 min-h-screen">
-      {/* Mini nav */}
-      <div className="border-border bg-background/85 sticky top-0 z-50 border-b backdrop-blur-lg">
-        <div className="mx-auto flex h-14 max-w-5xl items-center gap-3 px-4">
-          <Link href="/#products" className="text-content3 hover:text-primary text-sm transition-colors">
+    <div className="bg-background text-content1 flex min-h-screen flex-col">
+      <Header />
+      <div className="bg-background/60">
+        <div className="mx-auto flex h-9 max-w-5xl items-center gap-2 px-4 text-sm">
+          <Link href="/#products" className="text-content3 hover:text-primary transition-colors">
             ← Bộ sưu tập
           </Link>
           <span className="text-content3">/</span>
-          <span className="text-content2 text-sm font-medium">{product.name}</span>
+          <span className="text-content2 font-medium">{product.name}</span>
         </div>
       </div>
 
       <div className="mx-auto max-w-5xl px-4 py-8 md:py-12">
-        <div className="grid gap-8 md:grid-cols-2 md:gap-12">
+        <div className="grid gap-8 md:grid-cols-2 md:gap-12" id="product-info">
           {/* Ảnh */}
           <div>
             <div className="relative aspect-square w-full overflow-hidden rounded-2xl border border-gray-200 bg-gray-50 shadow-sm">
@@ -217,7 +229,19 @@ export default function ProductDetailPage() {
             </div>
           </div>
         </div>
+
+        {/* Bài viết chi tiết */}
+        {product.detailArticle && (
+          <div className="mt-12 border-t border-gray-100 pt-10">
+            <h2 className="mb-6 text-xl font-bold text-gray-800">Chi tiết sản phẩm</h2>
+            <div
+              className="article-body"
+              dangerouslySetInnerHTML={{ __html: product.detailArticle }}
+            />
+          </div>
+        )}
       </div>
+      <Footer />
     </div>
   );
 }

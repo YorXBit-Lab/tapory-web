@@ -222,6 +222,8 @@ export interface IProduct {
   baseComponents?: IBomLine[];
   variants?: Record<string, IProductVariant>;
   serviceIds?: string[];   // tham chiếu đến IService trong collection services
+  /** Bài viết chi tiết sản phẩm — lưu HTML từ rich text editor. */
+  detailArticle?: string;
   createdAt?: string;
   updatedAt?: string;
 }

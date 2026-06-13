@@ -184,6 +184,7 @@ function toProduct(id: string, d: Record<string, unknown>): IProduct {
     baseComponents: toBom(d.baseComponents),
     variants: toVariants(d.variants),
     serviceIds: Array.isArray(d.serviceIds) ? (d.serviceIds as string[]) : undefined,
+    detailArticle: d.detailArticle as string | undefined,
     createdAt: (d.createdAt as Timestamp)?.toDate?.()?.toISOString(),
     updatedAt: (d.updatedAt as Timestamp)?.toDate?.()?.toISOString(),
   };
@@ -203,7 +204,7 @@ export const ProductAPI = {
   },
 
   createOne: async (data: Omit<IProduct, 'id' | 'createdAt' | 'updatedAt'>): Promise<{ data: { id: string } }> => {
-    const { variants, options, baseComponents, serviceIds, ...rest } = data;
+    const { variants, options, baseComponents, serviceIds, detailArticle, ...rest } = data;
     const serializedVariants = serializeVariants(variants);
     const serializedOptions = serializeOptions(options);
     const serializedBom = serializeBom(baseComponents);
@@ -213,6 +214,7 @@ export const ProductAPI = {
       ...(serializedBom ? { baseComponents: serializedBom } : {}),
       ...(serializedVariants ? { variants: serializedVariants } : {}),
       ...(serviceIds && serviceIds.length > 0 ? { serviceIds } : {}),
+      ...(detailArticle ? { detailArticle } : {}),
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     });
@@ -220,7 +222,7 @@ export const ProductAPI = {
   },
 
   updateOne: async (id: string, data: Partial<Omit<IProduct, 'id' | 'createdAt' | 'updatedAt'>>): Promise<{ data: { id: string } }> => {
-    const { variants, options, baseComponents, serviceIds, ...rest } = data;
+    const { variants, options, baseComponents, serviceIds, detailArticle, ...rest } = data;
     const payload: Record<string, unknown> = { ...clean(rest), updatedAt: serverTimestamp() };
 
     if ('stock' in rest && rest.stock === undefined) payload.stock = deleteField();
@@ -243,6 +245,10 @@ export const ProductAPI = {
 
     if ('serviceIds' in data) {
       payload.serviceIds = serviceIds && serviceIds.length > 0 ? serviceIds : deleteField();
+    }
+
+    if ('detailArticle' in data) {
+      payload.detailArticle = detailArticle ?? deleteField();
     }
 
     await updateDoc(doc(db, COL, id), payload);

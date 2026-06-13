@@ -37,7 +37,9 @@ export async function POST(req: NextRequest) {
   }
 
   const ext = file.type.split('/')[1].replace('jpeg', 'jpg');
-  const key = `products/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+  const folder = (formData.get('folder') as string | null) ?? 'products';
+  const safeFolderName = /^[a-z0-9_-]+$/i.test(folder) ? folder : 'products';
+  const key = `${safeFolderName}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
 
   try {
     await getR2Client().send(

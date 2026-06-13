@@ -48,6 +48,23 @@ export async function uploadProductImage(
   return { url: json.url!, key: json.key! };
 }
 
+/** Upload ảnh trong bài viết chi tiết sản phẩm — trả về URL công khai. */
+export async function uploadArticleImage(file: File, idToken: string): Promise<string> {
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('folder', 'articles');
+
+  const res = await fetch('/api/admin/upload-image', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${idToken}` },
+    body: formData,
+  });
+
+  const json = (await res.json()) as { url?: string; key?: string; error?: string };
+  if (!res.ok) throw new Error(json.error ?? 'Upload thất bại');
+  return json.url!;
+}
+
 export async function uploadPrintPhoto(
   file: File,
   orderId: string,

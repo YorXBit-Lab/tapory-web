@@ -27,7 +27,8 @@ import { useServices, useCreateService, useUpdateService, useDeleteService } fro
 import { usePresetPhotos, useCreatePresetPhoto, useDeletePresetPhoto } from '@/hooks/presetPhoto';
 import { useComponents } from '@/hooks/component';
 import { PRODUCT_TYPES } from '@/configs/constants';
-import { uploadProductImage, deleteProductImage } from '@/utils/r2-upload';
+import { uploadProductImage, deleteProductImage, uploadArticleImage } from '@/utils/r2-upload';
+import RichTextEditor from '@/components/rich-text-editor';
 import type {
   IProduct,
   IProductVariant,
@@ -675,6 +676,7 @@ function ProductModal({
   const [simplePrint, setSimplePrint] = useState<IPrintConfig>({ enabled: false });
   const [uploadedKey, setUploadedKey] = useState<string | null>(null);
   const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]);
+  const [detailArticle, setDetailArticle] = useState<string>('');
 
   const { data: rawComponents = [] } = useComponents();
   const components = rawComponents as IComponent[];
@@ -706,6 +708,12 @@ function ProductModal({
     } finally {
       setVariantUploadingId(null);
     }
+  };
+
+  const handleArticleImageUpload = async (file: File): Promise<string> => {
+    if (!user) throw new Error('Chưa đăng nhập');
+    const idToken = await user.getIdToken();
+    return uploadArticleImage(file, idToken);
   };
 
   const discardPendingImage = async (key: string | null) => {
@@ -810,6 +818,7 @@ function ProductModal({
         baseComponents: cleanedBase.length > 0 ? cleanedBase : undefined,
         variants: variantMap,
         serviceIds: selectedServiceIds.length > 0 ? selectedServiceIds : undefined,
+        detailArticle: detailArticle.trim() || undefined,
       });
 
       if (initial?.imageUrl && values.imageUrl !== initial.imageUrl && user) {
@@ -821,6 +830,7 @@ function ProductModal({
         }
       }
       setUploadedKey(null);
+      setDetailArticle('');
       form.resetFields();
     } catch (err) {
       notification.error({
@@ -839,7 +849,7 @@ function ProductModal({
       onCancel={handleClose}
       footer={null}
       destroyOnHidden
-      width={560}
+      width={760}
       afterOpenChange={(vis) => {
         if (!vis) return;
         if (initial) {
@@ -850,6 +860,7 @@ function ProductModal({
           setBaseComponents(initial.baseComponents ?? []);
           setSimplePrint(initial.printConfig ?? { enabled: false });
           setSelectedServiceIds(initial.serviceIds ?? []);
+          setDetailArticle(initial.detailArticle ?? '');
           form.setFieldsValue({
             name: initial.name,
             type: initial.type ?? 'keychain',
@@ -868,6 +879,7 @@ function ProductModal({
           setBaseComponents([]);
           setSimplePrint({ enabled: false });
           setSelectedServiceIds([]);
+          setDetailArticle('');
         }
       }}
     >
@@ -1315,6 +1327,20 @@ function ProductModal({
             })}
           </div>
         )}
+
+        <Divider
+          titlePlacement="start"
+          orientationMargin={0}
+          className="!mt-2 !mb-3 !text-xs !text-gray-400"
+        >
+          Bài viết chi tiết
+        </Divider>
+
+        <RichTextEditor
+          content={detailArticle}
+          onChange={setDetailArticle}
+          uploadFn={handleArticleImageUpload}
+        />
 
         <div className="flex justify-end gap-2 pt-4">
           <Button onClick={handleClose} disabled={saving}>
