@@ -666,11 +666,13 @@ export default function HomePage() {
                           width={144}
                           height={144}
                           style={{ objectFit: 'cover' }}
-                          wrapperStyle={{
-                            borderRadius: '50%',
-                            overflow: 'hidden',
-                            boxShadow:
-                              '0 10px 15px -3px rgba(0,0,0,.1),0 4px 6px -4px rgba(0,0,0,.1)',
+                          styles={{
+                            root: {
+                              borderRadius: '50%',
+                              overflow: 'hidden',
+                              boxShadow:
+                                '0 10px 15px -3px rgba(0,0,0,.1),0 4px 6px -4px rgba(0,0,0,.1)',
+                            },
                           }}
                         />
                       ) : (

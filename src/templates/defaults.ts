@@ -9,59 +9,64 @@ type ContentFields = {
   date: string;
 };
 
+/**
+ * Giá trị khởi tạo CHUNG CHUNG cho mỗi template — dùng cho cả bản xem thử (demo)
+ * lẫn card thật khi chưa có dữ liệu. Field chữ điền nhãn gợi ý để người dùng biết
+ * cần thay; field ảnh/ngày/link để trống (trạng thái "chưa thêm").
+ */
 export const TEMPLATE_DEFAULTS: Record<TemplateId, ContentFields> = {
   graduation: {
-    title:       'Anh Khoa',
-    subtitle:    'ĐH Bách Khoa – Công nghệ Thông tin',
-    description: 'Cuối cùng cũng tốt nghiệp rồi! Bốn năm đại học đầy ắp kỷ niệm và những đêm thức trắng. Chúc bạn tiếp tục toả sáng trên con đường phía trước! 🎓',
-    date:        '2026-06-20',
+    title:       'Tên người nhận',
+    subtitle:    'Tên trường – Ngành học',
+    description: 'Lời chúc mừng tốt nghiệp dành cho bạn ấy…',
+    date:        '',
     imageUrl:    '',
     spotifyUrl:  '',
   },
   anniversary: {
-    title:       'Minh & Linh',
+    title:       'Tên hai bạn',
     subtitle:    '',
-    description: 'Ba năm bên nhau, mỗi ngày đều là một kỷ niệm đáng trân trọng. Cảm ơn em đã luôn ở bên anh dù mưa hay nắng. ❤️',
-    date:        '2023-02-14',
+    description: 'Lời chúc kỷ niệm dành cho hai bạn…',
+    date:        '',
     imageUrl:    '',
     spotifyUrl:  '',
   },
   wedding: {
-    title:       'Tuấn & Ngọc',
+    title:       'Tên cô dâu & chú rể',
     subtitle:    '',
-    description: 'Chúc hai bạn trăm năm hạnh phúc, mãi mãi bên nhau và gia đình luôn ấm êm ngập tràn yêu thương! 💍',
-    date:        '2026-12-12',
+    description: 'Lời chúc mừng hạnh phúc dành cho đôi uyên ương…',
+    date:        '',
     imageUrl:    '',
     spotifyUrl:  '',
   },
   birthday: {
-    title:       'Bảo An',
+    title:       'Tên người nhận',
     subtitle:    '',
-    description: 'Happy Birthday! Chúc bạn tuổi mới thật nhiều niềm vui, sức khoẻ dồi dào và mọi ước mơ đều thành hiện thực! 🎂',
-    date:        '2026-05-20',
+    description: 'Lời chúc sinh nhật dành cho bạn…',
+    date:        '',
     imageUrl:    '',
     spotifyUrl:  '',
   },
   spotify: {
-    title:       '',
-    subtitle:    '',
-    description: 'Mỗi lần nghe lại bài này mình lại nhớ đến những kỷ niệm đẹp của chúng mình. Tặng bạn nhé 🎵',
+    title:       'Tên bài hát',
+    subtitle:    'Tên nghệ sĩ',
+    description: 'Lời nhắn của bạn…',
     date:        '',
     imageUrl:    '',
-    spotifyUrl:  'https://open.spotify.com/track/4HtSolBbVA8BfJFHE4DKFO',
+    spotifyUrl:  '',
   },
   social: {
-    title:       '@tapory.vn',
-    subtitle:    'Móc khoá kỷ niệm NFC · TP.HCM',
-    description: 'Lưu giữ kỷ niệm đẹp theo cách đặc biệt nhất. Chỉ cần chạm NFC là mở ngay trang kỷ niệm riêng của bạn ✨',
+    title:       'Tên hiển thị',
+    subtitle:    'Bio / Giới thiệu ngắn',
+    description: 'Giới thiệu thêm về bạn…',
     date:        '',
     imageUrl:    '',
     spotifyUrl:  '',
   },
   profile: {
-    title:       'Nguyễn Văn A',
-    subtitle:    'Designer · Freelancer',
-    description: 'Mình là designer với 3 năm kinh nghiệm, đam mê tạo ra những sản phẩm đẹp và có ý nghĩa. Rất vui được kết nối! 👋',
+    title:       'Họ và tên',
+    subtitle:    'Chức danh / Nghề nghiệp',
+    description: 'Vài dòng giới thiệu về bản thân…',
     date:        '',
     imageUrl:    '',
     spotifyUrl:  '',
