@@ -91,6 +91,17 @@ export const TEMPLATES: Record<TemplateId, ITemplate> = {
       background: '#ffffff',
     },
   },
+  keepsake: {
+    id: 'keepsake',
+    name: 'Kỷ Vật',
+    icon: '🎁',
+    occasion: 'Lưu giữ kỷ niệm gắn vào vật',
+    colors: {
+      primary: '#5c4631',
+      secondary: '#c9a06b',
+      background: '#f3ead9',
+    },
+  },
   redirect: {
     id: 'redirect',
     name: 'Chuyển Hướng',

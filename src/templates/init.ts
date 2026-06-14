@@ -5,4 +5,5 @@ import './anniversary';
 import './spotify';
 import './social';
 import './profile';
+import './keepsake';
 import './redirect';

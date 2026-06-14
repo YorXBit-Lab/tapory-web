@@ -71,6 +71,14 @@ export const TEMPLATE_DEFAULTS: Record<TemplateId, ContentFields> = {
     imageUrl:    '',
     spotifyUrl:  '',
   },
+  keepsake: {
+    title:       'Tên kỷ vật',
+    subtitle:    'Dịp · Người tặng',
+    description: 'Kể lại kỷ niệm gắn với món quà này…',
+    date:        '',
+    imageUrl:    '',
+    spotifyUrl:  '',
+  },
   redirect: {
     title:       '',
     subtitle:    '',
