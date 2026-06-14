@@ -18,9 +18,9 @@ import { TextField } from './fields/TextField';
 import { TextareaField } from './fields/TextareaField';
 
 export function EditorForm() {
-  const { draft, fields, dispatch } = useEditorContext();
-  const { uploading, handlePhoto, onSaved } = useImageUpload(draft.orderId);
-  const { handleSave } = useSaveDraft({ onSaved });
+  const { orderId, draft, fields, dispatch } = useEditorContext();
+  const { uploading, handlePhoto, onSaved } = useImageUpload(orderId);
+  const { handleSave } = useSaveDraft(orderId, { onSaved });
   const isSpotify   = draft.templateId === 'spotify';
   const isRedirect  = draft.templateId === 'redirect';
 
@@ -117,7 +117,7 @@ export function EditorForm() {
 
       {/* Sticky on mobile, normal on desktop */}
       <div className="sticky bottom-0 z-10 -mx-4 bg-white/95 px-4 pb-8 pt-3 backdrop-blur-sm lg:static lg:mx-0 lg:bg-transparent lg:p-0 lg:backdrop-blur-none" style={{ paddingBottom: 'max(32px, env(safe-area-inset-bottom, 32px))' }}>
-        {draft.orderId === 'demo' ? (
+        {orderId === 'demo' ? (
           <div className="w-full rounded-xl border border-dashed border-content4 py-3.5 text-center text-sm text-content3">
             Đây là bản xem thử — không thể lưu
           </div>

@@ -106,6 +106,55 @@ export const websiteJsonLd = {
   },
 };
 
+export function productJsonLd({
+  name,
+  description,
+  image,
+  url,
+  price,
+  inStock = true,
+}: {
+  name: string;
+  description?: string;
+  image?: string;
+  url: string;
+  price: number;
+  inStock?: boolean;
+}) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name,
+    description: description || DEFAULT_DESCRIPTION,
+    image: image ? absoluteUrl(image) : absoluteUrl(DEFAULT_OG_IMAGE),
+    url,
+    brand: { '@type': 'Brand', name: SITE_NAME },
+    offers: {
+      '@type': 'Offer',
+      url,
+      priceCurrency: 'VND',
+      price: String(price),
+      availability: inStock
+        ? 'https://schema.org/InStock'
+        : 'https://schema.org/OutOfStock',
+      seller: { '@type': 'Organization', name: SITE_NAME },
+    },
+  };
+}
+
+export function breadcrumbJsonLd(items: Array<{ name: string; path: string }>) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: items.map((item, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      name: item.name,
+      item: absoluteUrl(item.path),
+    })),
+  };
+}
+
 export const CONTACT_LINKS = [
   { key: 'zalo',     label: 'Zalo',     href: '#', color: '#0068FF' },
   { key: 'facebook', label: 'Facebook', href: '#', color: '#1877F2' },

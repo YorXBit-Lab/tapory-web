@@ -52,7 +52,17 @@
       "Bash(xargs wc -l)",
       "Bash(npm run *)",
       "Bash(grep \"^D:\\\\\\\\|^src\\\\\\\\\")",
-      "Bash(grep \"\\\\.tsx$\\\\|\\\\.ts$\")"
+      "Bash(grep \"\\\\.tsx$\\\\|\\\\.ts$\")",
+      "Bash(git mv *)",
+      "PowerShell($r = Invoke-WebRequest -Uri \"http://localhost:3000/sitemap.xml\" -UseBasicParsing; $r.Content)",
+      "PowerShell(yarn build *)",
+      "PowerShell(yarn start *)",
+      "PowerShell($ok=$false; for \\($i=0; $i -lt 15; $i++\\) { try { Invoke-WebRequest \"http://localhost:3000/moc-khoa\" -UseBasicParsing -TimeoutSec 3 | Out-Null; $ok=$true; break } catch { Start-Sleep 2 } }; \"Ready: $ok\")",
+      "PowerShell($ok=$false; for \\($i=0; $i -lt 15; $i++\\) { try { Invoke-WebRequest \"http://localhost:3000/\" -UseBasicParsing -TimeoutSec 3 | Out-Null; $ok=$true; break } catch { Start-Sleep 2 } }; \"Server ready: $ok\")",
+      "Bash(cat src/hooks/product/index.ts)",
+      "Bash(cat src/hooks/product/useProducts.ts)",
+      "PowerShell(npx tsc --noEmit)",
+      "PowerShell(node --env-file=.env.local scripts/backfill-product-slug.mjs)"
     ]
   }
 }
