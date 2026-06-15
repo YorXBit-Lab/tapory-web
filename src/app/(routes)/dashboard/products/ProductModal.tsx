@@ -11,10 +11,8 @@ import {
   Modal,
   Select,
   Switch,
-  Tag,
   Typography,
 } from 'antd';
-import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
 import { useAdminAuth } from '@/contexts/AdminAuthContext';
 import { useComponents } from '@/hooks/component';
 import { uploadProductImage, deleteProductImage, uploadArticleImage } from '@/utils/r2-upload';
@@ -22,8 +20,12 @@ import { priceFormatter, priceParser } from '@/utils/format';
 import RichTextEditor from '@/components/rich-text-editor';
 import { ImageUploader } from '@/components/dashboard/ImageUploader';
 import { PrintConfigEditor } from '@/components/dashboard/PrintConfigEditor';
-import { rid, generateVariants, loadOptions, loadVariants, cleanPrintConfig } from './utils';
+import { generateVariants, loadOptions, loadVariants, cleanPrintConfig } from './utils';
 import { PresetPhotoManager } from './PresetPhotoManager';
+import { VariantOptionsEditor } from './product-modal/VariantOptionsEditor';
+import { VariantsTable } from './product-modal/VariantsTable';
+import { BaseComponentsEditor } from './product-modal/BaseComponentsEditor';
+import { ServicesPicker } from './product-modal/ServicesPicker';
 import { PRODUCT_TYPES } from '@/configs/constants';
 import type {
   IProduct,
@@ -34,9 +36,8 @@ import type {
   IComponent,
   IBomLine,
   ProductType,
-  ProductStatus,
 } from '@/configs/types';
-import type { OptionRow, OptValueRow, GenVariant, ProductFormFields } from './types';
+import type { OptionRow, GenVariant, ProductFormFields } from './types';
 
 const { Text } = Typography;
 
@@ -381,222 +382,18 @@ export function ProductModal({ open, initial, services, onClose, onSave }: Produ
               <InputNumber min={0} style={{ width: '100%' }} formatter={priceFormatter} parser={priceParser} placeholder="189.000" />
             </Form.Item>
 
-            <Text type="secondary" className="mb-1 block text-xs font-medium">Tùy chọn</Text>
-            <div className="space-y-2">
-              {options.map((o) => (
-                <div key={o.id} className="rounded-lg border border-divider p-3">
-                  <div className="flex items-center gap-2">
-                    <Input
-                      size="small"
-                      placeholder="Tên tùy chọn (VD: Hình dạng)"
-                      value={o.name}
-                      className="flex-1"
-                      onChange={(e) =>
-                        applyOptions(options.map((x) => (x.id === o.id ? { ...x, name: e.target.value } : x)))
-                      }
-                    />
-                    <Switch
-                      size="small"
-                      checked={o.createsVariant}
-                      checkedChildren="Biến thể"
-                      unCheckedChildren="Cá nhân hóa"
-                      onChange={(c) =>
-                        applyOptions(options.map((x) => (x.id === o.id ? { ...x, createsVariant: c } : x)))
-                      }
-                    />
-                    <Button
-                      type="text"
-                      danger
-                      size="small"
-                      icon={<DeleteOutlined />}
-                      onClick={() => applyOptions(options.filter((x) => x.id !== o.id))}
-                    />
-                  </div>
+            <VariantOptionsEditor
+              options={options}
+              applyOptions={applyOptions}
+              componentOptions={componentOptions}
+            />
 
-                  <div className="mt-2 space-y-1">
-                    {o.values.map((val) => {
-                      const setVal = (patch: Partial<OptValueRow>) =>
-                        applyOptions(
-                          options.map((x) =>
-                            x.id === o.id
-                              ? { ...x, values: x.values.map((y) => (y.id === val.id ? { ...y, ...patch } : y)) }
-                              : x,
-                          ),
-                        );
-                      return (
-                        <div key={val.id} className="flex flex-wrap items-center gap-2">
-                          <Input
-                            size="small"
-                            placeholder="Giá trị (VD: Tròn)"
-                            value={val.name}
-                            style={{ width: 140 }}
-                            onChange={(e) => setVal({ name: e.target.value })}
-                          />
-                          {o.createsVariant && (
-                            <>
-                              <InputNumber
-                                size="small"
-                                placeholder="+ giá"
-                                style={{ width: 100 }}
-                                formatter={priceFormatter}
-                                parser={priceParser}
-                                value={val.priceDelta}
-                                onChange={(n) => setVal({ priceDelta: n ?? undefined })}
-                              />
-                              <Select
-                                size="small"
-                                placeholder="Trừ linh kiện"
-                                style={{ width: 150 }}
-                                allowClear
-                                showSearch
-                                optionFilterProp="label"
-                                value={val.componentId ?? undefined}
-                                options={componentOptions}
-                                onChange={(cid?: string) =>
-                                  setVal({ componentId: cid, componentQty: cid ? (val.componentQty ?? 1) : undefined })
-                                }
-                              />
-                              {val.componentId && (
-                                <InputNumber
-                                  size="small"
-                                  min={1}
-                                  style={{ width: 56 }}
-                                  value={val.componentQty ?? 1}
-                                  onChange={(n) => setVal({ componentQty: n ?? 1 })}
-                                />
-                              )}
-                            </>
-                          )}
-                          <Button
-                            type="text"
-                            danger
-                            size="small"
-                            icon={<DeleteOutlined />}
-                            onClick={() =>
-                              applyOptions(
-                                options.map((x) =>
-                                  x.id === o.id ? { ...x, values: x.values.filter((y) => y.id !== val.id) } : x,
-                                ),
-                              )
-                            }
-                          />
-                        </div>
-                      );
-                    })}
-                    <Button
-                      type="dashed"
-                      size="small"
-                      icon={<PlusOutlined />}
-                      onClick={() =>
-                        applyOptions(
-                          options.map((x) =>
-                            x.id === o.id ? { ...x, values: [...x.values, { id: rid('o'), name: '' }] } : x,
-                          ),
-                        )
-                      }
-                    >
-                      Thêm giá trị
-                    </Button>
-                  </div>
-                </div>
-              ))}
-
-              <Button
-                type="dashed"
-                block
-                icon={<PlusOutlined />}
-                onClick={() =>
-                  applyOptions([
-                    ...options,
-                    { id: rid('opt'), name: '', createsVariant: true, values: [{ id: rid('o'), name: '' }] },
-                  ])
-                }
-              >
-                Thêm tùy chọn
-              </Button>
-            </div>
-
-            {variants.length > 0 && (
-              <>
-                <Divider titlePlacement="start" orientationMargin={0} className="!mt-4 !mb-2 !text-xs !text-content3">
-                  Biến thể ({variants.length}) — tự sinh từ tùy chọn tạo-biến-thể
-                </Divider>
-
-                <div className="mb-1 grid grid-cols-12 gap-2 px-1">
-                  <Text type="secondary" className="col-span-4 text-[10px]">Giá (đ)</Text>
-                  <Text type="secondary" className="col-span-3 text-[10px]">Kho</Text>
-                  <Text type="secondary" className="col-span-3 text-[10px]">SKU</Text>
-                  <Text type="secondary" className="col-span-2 text-center text-[10px]">NFC</Text>
-                </div>
-
-                <div className="space-y-2">
-                  {variants.map((v) => (
-                    <div key={v.id} className="rounded-lg border border-divider bg-elevated p-3">
-                      <div className="mb-2 flex flex-wrap gap-1">
-                        {v.valueNames.map((n, i) => (
-                          <Tag key={i} className="text-[10px]">{n || '—'}</Tag>
-                        ))}
-                      </div>
-
-                      <div className="mb-2">
-                        <ImageUploader
-                          value={v.imageUrl}
-                          uploading={variantUploadingId === v.id}
-                          onUpload={(file) => uploadVariantImage(v.id, file)}
-                          onRemove={() => patchVariant(v.id, { imageUrl: undefined })}
-                        />
-                      </div>
-
-                      <div className="grid grid-cols-12 items-center gap-2">
-                        <InputNumber
-                          className="col-span-4"
-                          size="small"
-                          min={0}
-                          style={{ width: '100%' }}
-                          formatter={priceFormatter}
-                          parser={priceParser}
-                          value={v.price}
-                          onChange={(n) => patchVariant(v.id, { price: n ?? 0 })}
-                        />
-                        <InputNumber
-                          className="col-span-3"
-                          size="small"
-                          min={0}
-                          style={{ width: '100%' }}
-                          placeholder="∞"
-                          value={v.stock}
-                          onChange={(n) => patchVariant(v.id, { stock: n ?? undefined })}
-                        />
-                        <Input
-                          className="col-span-3"
-                          size="small"
-                          placeholder="SKU"
-                          value={v.sku}
-                          onChange={(e) => patchVariant(v.id, { sku: e.target.value })}
-                        />
-                        <div className="col-span-2 flex items-center justify-center">
-                          <Switch
-                            size="small"
-                            checkedChildren="📡"
-                            unCheckedChildren="—"
-                            checked={!!v.isNfc}
-                            onChange={(c) => patchVariant(v.id, { isNfc: c })}
-                          />
-                        </div>
-                      </div>
-
-                      <div className="mt-2 border-t border-border pt-2">
-                        <PrintConfigEditor
-                          compact
-                          value={v.printConfig ?? { enabled: false }}
-                          onChange={(pc) => patchVariant(v.id, { printConfig: pc })}
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </>
-            )}
+            <VariantsTable
+              variants={variants}
+              patchVariant={patchVariant}
+              variantUploadingId={variantUploadingId}
+              onUploadVariantImage={uploadVariantImage}
+            />
           </>
         )}
 
@@ -604,54 +401,12 @@ export function ProductModal({ open, initial, services, onClose, onSave }: Produ
           Linh kiện nền (luôn trừ kho mỗi sản phẩm)
         </Divider>
 
-        {components.length === 0 ? (
-          <Text type="secondary" className="text-xs">
-            Chưa có linh kiện nào. Tạo ở trang <b>Kho linh kiện</b> trước để gắn định mức trừ kho.
-          </Text>
-        ) : (
-          <div className="space-y-1.5">
-            {baseComponents.map((line, idx) => (
-              <div key={idx} className="flex items-center gap-2">
-                <Select
-                  size="small"
-                  placeholder="Chọn linh kiện"
-                  className="flex-1"
-                  showSearch
-                  optionFilterProp="label"
-                  value={line.componentId || undefined}
-                  options={componentOptions}
-                  onChange={(cid: string) =>
-                    setBaseComponents((prev) => prev.map((b, i) => (i === idx ? { ...b, componentId: cid } : b)))
-                  }
-                />
-                <InputNumber
-                  size="small"
-                  min={1}
-                  style={{ width: 64 }}
-                  value={line.qty}
-                  onChange={(n) =>
-                    setBaseComponents((prev) => prev.map((b, i) => (i === idx ? { ...b, qty: n ?? 1 } : b)))
-                  }
-                />
-                <Button
-                  type="text"
-                  danger
-                  size="small"
-                  icon={<DeleteOutlined />}
-                  onClick={() => setBaseComponents((prev) => prev.filter((_, i) => i !== idx))}
-                />
-              </div>
-            ))}
-            <Button
-              type="dashed"
-              size="small"
-              icon={<PlusOutlined />}
-              onClick={() => setBaseComponents((prev) => [...prev, { componentId: '', qty: 1 }])}
-            >
-              Thêm linh kiện nền
-            </Button>
-          </div>
-        )}
+        <BaseComponentsEditor
+          components={components}
+          componentOptions={componentOptions}
+          baseComponents={baseComponents}
+          setBaseComponents={setBaseComponents}
+        />
 
         <Divider
           titlePlacement="start"
@@ -677,38 +432,11 @@ export function ProductModal({ open, initial, services, onClose, onSave }: Produ
           Dịch vụ cộng thêm
         </Divider>
 
-        {services.length === 0 ? (
-          <Text type="secondary" className="text-xs">
-            Chưa có dịch vụ nào. Tạo dịch vụ từ trang sản phẩm trước.
-          </Text>
-        ) : (
-          <div className="flex flex-wrap gap-2">
-            {services.map((service) => {
-              const selected = selectedServiceIds.includes(service.id);
-              return (
-                <button
-                  key={service.id}
-                  type="button"
-                  onClick={() =>
-                    setSelectedServiceIds((prev) =>
-                      selected ? prev.filter((id) => id !== service.id) : [...prev, service.id],
-                    )
-                  }
-                  className={`flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs transition-colors ${
-                    selected
-                      ? 'border-primary bg-primary/10 text-primary'
-                      : 'border-border bg-background text-content2 hover:border-primary/50'
-                  }`}
-                >
-                  <span>{service.name}</span>
-                  <span className={selected ? 'text-primary' : 'text-content3'}>
-                    +{service.price.toLocaleString('vi-VN')}đ
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        )}
+        <ServicesPicker
+          services={services}
+          selectedServiceIds={selectedServiceIds}
+          setSelectedServiceIds={setSelectedServiceIds}
+        />
 
         <Divider
           titlePlacement="start"

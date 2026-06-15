@@ -44,6 +44,46 @@ export async function getAllProductsForSeo(): Promise<ProductSeo[]> {
   }
 }
 
+/** Dữ liệu tối thiểu để render 1 card sản phẩm ở trang chủ. */
+export type ProductCard = {
+  id: string;
+  name: string;
+  slug: string;
+  price: number;
+  imageUrl?: string;
+  description?: string;
+  canBeNfc: boolean;
+};
+
+/**
+ * Danh sách sản phẩm cho section "Bộ sưu tập" ở trang chủ, sắp xếp mới → cũ
+ * (giống truy vấn client cũ `ProductAPI.getAll`). Render server-side để vào
+ * thẳng HTML (SEO + bỏ skeleton/flash). Trả về [] nếu không đọc được DB.
+ */
+export async function getProductsForHome(): Promise<ProductCard[]> {
+  try {
+    const snap = await getAdminDb()
+      .collection(FIRESTORE_COLLECTIONS.PRODUCTS)
+      .orderBy('createdAt', 'desc')
+      .get();
+    return snap.docs.map((doc) => {
+      const d = doc.data();
+      const name = (d.name as string) ?? '';
+      return {
+        id: doc.id,
+        name,
+        slug: toSlug(name),
+        price: (d.price as number) ?? 0,
+        imageUrl: d.imageUrl as string | undefined,
+        description: d.description as string | undefined,
+        canBeNfc: (d.canBeNfc as boolean) ?? false,
+      };
+    });
+  } catch {
+    return [];
+  }
+}
+
 /**
  * Sản phẩm đầy đủ (IProduct) theo slug, để render server-side cho trang chi tiết.
  * Bọc trong React cache() để generateMetadata, JSON-LD và body trang dùng chung
