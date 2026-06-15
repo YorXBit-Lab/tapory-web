@@ -19,6 +19,7 @@ const VALID_TEMPLATES: TemplateId[] = [
   'social',
   'profile',
   'keepsake',
+  'album',
   'redirect',
 ];
 

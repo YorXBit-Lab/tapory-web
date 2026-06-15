@@ -14,6 +14,7 @@ const initialState: IEditDraft = {
   subtitle: '',
   description: '',
   imageUrl: '',
+  galleryUrls: [],
   spotifyUrl: '',
   date: '',
   fontStyle: '',

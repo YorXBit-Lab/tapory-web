@@ -41,7 +41,7 @@ export async function PATCH(req: NextRequest) {
   }
 
   // Whitelist các field được phép update
-  const allowed: (keyof typeof body)[] = ['nfcExtraPrice'];
+  const allowed: (keyof typeof body)[] = ['brand', 'contact', 'social', 'seo', 'nfcExtraPrice'];
   const update: Record<string, unknown> = {};
   for (const key of allowed) {
     if (key in body) update[key] = body[key];

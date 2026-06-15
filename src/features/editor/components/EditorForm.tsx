@@ -3,6 +3,7 @@ import { Tabs } from 'antd';
 import { useEditorContext } from '@/features/editor/context';
 import { updateField } from '@/redux/editSlice';
 import { useImageUpload } from '../hooks/useImageUpload';
+import { useGalleryUpload } from '../hooks/useGalleryUpload';
 import { useSaveDraft } from '../hooks/useSaveDraft';
 import { StylePicker } from './pickers/StylePicker';
 import { FontPicker } from './pickers/FontPicker';
@@ -14,12 +15,14 @@ import { IntroPicker } from './pickers/IntroPicker';
 import { TemplatePicker } from './pickers/TemplatePicker';
 import { SmartSuggestBanner } from './SmartSuggestBanner';
 import { ImageField } from './fields/ImageField';
+import { GalleryField } from './fields/GalleryField';
 import { TextField } from './fields/TextField';
 import { TextareaField } from './fields/TextareaField';
 
 export function EditorForm() {
   const { orderId, draft, fields, dispatch } = useEditorContext();
   const { uploading, handlePhoto, onSaved } = useImageUpload(orderId);
+  const gallery = useGalleryUpload(orderId);
   const { handleSave } = useSaveDraft(orderId, { onSaved });
   const isSpotify   = draft.templateId === 'spotify';
   const isRedirect  = draft.templateId === 'redirect';
@@ -102,6 +105,17 @@ export function EditorForm() {
       <div className="space-y-4">
         <p className="text-xs font-semibold uppercase tracking-wider text-content3">Nội dung</p>
         {fields.map(field => {
+          if (field.type === 'gallery') return (
+            <GalleryField
+              key={String(field.key)}
+              field={field}
+              urls={draft.galleryUrls ?? []}
+              uploading={gallery.uploading}
+              onAdd={gallery.addPhotos}
+              onRemove={gallery.removePhoto}
+              onMove={gallery.movePhoto}
+            />
+          );
           const value = (draft[field.key] as string) || '';
           if (field.type === 'image') return (
             <ImageField key={String(field.key)} field={field} value={value} uploading={uploading} onFile={handlePhoto} />

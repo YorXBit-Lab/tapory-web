@@ -62,7 +62,8 @@
       "Bash(cat src/hooks/product/index.ts)",
       "Bash(cat src/hooks/product/useProducts.ts)",
       "PowerShell(npx tsc --noEmit)",
-      "PowerShell(node --env-file=.env.local scripts/backfill-product-slug.mjs)"
+      "PowerShell(node --env-file=.env.local scripts/backfill-product-slug.mjs)",
+      "WebSearch"
     ]
   }
 }

@@ -102,6 +102,17 @@ export const TEMPLATES: Record<TemplateId, ITemplate> = {
       background: '#f3ead9',
     },
   },
+  album: {
+    id: 'album',
+    name: 'Album Ảnh',
+    icon: '📸',
+    occasion: 'Album kỷ niệm nhiều ảnh',
+    colors: {
+      primary: '#1a1a1a',
+      secondary: '#c44f6a',
+      background: '#0e0e12',
+    },
+  },
   redirect: {
     id: 'redirect',
     name: 'Chuyển Hướng',

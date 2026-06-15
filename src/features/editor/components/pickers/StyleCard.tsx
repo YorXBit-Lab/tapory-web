@@ -341,6 +341,36 @@ function MiniPreview({ layout, c }: { layout: string; c: Colors }) {
     </div>
   );
 
+  /* ── Sphere (album): cluster of tiles on a globe ── */
+  if (layout === 'sphere') return (
+    <div className="relative flex h-full w-full items-center justify-center overflow-hidden rounded-lg" style={{ background: `radial-gradient(circle at 50% 45%,${c.secondary}55,${c.accent})` }}>
+      <div className="relative" style={{ width: 32, height: 32 }}>
+        {[[13, 0], [25, 7], [25, 20], [13, 26], [2, 20], [2, 7], [19, 13], [7, 13]].map(([x, y], i) => (
+          <div key={i} style={{ position: 'absolute', left: x, top: y, width: 7, height: 7, borderRadius: 2, background: `linear-gradient(135deg,${c.secondary}dd,${c.primary}55)`, boxShadow: '0 1px 3px rgba(0,0,0,0.45)' }} />
+        ))}
+      </div>
+    </div>
+  );
+
+  /* ── Heart (album): tiles forming a heart outline ── */
+  if (layout === 'heart') return (
+    <div className="relative flex h-full w-full items-center justify-center overflow-hidden rounded-lg" style={{ background: `radial-gradient(circle at 50% 42%,${c.secondary}44,${c.accent})` }}>
+      <div className="relative" style={{ width: 34, height: 30 }}>
+        {[[9, 5], [5, 9], [25, 5], [29, 9], [17, 8], [2, 14], [32, 14], [8, 20], [26, 20], [17, 28]].map(([x, y], i) => (
+          <div key={i} style={{ position: 'absolute', left: x, top: y, width: 6, height: 6, borderRadius: 2, background: `${c.secondary}ee` }} />
+        ))}
+      </div>
+    </div>
+  );
+
+  /* ── Orbit (album): card on a 3D ring ── */
+  if (layout === 'orbit') return (
+    <div className="relative flex h-full w-full items-center justify-center overflow-hidden rounded-lg" style={{ background: c.accent }}>
+      <div className="absolute" style={{ width: 54, height: 24, border: `1px solid ${c.secondary}55`, borderRadius: '50%', transform: 'rotateX(60deg)' }} />
+      <div style={{ width: 14, height: 18, borderRadius: 3, background: `linear-gradient(135deg,${c.secondary}cc,${c.primary}44)`, border: `1px solid ${c.secondary}88`, zIndex: 1, boxShadow: `0 3px 8px ${c.secondary}55` }} />
+    </div>
+  );
+
   /* ── Generic fallback ── */
   return (
     <div className="h-full w-full rounded-lg" style={{ background: `linear-gradient(135deg,${c.accent},${c.secondary}33)` }}>

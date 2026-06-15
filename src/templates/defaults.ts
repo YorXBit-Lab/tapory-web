@@ -79,6 +79,14 @@ export const TEMPLATE_DEFAULTS: Record<TemplateId, ContentFields> = {
     imageUrl:    '',
     spotifyUrl:  '',
   },
+  album: {
+    title:       'Album kỷ niệm',
+    subtitle:    '',
+    description: 'Đôi dòng kể về những khoảnh khắc này…',
+    date:        '',
+    imageUrl:    '',
+    spotifyUrl:  '',
+  },
   redirect: {
     title:       '',
     subtitle:    '',

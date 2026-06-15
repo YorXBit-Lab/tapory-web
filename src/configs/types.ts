@@ -1,4 +1,4 @@
-export type TemplateId = 'graduation' | 'wedding' | 'birthday' | 'anniversary' | 'spotify' | 'social' | 'profile' | 'keepsake' | 'redirect';
+export type TemplateId = 'graduation' | 'wedding' | 'birthday' | 'anniversary' | 'spotify' | 'social' | 'profile' | 'keepsake' | 'album' | 'redirect';
 
 export type CardStatus = 'blank' | 'assigned' | 'published' | 'locked' | 'expired';
 
@@ -270,6 +270,8 @@ export interface IMemorial {
   subtitle?: string;
   description?: string;
   imageUrl?: string;
+  /** Album ảnh — nhiều hình kỷ niệm (template `album`). */
+  galleryUrls?: string[];
   spotifyUrl?: string;
   date?: string;
   fontStyle?: string;

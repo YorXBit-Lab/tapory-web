@@ -6,4 +6,5 @@ import './spotify';
 import './social';
 import './profile';
 import './keepsake';
+import './album';
 import './redirect';

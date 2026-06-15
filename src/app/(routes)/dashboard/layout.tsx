@@ -43,7 +43,10 @@ const NAV_ITEMS = [
   {
     type: 'group' as const,
     label: 'Hệ thống',
-    children: [{ key: '/dashboard/settings', icon: <SettingIcon />, label: 'Cài đặt' }],
+    children: [
+      { key: '/dashboard/settings/site', icon: <GlobeIcon />, label: 'Thông tin website' },
+      { key: '/dashboard/settings', icon: <SettingIcon />, label: 'Cài đặt' },
+    ],
   },
 ];
 
@@ -57,6 +60,7 @@ const PAGE_TITLES: Record<string, string> = {
   '/dashboard/users': 'Khách hàng',
   '/dashboard/memories': 'Kỷ niệm khách hàng',
   '/dashboard/nfcs': 'Chip NFC',
+  '/dashboard/settings/site': 'Thông tin website',
   '/dashboard/settings': 'Cài đặt',
 };
 
@@ -317,6 +321,15 @@ function SettingIcon() {
     <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
       <path d="M8 5a3 3 0 100 6A3 3 0 008 5zm0 1a2 2 0 110 4A2 2 0 018 6z" />
       <path d="M6.5 0h3l.4 1.6a5.5 5.5 0 011.3.75l1.55-.65 2.12 2.12-.65 1.55c.3.4.56.83.75 1.3L16 7v3l-1.58.38c-.19.47-.45.9-.75 1.3l.65 1.55-2.12 2.12-1.55-.65c-.4.3-.83.56-1.3.75L9 16H6l-.38-1.58a5.5 5.5 0 01-1.3-.75l-1.55.65L.65 12.2l.65-1.55A5.5 5.5 0 011.05 9.4L0 9V6l1.58-.38c.19-.47.45-.9.75-1.3L1.68 2.77 3.8.65l1.55.65A5.5 5.5 0 016.65 1L6.5 0z" />
+    </svg>
+  );
+}
+function GlobeIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.3">
+      <circle cx="8" cy="8" r="6.5" />
+      <ellipse cx="8" cy="8" rx="3" ry="6.5" />
+      <line x1="1.5" y1="8" x2="14.5" y2="8" />
     </svg>
   );
 }

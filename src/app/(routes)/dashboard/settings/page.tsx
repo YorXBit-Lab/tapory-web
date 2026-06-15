@@ -416,16 +416,6 @@ export default function SettingsPage() {
     <div className="grid max-w-4xl grid-cols-1 gap-5 md:grid-cols-2">
       <ShippingRatesCard />
       <TiktokCard />
-      <Card title="Cửa hàng">
-        <SettingRow
-          name="Tên cửa hàng"
-          desc="Góc Chạm – Móc Khóa Kỷ Niệm NFC"
-          action={<EditBtn />}
-        />
-        <SettingRow name="Giá bán mặc định" desc="189.000đ / móc khóa" action={<EditBtn />} />
-        <SettingRow name="Domain NFC" desc="tapory.com/view/{orderId}" action={<EditBtn />} />
-        <SettingRow name="Email liên hệ" desc="hello@tapory.com" action={<EditBtn />} />
-      </Card>
 
       {/* Tích hợp sàn */}
       <section>
@@ -487,10 +477,6 @@ function SettingRow({
       <Divider style={{ margin: 0 }} />
     </>
   );
-}
-
-function EditBtn() {
-  return <Button size="small">Sửa</Button>;
 }
 
 function ConfigBtn() {

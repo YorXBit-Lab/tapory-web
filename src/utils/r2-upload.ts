@@ -65,6 +65,23 @@ export async function uploadArticleImage(file: File, idToken: string): Promise<s
   return json.url!;
 }
 
+/** Upload tài nguyên cấu hình website (logo, favicon, ảnh OG) — trả về URL công khai. */
+export async function uploadSiteImage(file: File, idToken: string): Promise<string> {
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('folder', 'site');
+
+  const res = await fetch('/api/admin/upload-image', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${idToken}` },
+    body: formData,
+  });
+
+  const json = (await res.json()) as { url?: string; error?: string };
+  if (!res.ok) throw new Error(json.error ?? 'Upload thất bại');
+  return json.url!;
+}
+
 export async function uploadPrintPhoto(
   file: File,
   orderId: string,
