@@ -1,22 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PDFDocument } from 'pdf-lib';
+import { PDFDocument, type PDFPage } from 'pdf-lib';
 import { getAdminAuth, getAdminDb } from '@/libs/firebase-admin';
 import type { IOrderItem } from '@/services/OrderAPI';
 import type { IPrintPhotoSlot, IPrintConfig, PrintShape } from '@/configs/types';
-import {
-  mmToPt,
-  A4_W_PT,
-  A4_H_PT,
-  PRINT_SHEET,
-  GAP_BY_SHAPE,
-  resolvePrintSize,
-  printSizeKey,
-} from '@/configs/print';
-
-/* ── Layout constants — nguồn chung @/configs/print ── */
-const MARGIN_MM = PRINT_SHEET.marginMm;
-const GROUP_GAP_MM = PRINT_SHEET.groupGapMm;
-const GAP_MM = GAP_BY_SHAPE;
+import { mmToPt, resolvePrintSize, printSizeKey } from '@/configs/print';
+import { layoutGridA4, type GridItem, type GridBox } from '@/utils/pdf-grid';
 
 interface LayoutItem {
   frontBytes: Uint8Array;
@@ -25,97 +13,24 @@ interface LayoutItem {
   backIsJpeg?: boolean;
   widthPt: number;
   heightPt: number;
+  shape: PrintShape;
   groupKey: string;
-}
-
-interface DuplexRecord {
-  x: number;
-  y: number;
-  w: number;
-  h: number;
-  backBytes: Uint8Array;
-  backIsJpeg: boolean;
-}
-
-type PdfPage = ReturnType<PDFDocument['addPage']>;
-
-interface Cursor { page: PdfPage; topUsed: number; }
-
-async function buildGrid(
-  pdfDoc: PDFDocument,
-  items: LayoutItem[],
-  frontPageDuplex: Map<PdfPage, DuplexRecord[]>,
-): Promise<void> {
-  // Group by shape/size so same-size photos land on the same pages
-  const groupMap = new Map<string, LayoutItem[]>();
-  for (const item of items) {
-    if (!groupMap.has(item.groupKey)) groupMap.set(item.groupKey, []);
-    groupMap.get(item.groupKey)!.push(item);
-  }
-  const groups = Array.from(groupMap.values());
-
-  const marginPt   = mmToPt(MARGIN_MM);
-  const groupGapPt = mmToPt(GROUP_GAP_MM);
-
-  let cursor: Cursor | null = null;
-
-  for (let g = 0; g < groups.length; g++) {
-    const group    = groups[g];
-    const itemW    = group[0].widthPt;
-    const itemH    = group[0].heightPt;
-    const shapeKey = group[0].groupKey.split('-')[0] as PrintShape;
-    const gapPt    = mmToPt(GAP_MM[shapeKey] ?? 3);
-    const usableW  = A4_W_PT - 2 * marginPt;
-    const usableH  = A4_H_PT - 2 * marginPt;
-    const cols     = Math.max(1, Math.floor((usableW + gapPt) / (itemW + gapPt)));
-
-    if (cursor && g > 0) {
-      cursor.topUsed += groupGapPt;
-      if (cursor.topUsed + itemH > usableH) cursor = null;
-    }
-
-    let i = 0;
-    while (i < group.length) {
-      if (!cursor) {
-        cursor = { page: pdfDoc.addPage([A4_W_PT, A4_H_PT]), topUsed: 0 };
-      }
-
-      const remaining = usableH - cursor.topUsed;
-      const rowsFit   = Math.floor((remaining + gapPt) / (itemH + gapPt));
-      if (rowsFit <= 0) { cursor = null; continue; }
-
-      const chunk      = group.slice(i, i + rowsFit * cols);
-      const actualRows = Math.ceil(chunk.length / cols);
-
-      for (let j = 0; j < chunk.length; j++) {
-        const col = j % cols;
-        const row = Math.floor(j / cols);
-        const x   = marginPt + col * (itemW + gapPt);
-        const y   = A4_H_PT - marginPt - cursor.topUsed - (row + 1) * itemH - row * gapPt;
-
-        const img = chunk[j].frontIsJpeg
-          ? await pdfDoc.embedJpg(chunk[j].frontBytes)
-          : await pdfDoc.embedPng(chunk[j].frontBytes);
-        cursor.page.drawImage(img, { x, y, width: itemW, height: itemH });
-
-        if (chunk[j].backBytes) {
-          if (!frontPageDuplex.has(cursor.page)) frontPageDuplex.set(cursor.page, []);
-          frontPageDuplex.get(cursor.page)!.push({
-            x, y, w: itemW, h: itemH,
-            backBytes: chunk[j].backBytes!,
-            backIsJpeg: chunk[j].backIsJpeg ?? false,
-          });
-        }
-      }
-
-      cursor.topUsed += actualRows * (itemH + gapPt);
-      i += chunk.length;
-    }
-  }
 }
 
 /* ── Helpers ── */
 function isJpeg(url: string) { return /\.(jpg|jpeg)(\?|$)/i.test(url); }
+
+/** Vẽ 1 ảnh (jpg/png) vào ô box trên trang PDF. */
+async function drawImage(
+  pdfDoc: PDFDocument,
+  page: PDFPage,
+  bytes: Uint8Array,
+  isJpg: boolean,
+  box: GridBox,
+) {
+  const img = isJpg ? await pdfDoc.embedJpg(bytes) : await pdfDoc.embedPng(bytes);
+  page.drawImage(img, { x: box.x, y: box.y, width: box.width, height: box.height });
+}
 
 function printConfigToGroupKey(cfg: IPrintConfig): { key: string; widthPt: number; heightPt: number } {
   const { widthCm, heightCm } = resolvePrintSize(cfg);
@@ -190,6 +105,7 @@ export async function POST(req: NextRequest) {
         const item = order.items[itemIdx];
         if (!item.printConfig?.enabled) continue;
         const { key, widthPt, heightPt } = printConfigToGroupKey(item.printConfig);
+        const shape: PrintShape = item.printConfig.shape ?? 'rectangle';
 
         for (let slotIdx = 0; slotIdx < item.quantity; slotIdx++) {
           const photoA = order.printPhotos.find(
@@ -203,11 +119,11 @@ export async function POST(req: NextRequest) {
             // NFC: 2 cutout photos — both placed as independent items (no duplex)
             if (photoA) {
               const bytes = await fetchBytes(photoA.url);
-              if (bytes) allItems.push({ frontBytes: bytes, frontIsJpeg: isJpeg(photoA.url), widthPt, heightPt, groupKey: key });
+              if (bytes) allItems.push({ frontBytes: bytes, frontIsJpeg: isJpeg(photoA.url), widthPt, heightPt, shape, groupKey: key });
             }
             if (photoB) {
               const bytes = await fetchBytes(photoB.url);
-              if (bytes) allItems.push({ frontBytes: bytes, frontIsJpeg: isJpeg(photoB.url), widthPt, heightPt, groupKey: key });
+              if (bytes) allItems.push({ frontBytes: bytes, frontIsJpeg: isJpeg(photoB.url), widthPt, heightPt, shape, groupKey: key });
             }
           } else {
             // Non-NFC: duplex — side A on front, side B mirrored on back
@@ -220,6 +136,7 @@ export async function POST(req: NextRequest) {
               frontIsJpeg: isJpeg(photoA.url),
               widthPt,
               heightPt,
+              shape,
               groupKey: key,
             };
 
@@ -245,22 +162,19 @@ export async function POST(req: NextRequest) {
     }
 
     const pdfDoc = await PDFDocument.create();
-    const frontPageDuplex = new Map<PdfPage, DuplexRecord[]>();
 
-    await buildGrid(pdfDoc, allItems, frontPageDuplex);
+    const gridItems: GridItem[] = allItems.map((it) => ({
+      widthPt: it.widthPt,
+      heightPt: it.heightPt,
+      shape: it.shape,
+      groupKey: it.groupKey,
+      drawFront: (page, box) => drawImage(pdfDoc, page, it.frontBytes, it.frontIsJpeg, box),
+      ...(it.backBytes
+        ? { drawBack: (page: PDFPage, box: GridBox) => drawImage(pdfDoc, page, it.backBytes!, it.backIsJpeg ?? false, box) }
+        : {}),
+    }));
 
-    // Generate back pages — mirror each duplex item horizontally (long-edge flip)
-    for (const [, duplexItems] of frontPageDuplex) {
-      if (!duplexItems.length) continue;
-      const backPage = pdfDoc.addPage([A4_W_PT, A4_H_PT]);
-      for (const di of duplexItems) {
-        const xMirrored = A4_W_PT - di.x - di.w;
-        const img = di.backIsJpeg
-          ? await pdfDoc.embedJpg(di.backBytes)
-          : await pdfDoc.embedPng(di.backBytes);
-        backPage.drawImage(img, { x: xMirrored, y: di.y, width: di.w, height: di.h });
-      }
-    }
+    await layoutGridA4(pdfDoc, gridItems);
 
     const pdfBytes = await pdfDoc.save();
     return new NextResponse(Buffer.from(pdfBytes), {
