@@ -63,7 +63,17 @@
       "Bash(cat src/hooks/product/useProducts.ts)",
       "PowerShell(npx tsc --noEmit)",
       "PowerShell(node --env-file=.env.local scripts/backfill-product-slug.mjs)",
-      "WebSearch"
+      "WebSearch",
+      "PowerShell(npx tsc --noEmit 2>&1 | Select-Object -First 12)",
+      "PowerShell(Get-Content *)",
+      "PowerShell(Start-Sleep -Seconds 2; \\(Invoke-WebRequest -UseBasicParsing \"http://localhost:3000/edit/demo?template=album\"\\).StatusCode; Get-Content \"C:\\\\Users\\\\ADMIN\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\D--YORXBIT-tapory-web\\\\006ee4cb-5beb-4da0-bc94-0084bb6baa81\\\\tasks\\\\b8ipmqrig.output\" -Tail 4)",
+      "PowerShell(npx tsc --noEmit 2>&1 | Select-String -Pattern \"album|Heart|_shared\"; \"TSC_DONE\"; Start-Sleep -Seconds 2; \\(Invoke-WebRequest -UseBasicParsing \"http://localhost:3000/edit/demo?template=album\"\\).StatusCode)",
+      "PowerShell(node -e \"try{require.resolve\\('playwright'\\);console.log\\('playwright'\\)}catch{}; try{require.resolve\\('puppeteer'\\);console.log\\('puppeteer'\\)}catch{}; try{require.resolve\\('playwright-core'\\);console.log\\('playwright-core'\\)}catch{}\")",
+      "Bash(yarn install *)",
+      "Bash(echo \"---exit $?---\")",
+      "Bash(git *)",
+      "Bash(ls README*)",
+      "Bash(head -5 README.md)"
     ]
   }
 }

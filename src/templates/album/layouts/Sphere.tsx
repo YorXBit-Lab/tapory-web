@@ -1,15 +1,14 @@
 'use client';
 import { useMemo, useState } from 'react';
-import { fmt } from '@/shared/utils/fmt';
 import { getFontFamily, getImageFilter, getTitleFontSize } from '@/shared/utils/styleHelpers';
 import type { LayoutProps } from '@/templates/types';
 import { getPhotos, spherePositions } from './_shared';
 import { useDragSpin } from './_hooks';
 import { Lightbox } from './Lightbox';
+import { ALBUM_KEYFRAMES, AlbumBackdrop, AlbumParticles, AlbumStageGlow, AlbumHeader, AlbumFooter } from './_chrome';
 
-const KEYFRAMES = `@keyframes albStageIn { 0% { opacity: 0; transform: scale(0.7); } 100% { opacity: 1; transform: scale(1); } }`;
-const R = 84;
-const TILE = 50;
+const R = 90;
+const TILE = 54;
 
 export function AlbumSphere({ data, c }: LayoutProps) {
   const font      = getFontFamily(data.fontStyle);
@@ -26,22 +25,19 @@ export function AlbumSphere({ data, c }: LayoutProps) {
   return (
     <div className="relative flex h-full w-full flex-col overflow-hidden"
       style={{ background: `radial-gradient(75% 55% at 50% 40%, ${c.secondary}30, transparent 70%), ${c.accent}` }}>
-      <style>{KEYFRAMES}</style>
+      <style>{ALBUM_KEYFRAMES}</style>
+      <AlbumBackdrop c={c} />
+      <AlbumParticles c={c} count={18} />
 
-      {/* Header */}
-      <div className="relative z-10 px-5 pt-5 text-center">
-        <p className="text-[7px] font-bold uppercase tracking-[0.55em]" style={{ color: c.secondary, opacity: 0.8 }}>Album</p>
-        <p className="mt-1 font-bold leading-tight" style={{ fontFamily: font, fontSize: titleSize, color: c.primary }}>
-          {data.title || 'Album kỷ niệm'}
-        </p>
-        {data.date && (
-          <p className="mt-1 text-[8px] font-bold uppercase tracking-[0.4em]" style={{ color: c.secondary }}>{fmt(data.date)}</p>
-        )}
-      </div>
+      <AlbumHeader data={data} c={c} font={font} titleSize={titleSize} kicker="Album" />
 
       {/* Sphere stage */}
-      <div className="relative flex flex-1 items-center justify-center" style={{ perspective: 760, animation: 'albStageIn 0.7s cubic-bezier(.2,.7,.2,1) both' }}>
-        <div className="pointer-events-none absolute h-28 w-28 rounded-full" style={{ background: `${c.secondary}55`, filter: 'blur(36px)' }} />
+      <div className="relative flex flex-1 items-center justify-center" style={{ perspective: 780, animation: 'albStageIn 0.7s cubic-bezier(.2,.7,.2,1) both' }}>
+        <AlbumStageGlow c={c} pulse />
+        {/* Vòng sáng xoay dưới chân quả cầu — gợi quỹ đạo, tạo chiều sâu */}
+        <div className="pointer-events-none absolute left-1/2 top-1/2 h-44 w-44 rounded-full"
+          style={{ border: `1px solid ${c.secondary}40`, boxShadow: `0 0 22px ${c.secondary}33 inset`, animation: 'albRingSpin 18s linear infinite' }} />
+
         <div ref={spinRef} className="absolute inset-0" style={{ transformStyle: 'preserve-3d', touchAction: 'none', cursor: 'grab' }}>
           {placed.map((p, i) => {
             const url = unique[i % unique.length];
@@ -57,13 +53,16 @@ export function AlbumSphere({ data, c }: LayoutProps) {
                   marginLeft: -TILE / 2, marginTop: -TILE / 2,
                   transform: p.transform,
                   backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden',
-                  border: `1px solid ${c.primary}33`,
-                  boxShadow: `0 4px 14px rgba(0,0,0,0.45)`,
+                  border: `1px solid ${c.secondary}4d`,
+                  boxShadow: `0 6px 18px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05) inset`,
                   background: '#14141c',
                 }}
               >
                 {url ? (
-                  <img src={url} alt="" className="h-full w-full object-cover" style={{ backfaceVisibility: 'hidden' }} draggable={false} />
+                  <>
+                    <img src={url} alt="" className="h-full w-full object-cover" style={{ filter: imgFilter, backfaceVisibility: 'hidden' }} draggable={false} />
+                    <span className="pointer-events-none absolute inset-0" style={{ background: `linear-gradient(135deg, rgba(255,255,255,0.18), transparent 45%)` }} />
+                  </>
                 ) : (
                   <div className="flex h-full w-full items-center justify-center text-lg" style={{ color: '#3a3a48' }}>📷</div>
                 )}
@@ -73,17 +72,8 @@ export function AlbumSphere({ data, c }: LayoutProps) {
         </div>
       </div>
 
-      {/* Footer */}
-      <div className="relative z-10 px-5 pb-4 text-center">
-        {data.description && (
-          <p className="mx-auto max-w-[92%] text-[9px] italic leading-relaxed" style={{ fontFamily: font, color: c.primary, opacity: 0.72 }}>
-            {data.description}
-          </p>
-        )}
-        <p className="mt-1.5 text-[8px]" style={{ color: c.primary, opacity: 0.45 }}>
-          {isPlaceholder ? 'Thêm 5–10 ảnh để tạo quả cầu kỷ niệm' : 'Kéo để xoay · chạm ảnh để phóng to'}
-        </p>
-      </div>
+      <AlbumFooter data={data} c={c} font={font}
+        hint={isPlaceholder ? 'Thêm 5–10 ảnh để tạo quả cầu kỷ niệm' : 'Kéo để xoay · chạm ảnh để phóng to'} />
 
       {lb !== null && (
         <Lightbox photos={unique} index={lb} onIndex={setLb} onClose={() => setLb(null)} c={c} filter={imgFilter} title={data.title} description={data.description} date={data.date} />
