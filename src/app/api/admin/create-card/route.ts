@@ -1,17 +1,7 @@
-import { createHash } from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { getAdminAuth, getAdminDb } from '@/libs/firebase-admin';
+import { normalisePhone, hashPhone } from '@/utils/phone';
 import type { TemplateId } from '@/configs/types';
-
-/** Giống /api/auth/token: mật khẩu được chuẩn hoá về dạng số rồi hash. */
-function normalisePhone(raw: string): string {
-  const digits = raw.replace(/\D/g, '');
-  if (digits.startsWith('84') && digits.length >= 11) return '0' + digits.slice(2);
-  return digits;
-}
-function hashPassword(raw: string): string {
-  return createHash('sha256').update(normalisePhone(raw)).digest('hex');
-}
 
 const VALID_TEMPLATES: TemplateId[] = [
   'graduation',
@@ -83,7 +73,7 @@ export async function POST(req: NextRequest) {
 
     if (hasPassword) {
       await adminDb.collection('cardAuth').doc(cardId).set({
-        phoneHash: hashPassword(rawPassword),
+        phoneHash: await hashPhone(rawPassword),
         failCount: 0,
         lockedUntil: null,
         createdAt: now,

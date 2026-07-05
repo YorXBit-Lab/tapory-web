@@ -4,6 +4,7 @@
  */
 import { FieldValue, type Firestore } from 'firebase-admin/firestore';
 import { stockKey, resolveProductBom } from '@/utils/bom';
+import { hashPhone } from '@/utils/phone';
 import type { IOrderItem } from '@/services/OrderAPI';
 
 export type OrderSourceServer = 'local' | 'web' | 'tiktok' | 'shopee';
@@ -26,13 +27,6 @@ function generateOrderId(): string {
   const d = String(now.getDate()).padStart(2, '0');
   const rand = Math.random().toString(36).slice(2, 6).toUpperCase();
   return `ORD${y}${m}${d}${rand}`;
-}
-
-async function hashPhone(phone: string): Promise<string> {
-  let n = phone.replace(/\D/g, '');
-  if (n.startsWith('84')) n = '0' + n.slice(2);
-  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(n));
-  return Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, '0')).join('');
 }
 
 function cleanItem(item: IOrderItem): Record<string, unknown> {
