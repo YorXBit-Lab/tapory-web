@@ -36,18 +36,19 @@ export function ProductsSection({ products }: { products: ProductCard[] }) {
                     NFC
                   </Tag>
                 )}
-                <div className="mx-auto mb-7 h-36 w-36">
+                <div className="mb-7 aspect-square w-full">
                   {p.imageUrl ? (
                     <Image
                       src={p.imageUrl}
                       alt={p.name}
-                      width={144}
-                      height={144}
+                      width="100%"
+                      height="100%"
                       preview={false}
                       style={{ objectFit: 'cover' }}
+                      wrapperStyle={{ display: 'block', width: '100%', height: '100%' }}
                       styles={{
                         root: {
-                          borderRadius: '50%',
+                          borderRadius: '16px',
                           overflow: 'hidden',
                           boxShadow: '0 10px 15px -3px rgba(0,0,0,.1),0 4px 6px -4px rgba(0,0,0,.1)',
                         },
@@ -55,7 +56,7 @@ export function ProductsSection({ products }: { products: ProductCard[] }) {
                     />
                   ) : (
                     <div
-                      className="h-36 w-36 rounded-full shadow-lg"
+                      className="h-full w-full rounded-2xl shadow-lg"
                       style={{ background: 'radial-gradient(circle at 35% 30%,#F6F0E8,#8B6B52)' }}
                     />
                   )}
