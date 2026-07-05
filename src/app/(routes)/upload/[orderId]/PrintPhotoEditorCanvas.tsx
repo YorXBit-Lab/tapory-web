@@ -54,8 +54,8 @@ export function PrintPhotoEditorCanvas({ imageUrl, W, H, isCircle, state, onChan
   }
 
   const clipFn = isCircle
-    ? (ctx: CanvasRenderingContext2D) => { ctx.arc(W / 2, H / 2, W / 2, 0, Math.PI * 2) }
-    : (ctx: CanvasRenderingContext2D) => { ctx.rect(0, 0, W, H) }
+    ? (ctx: Konva.Context) => { ctx.arc(W / 2, H / 2, W / 2, 0, Math.PI * 2) }
+    : (ctx: Konva.Context) => { ctx.rect(0, 0, W, H) }
 
   return (
     <Stage width={W} height={H} onWheel={handleWheel} style={{ cursor: 'grab', display: 'block' }}>

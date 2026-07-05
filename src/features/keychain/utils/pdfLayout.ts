@@ -1,15 +1,12 @@
 import { PDFDocument } from 'pdf-lib'
-import { mmToPt, A4_W_PT, A4_H_PT } from './dpi'
+import { mmToPt, A4_W_PT, A4_H_PT, PRINT_SHEET, GAP_BY_SHAPE } from '@/configs/print'
 import type { KeychainTemplate } from '../types'
 
-const MARGIN_MM    = 8
-const GROUP_GAP_MM = 4
+const MARGIN_MM    = PRINT_SHEET.marginMm
+const GROUP_GAP_MM = PRINT_SHEET.groupGapMm
 
-export const GAP_BY_SHAPE: Record<string, number> = {
-  rectangle: 1,
-  square:    1,
-  circle:    5,
-}
+// Re-export để các nơi đang import GAP_BY_SHAPE từ file này vẫn hoạt động.
+export { GAP_BY_SHAPE }
 
 export interface PdfExportItem {
   pngDataUrl: string

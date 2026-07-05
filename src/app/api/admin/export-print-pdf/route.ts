@@ -2,16 +2,21 @@ import { NextRequest, NextResponse } from 'next/server';
 import { PDFDocument } from 'pdf-lib';
 import { getAdminAuth, getAdminDb } from '@/libs/firebase-admin';
 import type { IOrderItem } from '@/services/OrderAPI';
-import type { IPrintPhotoSlot, IPrintConfig } from '@/configs/types';
+import type { IPrintPhotoSlot, IPrintConfig, PrintShape } from '@/configs/types';
+import {
+  mmToPt,
+  A4_W_PT,
+  A4_H_PT,
+  PRINT_SHEET,
+  GAP_BY_SHAPE,
+  resolvePrintSize,
+  printSizeKey,
+} from '@/configs/print';
 
-/* ── Layout constants — mirrors /keychain pdfLayout.ts ── */
-const MARGIN_MM = 8;
-const GROUP_GAP_MM = 4;
-const GAP_MM: Record<string, number> = { rectangle: 1, square: 1, circle: 5 };
-
-function mmToPt(mm: number) { return (mm / 25.4) * 72; }
-const A4_W_PT = mmToPt(210);
-const A4_H_PT = mmToPt(297);
+/* ── Layout constants — nguồn chung @/configs/print ── */
+const MARGIN_MM = PRINT_SHEET.marginMm;
+const GROUP_GAP_MM = PRINT_SHEET.groupGapMm;
+const GAP_MM = GAP_BY_SHAPE;
 
 interface LayoutItem {
   frontBytes: Uint8Array;
@@ -58,7 +63,7 @@ async function buildGrid(
     const group    = groups[g];
     const itemW    = group[0].widthPt;
     const itemH    = group[0].heightPt;
-    const shapeKey = group[0].groupKey.split('-')[0];
+    const shapeKey = group[0].groupKey.split('-')[0] as PrintShape;
     const gapPt    = mmToPt(GAP_MM[shapeKey] ?? 3);
     const usableW  = A4_W_PT - 2 * marginPt;
     const usableH  = A4_H_PT - 2 * marginPt;
@@ -113,17 +118,12 @@ async function buildGrid(
 function isJpeg(url: string) { return /\.(jpg|jpeg)(\?|$)/i.test(url); }
 
 function printConfigToGroupKey(cfg: IPrintConfig): { key: string; widthPt: number; heightPt: number } {
-  if (cfg.shape === 'circle') {
-    const d = mmToPt((cfg.diameter ?? 5) * 10);
-    return { key: `circle-${cfg.diameter}`, widthPt: d, heightPt: d };
-  }
-  if (cfg.shape === 'square') {
-    const s = mmToPt((cfg.width ?? 5) * 10);
-    return { key: `square-${cfg.width}`, widthPt: s, heightPt: s };
-  }
-  const w = mmToPt((cfg.width ?? 5) * 10);
-  const h = mmToPt((cfg.height ?? 7) * 10);
-  return { key: `rectangle-${cfg.width}-${cfg.height}`, widthPt: w, heightPt: h };
+  const { widthCm, heightCm } = resolvePrintSize(cfg);
+  return {
+    key: printSizeKey(cfg),
+    widthPt: mmToPt(widthCm * 10),
+    heightPt: mmToPt(heightCm * 10),
+  };
 }
 
 interface OrderData {

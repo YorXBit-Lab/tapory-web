@@ -2,6 +2,7 @@
 
 import dynamic from 'next/dynamic'
 import type { IPrintConfig } from '@/configs/types'
+import { resolvePrintSize } from '@/configs/print'
 import type { PhotoEditorState } from './PrintPhotoEditorCanvas'
 
 const Canvas = dynamic(
@@ -17,13 +18,9 @@ const Canvas = dynamic(
 const MAX_PX = 160
 
 export function cfgToDims(cfg: IPrintConfig) {
-  const isCircle = cfg.shape === 'circle'
-  const wCm = isCircle
-    ? (cfg.diameter ?? 3)
-    : (cfg.width ?? (cfg.shape === 'square' ? 3.35 : 3.2))
-  const hCm = isCircle ? wCm : (cfg.shape === 'square' ? wCm : (cfg.height ?? 5))
-  const scale = MAX_PX / Math.max(wCm, hCm)
-  return { W: Math.round(wCm * scale), H: Math.round(hCm * scale), isCircle }
+  const { widthCm, heightCm, isCircle } = resolvePrintSize(cfg)
+  const scale = MAX_PX / Math.max(widthCm, heightCm)
+  return { W: Math.round(widthCm * scale), H: Math.round(heightCm * scale), isCircle }
 }
 
 interface Props {
