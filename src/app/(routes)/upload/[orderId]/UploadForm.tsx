@@ -2,8 +2,10 @@
 
 import { useRef, useState } from 'react';
 import { Button, Typography, notification } from 'antd';
-import { UploadOutlined, CheckCircleOutlined } from '@ant-design/icons';
+import { UploadOutlined, CheckCircleOutlined, SaveOutlined } from '@ant-design/icons';
 import { uploadPrintPhoto } from '@/utils/r2-upload';
+import { bakeCropToBlob } from '@/utils/crop-bake';
+import { resolvePrintSize, cmToPx, PRINT_DPI } from '@/configs/print';
 import type { IPrintConfig, IPrintPhotoSlot } from '@/configs/types';
 import { PrintPhotoEditor, cfgToDims } from './PrintPhotoEditor';
 import type { PhotoEditorState } from './PrintPhotoEditorCanvas';
@@ -65,6 +67,7 @@ export default function UploadForm({ orderId, customerName, printItems, initialP
     return init;
   });
   const [uploading, setUploading] = useState<Record<string, boolean>>({});
+  const [rawFiles, setRawFiles] = useState<Record<string, File>>({});
   const [editorStates, setEditorStates] = useState<Record<string, PhotoEditorState | null>>({});
   const [samePhoto, setSamePhoto] = useState<Record<string, boolean>>(() => {
     const init: Record<string, boolean> = {};
@@ -78,48 +81,60 @@ export default function UploadForm({ orderId, customerName, printItems, initialP
   });
   const inputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
-  const handleUpload = async (file: File, itemIndex: number, slotIndex: number, side: 'a' | 'b') => {
-    const key = photoKey(itemIndex, slotIndex, side);
-    setUploading(prev => ({ ...prev, [key]: true }));
-    try {
-      const { url } = await uploadPrintPhoto(file, orderId, itemIndex, slotIndex, side);
-      setPhotos(prev => ({ ...prev, [key]: url }));
-      setEditorStates(prev => ({ ...prev, [key]: null })); // reset → re-fit on load
-      notification.success({ message: 'Upload thành công', duration: 2 });
-    } catch (err) {
-      notification.error({
-        message: 'Upload thất bại',
-        description: err instanceof Error ? err.message : 'Thử lại sau',
-      });
-    } finally {
-      setUploading(prev => ({ ...prev, [key]: false }));
-    }
+  // Chọn ảnh: chỉ preview cục bộ (chưa upload). Khách chỉnh crop rồi bấm "Lưu".
+  const selectPhoto = (file: File, itemIndex: number, slotIndex: number, sides: ('a' | 'b')[]) => {
+    const objectUrl = URL.createObjectURL(file);
+    const keys = sides.map(s => photoKey(itemIndex, slotIndex, s));
+    setPhotos(prev => ({ ...prev, ...Object.fromEntries(keys.map(k => [k, objectUrl])) }));
+    setRawFiles(prev => ({ ...prev, ...Object.fromEntries(keys.map(k => [k, file])) }));
+    setEditorStates(prev => ({ ...prev, ...Object.fromEntries(keys.map(k => [k, null])) }));
   };
 
-  const handleUploadBoth = async (file: File, itemIndex: number, slotIndex: number) => {
-    const keyA = photoKey(itemIndex, slotIndex, 'a');
-    const keyB = photoKey(itemIndex, slotIndex, 'b');
-    setUploading(prev => ({ ...prev, [keyA]: true, [keyB]: true }));
+  // Bake vùng crop hiện tại thành PNG 300 DPI rồi upload — bản in đúng như preview.
+  const savePhoto = async (itemIndex: number, slotIndex: number, cfg: IPrintConfig, sides: ('a' | 'b')[]) => {
+    const keys = sides.map(s => photoKey(itemIndex, slotIndex, s));
+    const file = rawFiles[keys[0]];
+    const transform = editorStates[keys[0]];
+    if (!file || !transform) return;
+
+    const { W, H } = cfgToDims(cfg);
+    const { widthCm, heightCm, isCircle } = resolvePrintSize(cfg);
+
+    setUploading(prev => ({ ...prev, ...Object.fromEntries(keys.map(k => [k, true])) }));
     try {
-      const [resA, resB] = await Promise.all([
-        uploadPrintPhoto(file, orderId, itemIndex, slotIndex, 'a'),
-        uploadPrintPhoto(file, orderId, itemIndex, slotIndex, 'b'),
-      ]);
-      setPhotos(prev => ({ ...prev, [keyA]: resA.url, [keyB]: resB.url }));
-      setEditorStates(prev => ({ ...prev, [keyA]: null, [keyB]: null }));
-      notification.success({ message: 'Upload thành công cho cả 2 mặt', duration: 2 });
+      const blob = await bakeCropToBlob(file, {
+        displayW: W, displayH: H,
+        outputW: cmToPx(widthCm, PRINT_DPI),
+        outputH: cmToPx(heightCm, PRINT_DPI),
+        isCircle, transform,
+      });
+      const baked = new File([blob], 'print.png', { type: 'image/png' });
+      const results = await Promise.all(
+        sides.map(s => uploadPrintPhoto(baked, orderId, itemIndex, slotIndex, s)),
+      );
+      setPhotos(prev => {
+        const next = { ...prev };
+        sides.forEach((s, i) => { next[photoKey(itemIndex, slotIndex, s)] = results[i].url; });
+        return next;
+      });
+      setRawFiles(prev => {
+        const next = { ...prev };
+        for (const k of keys) delete next[k];
+        return next;
+      });
+      notification.success({ message: sides.length > 1 ? 'Đã lưu cho cả 2 mặt' : 'Đã lưu ảnh', duration: 2 });
     } catch (err) {
       notification.error({
-        message: 'Upload thất bại',
+        message: 'Lưu ảnh thất bại',
         description: err instanceof Error ? err.message : 'Thử lại sau',
       });
     } finally {
-      setUploading(prev => ({ ...prev, [keyA]: false, [keyB]: false }));
+      setUploading(prev => ({ ...prev, ...Object.fromEntries(keys.map(k => [k, false])) }));
     }
   };
 
   const totalSlots = printItems.reduce((s, item) => s + totalSlotsForItem(item), 0);
-  const uploadedCount = Object.keys(photos).length;
+  const uploadedCount = Object.keys(photos).filter(k => !rawFiles[k]).length;
   const allDone = uploadedCount >= totalSlots;
 
   return (
@@ -200,7 +215,9 @@ export default function UploadForm({ orderId, customerName, printItems, initialP
                             }
                             inputRef={(el) => { inputRefs.current[`${sk}-same`] = el; }}
                             onTrigger={() => inputRefs.current[`${sk}-same`]?.click()}
-                            onChange={(file) => handleUploadBoth(file, item.itemIndex, slotIndex)}
+                            onChange={(file) => selectPhoto(file, item.itemIndex, slotIndex, ['a', 'b'])}
+                            isDraft={!!rawFiles[photoKey(item.itemIndex, slotIndex, 'a')]}
+                            onSave={() => savePhoto(item.itemIndex, slotIndex, item.printConfig, ['a', 'b'])}
                           />
                         </div>
                       ) : (
@@ -219,7 +236,9 @@ export default function UploadForm({ orderId, customerName, printItems, initialP
                                 onEditorChange={(s) => setEditorStates(prev => ({ ...prev, [key]: s }))}
                                 inputRef={(el) => { inputRefs.current[key] = el; }}
                                 onTrigger={() => inputRefs.current[key]?.click()}
-                                onChange={(file) => handleUpload(file, item.itemIndex, slotIndex, side)}
+                                onChange={(file) => selectPhoto(file, item.itemIndex, slotIndex, [side])}
+                                isDraft={!!rawFiles[key]}
+                                onSave={() => savePhoto(item.itemIndex, slotIndex, item.printConfig, [side])}
                               />
                             );
                           })}
@@ -252,12 +271,15 @@ interface SlotProps {
   inputRef: (el: HTMLInputElement | null) => void;
   onTrigger: () => void;
   onChange: (file: File) => void;
+  isDraft: boolean;
+  onSave: () => void;
 }
 
 function UploadSlot({
   label, slotKey, url, isUploading, cfg,
   editorState, onEditorChange,
   inputRef, onTrigger, onChange,
+  isDraft, onSave,
 }: SlotProps) {
   const { W, H, isCircle } = cfgToDims(cfg);
 
@@ -310,10 +332,30 @@ function UploadSlot({
         )}
       </div>
 
-      {/* tầng 3: action button */}
-      <Button size="small" icon={<UploadOutlined />} loading={isUploading} onClick={onTrigger} className="w-full">
-        {hasImage ? 'Đổi ảnh' : 'Chọn ảnh'}
-      </Button>
+      {/* tầng 3: action buttons */}
+      {isDraft ? (
+        <div className="flex w-full flex-col gap-1">
+          <Button
+            size="small"
+            type="primary"
+            icon={<SaveOutlined />}
+            loading={isUploading}
+            disabled={!editorState}
+            onClick={onSave}
+            className="w-full"
+          >
+            Lưu ảnh in
+          </Button>
+          <Button size="small" icon={<UploadOutlined />} onClick={onTrigger} disabled={isUploading} className="w-full">
+            Đổi ảnh
+          </Button>
+          <span className="text-center text-[10px] text-warning">Chưa lưu — bấm “Lưu” sau khi căn ảnh</span>
+        </div>
+      ) : (
+        <Button size="small" icon={<UploadOutlined />} loading={isUploading} onClick={onTrigger} className="w-full">
+          {hasImage ? 'Đổi ảnh' : 'Chọn ảnh'}
+        </Button>
+      )}
 
       <input
         key={slotKey}
