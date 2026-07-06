@@ -2,6 +2,7 @@
 import { useRef } from 'react';
 import type { FieldMeta } from '@/templates/types';
 import { GALLERY_MAX } from '../../hooks/useGalleryUpload';
+import { MAX_IMAGE_MB } from '@/utils/image-file';
 
 interface Props {
   field: FieldMeta;
@@ -82,7 +83,7 @@ export function GalleryField({ field, urls, uploading, onAdd, onRemove, onMove }
       </div>
 
       <p className="mt-1.5 text-[11px] text-content3">
-        Nên thêm {MIN_RECOMMENDED}–{GALLERY_MAX} ảnh. Kéo ‹ › để sắp thứ tự hiển thị.
+        Nên thêm {MIN_RECOMMENDED}–{GALLERY_MAX} ảnh, tối đa {MAX_IMAGE_MB} MB/ảnh. Kéo ‹ › để sắp thứ tự hiển thị.
       </p>
 
       <input

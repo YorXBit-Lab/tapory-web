@@ -8,6 +8,16 @@ export const ALBUM_STYLES: ITemplateStyle[] = [
     colors: { primary: '#fff0f4', secondary: '#ff5d8f', accent: '#1a0710' } },
   { id: 'album-orbit',  layout: 'orbit',  name: 'Vòng xoay',
     colors: { primary: '#f5f5f7', secondary: '#22d3ee', accent: '#070a10' } },
+  { id: 'album-mosaic', layout: 'mosaic', name: 'Lưới ảnh',
+    colors: { primary: '#f4f4f7', secondary: '#a78bfa', accent: '#0b0a12' } },
+  { id: 'album-carousel', layout: 'carousel', name: 'Băng chuyền',
+    colors: { primary: '#eef6f7', secondary: '#2dd4bf', accent: '#07100f' } },
+  { id: 'album-reel',   layout: 'reel',   name: 'Cuộn phim',
+    colors: { primary: '#f2f0ec', secondary: '#f4c542', accent: '#08080a' } },
+  { id: 'album-swipe',  layout: 'swipe',  name: 'Vuốt xem',
+    colors: { primary: '#f4f5f7', secondary: '#60a5fa', accent: '#080b12' } },
+  { id: 'album-photobooth', layout: 'photobooth', name: 'Photobooth',
+    colors: { primary: '#f6f3ee', secondary: '#ff5d8f', accent: '#12080d' } },
 ];
 
 export const ALBUM_FIELDS: FieldMeta[] = [

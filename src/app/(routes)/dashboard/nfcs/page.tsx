@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react';
 import { Input, Modal, notification, Segmented, Select, Spin, Table, Tag, Tooltip, Typography } from 'antd';
 import { Button } from 'antd';
-import { PlusOutlined, SearchOutlined, WifiOutlined } from '@ant-design/icons';
+import { CopyOutlined, PlusOutlined, SearchOutlined, WifiOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import Link from 'next/link';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -132,6 +132,28 @@ export default function NfcPage() {
     }
   };
 
+  /** Copy đúng link sẽ ghi vào chip NFC (= URL trang xem). */
+  const copyViewLink = async (cardId: string) => {
+    const url = `${window.location.origin}/view/${cardId}`;
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(url);
+      } else {
+        const ta = document.createElement('textarea');
+        ta.value = url;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+      }
+      notification.success({ message: 'Đã copy link ghi NFC', description: url });
+    } catch {
+      notification.error({ message: 'Copy thất bại', description: url });
+    }
+  };
+
   const { data: cards = [] }  = useQuery({ queryKey: ['cards-all'], queryFn: () => CardAPI.listAll(), staleTime: 60_000 });
   const { data: orders = [] } = useQuery({ queryKey: ['orders'],    queryFn: () => OrderAPI.list(),   staleTime: 60_000 });
 
@@ -213,9 +235,17 @@ export default function NfcPage() {
     {
       title: 'Link',
       render: (_: unknown, r: ChipRow) => (
-        <span className="flex gap-2 text-xs">
+        <span className="flex items-center gap-2 text-xs">
           <Link href={`/view/${r.id}`} target="_blank" className="text-primary hover:opacity-70">Xem</Link>
           <Link href={`/edit/${r.id}`} target="_blank" className="text-primary hover:opacity-70">Sửa</Link>
+          <Tooltip title={`Copy ${typeof window !== 'undefined' ? window.location.origin : ''}/view/${r.id}`}>
+            <button
+              onClick={() => copyViewLink(r.id)}
+              className="inline-flex items-center gap-0.5 text-primary hover:opacity-70"
+            >
+              <CopyOutlined /> Copy
+            </button>
+          </Tooltip>
         </span>
       ),
     },

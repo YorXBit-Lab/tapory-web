@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { JsonLd } from '@/components/seo/JsonLd';
-import { TEMPLATE_LIST } from '@/configs/constants';
+import { PUBLIC_TEMPLATE_LIST } from '@/configs/constants';
 import { absoluteUrl, createPageMetadata } from '@/libs/seo';
 import { TemplateCard } from './TemplateCard';
 
@@ -17,7 +17,7 @@ const templatesJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'ItemList',
   name: 'Mẫu thiết kế trang kỷ niệm Góc Chạm',
-  itemListElement: TEMPLATE_LIST.map((tpl, index) => ({
+  itemListElement: PUBLIC_TEMPLATE_LIST.map((tpl, index) => ({
     '@type': 'ListItem',
     position: index + 1,
     name: tpl.name,
@@ -60,7 +60,7 @@ export default function TemplatesPage() {
 
           <div className="relative z-10">
             <span className="bg-primary/15 text-primary mb-4 inline-block rounded-full px-4 py-1.5 text-sm font-semibold backdrop-blur-sm">
-              {TEMPLATE_LIST.length} mẫu thiết kế có sẵn
+              {PUBLIC_TEMPLATE_LIST.length} mẫu thiết kế có sẵn
             </span>
             <h1 className="text-content1 mb-3 text-4xl font-bold">Chọn mẫu thiết kế</h1>
             <p className="text-content3 mx-auto max-w-md">
@@ -84,7 +84,7 @@ export default function TemplatesPage() {
 
           <div className="relative z-10 mx-auto max-w-5xl">
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {TEMPLATE_LIST.map((tpl) => (
+              {PUBLIC_TEMPLATE_LIST.map((tpl) => (
                 <TemplateCard key={tpl.id} tpl={tpl} />
               ))}
             </div>

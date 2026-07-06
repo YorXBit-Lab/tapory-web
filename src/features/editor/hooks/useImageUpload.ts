@@ -1,9 +1,11 @@
 import { useRef, useState } from 'react';
+import { App } from 'antd';
 import { useDispatch, useSelector } from 'react-redux';
 import type { AppDispatch, RootState } from '@/redux/store';
 import { updateField } from '@/redux/editSlice';
 import { auth } from '@/libs/firebase';
 import { uploadCardImage, deleteCardImage } from '@/utils/r2-upload';
+import { validateImageFile } from '@/utils/image-file';
 
 const R2_BASE = (process.env.NEXT_PUBLIC_R2_PUBLIC_URL ?? '').replace(/\/$/, '');
 
@@ -17,6 +19,7 @@ function keyFromR2Url(url: string) {
 
 export function useImageUpload(orderId: string) {
   const dispatch = useDispatch<AppDispatch>();
+  const { notification } = App.useApp();
   const [uploading, setUploading] = useState(false);
 
   const imageUrl = useSelector((s: RootState) => s.edit.imageUrl ?? '');
@@ -27,6 +30,13 @@ export function useImageUpload(orderId: string) {
   const originalSavedUrlRef = useRef<string | null>(null);
 
   const handlePhoto = async (file: File) => {
+    // Chặn ảnh quá lớn / sai định dạng ngay tại client, báo lý do rõ ràng.
+    const err = validateImageFile(file);
+    if (err) {
+      notification.warning({ message: 'Ảnh không hợp lệ', description: err });
+      return;
+    }
+
     // Demo mode — use a local object URL, no upload, no auth needed
     if (orderId === 'demo') {
       const localUrl = URL.createObjectURL(file);

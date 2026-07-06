@@ -128,6 +128,16 @@ export const TEMPLATES: Record<TemplateId, ITemplate> = {
 
 export const TEMPLATE_LIST = Object.values(TEMPLATES);
 
+/**
+ * Template tạm ẩn khỏi phần chọn mẫu cho khách (gallery + editor picker).
+ * Định nghĩa vẫn giữ trong TEMPLATES để thẻ đã tạo và trang admin vẫn hoạt động.
+ * Muốn bật lại: xoá id khỏi mảng này.
+ */
+export const HIDDEN_TEMPLATE_IDS: TemplateId[] = ['spotify'];
+
+/** Danh sách template hiển thị cho khách — đã loại các mẫu tạm ẩn. */
+export const PUBLIC_TEMPLATE_LIST = TEMPLATE_LIST.filter((t) => !HIDDEN_TEMPLATE_IDS.includes(t.id));
+
 export const BG_PRESETS = [
   '#ffffff', '#f8f6f0', '#fdf5f8', '#f0fdf4',
   '#eff6ff', '#faf5ff', '#fff7ed', '#f0fdfe',

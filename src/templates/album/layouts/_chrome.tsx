@@ -96,7 +96,7 @@ export function AlbumHeader({ data, c, font, titleSize, kicker = 'Album' }: Head
         <p className="text-[7px] font-bold uppercase tracking-[0.55em]" style={{ color: c.secondary, opacity: 0.9 }}>{kicker}</p>
         <span className="h-px w-5" style={{ background: `linear-gradient(to left, transparent, ${c.secondary})`, opacity: 0.8 }} />
       </div>
-      <p className="font-bold leading-tight" style={{ fontFamily: font, fontSize: titleSize, color: c.primary, textShadow: `0 2px 26px ${c.secondary}3a` }}>
+      <p className="font-bold leading-tight" style={{ fontFamily: font, fontSize: typeof titleSize === 'number' ? titleSize * 0.82 : `calc(${titleSize} * 0.82)`, color: c.primary, textShadow: `0 2px 26px ${c.secondary}3a` }}>
         {data.title || 'Album kỷ niệm'}
       </p>
       {data.date && (
