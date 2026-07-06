@@ -73,7 +73,16 @@
       "Bash(echo \"---exit $?---\")",
       "Bash(git *)",
       "Bash(ls README*)",
-      "Bash(head -5 README.md)"
+      "Bash(head -5 README.md)",
+      "PowerShell(npx tsc --noEmit 2>$null; echo \"exit=$LASTEXITCODE\")",
+      "PowerShell(npx eslint src/templates/album; echo \"exit=$LASTEXITCODE\")",
+      "PowerShell(npx eslint src/templates/album --quiet; echo \"eslint=$LASTEXITCODE\"; npx tsc --noEmit 2>$null; echo \"tsc=$LASTEXITCODE\")",
+      "PowerShell(npx tsc --noEmit 2>$null; echo \"tsc=$LASTEXITCODE\")",
+      "Read(//c/Program Files \\(x86\\)/Microsoft/Edge/Application/**)",
+      "Read(//c/Program Files/Google/Chrome/Application/**)",
+      "Read(//c/Program Files \\(x86\\)/Google/Chrome/Application/**)",
+      "Bash(npm init *)",
+      "Bash(npm i *)"
     ]
   }
 }

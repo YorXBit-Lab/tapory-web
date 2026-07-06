@@ -6,9 +6,6 @@ import { getPhotos } from './_shared';
 import { Lightbox } from './Lightbox';
 import { ALBUM_KEYFRAMES, AlbumBackdrop, AlbumHeader, AlbumFooter } from './_chrome';
 
-// Tỉ lệ ô placeholder — tất định theo index để masonry so le tự nhiên (an toàn SSR).
-const RATIOS = [1.35, 0.85, 1.1, 0.72, 1.25, 0.95, 1.5, 0.8];
-
 export function AlbumMosaic({ data, c }: LayoutProps) {
   const font      = getFontFamily(data.fontStyle);
   const titleSize = getTitleFontSize(data.titleSize);
@@ -19,36 +16,40 @@ export function AlbumMosaic({ data, c }: LayoutProps) {
   return (
     <div className="relative flex h-full w-full flex-col overflow-hidden"
       style={{ background: `radial-gradient(80% 50% at 50% 0%, ${c.secondary}22, transparent 70%), ${c.accent}` }}>
-      <style>{ALBUM_KEYFRAMES}</style>
+      <style>{ALBUM_KEYFRAMES}{`
+        @keyframes albMosUp { 0% { opacity:0; transform: translateY(40px); } 100% { opacity:1; transform: translateY(0); } }
+        .albm-card { transition: transform .3s ease, box-shadow .3s ease, border-color .3s ease; }
+        .albm-card:hover { transform: scale(1.04); box-shadow: 0 14px 34px rgba(0,0,0,.55), 0 0 20px ${c.secondary}55; border-color: ${c.secondary}aa !important; }
+        .albm-card:hover img { filter: brightness(1.05); }
+      `}</style>
       <AlbumBackdrop c={c} />
 
       <AlbumHeader data={data} c={c} font={font} titleSize={titleSize} kicker="Album" />
 
+      {/* Lưới đều tăm tắp như mockup: ô vuông, bo góc, khe nhỏ */}
       <div className="relative z-10 min-h-0 flex-1 overflow-y-auto px-4 py-3" style={{ scrollbarWidth: 'none' }}>
-        <div style={{ columnCount: 2, columnGap: 8 }}>
+        <div className="grid grid-cols-3 gap-2">
           {photos.map((url, i) => (
             <button
               key={i}
               type="button"
               onClick={() => url && setLb(i)}
-              className="mb-2 block w-full overflow-hidden rounded-xl"
+              className="albm-card relative block aspect-square w-full overflow-hidden rounded-xl"
               style={{
-                breakInside: 'avoid',
                 border: `1px solid ${c.secondary}33`,
                 boxShadow: '0 6px 16px rgba(0,0,0,0.42)',
                 background: '#14141c',
-                animation: 'albStageIn .5s cubic-bezier(.2,.7,.2,1) both',
-                animationDelay: `${i * 55}ms`,
+                // fill "backwards": xong animation thì thả transform để hover scale hoạt động
+                animation: `albMosUp .55s cubic-bezier(.2,.7,.2,1) ${i * 55}ms backwards`,
               }}
             >
               {url ? (
-                <div className="relative">
-                  <img src={url} alt="" className="block w-full" style={{ filter: imgFilter, height: 'auto' }} draggable={false} />
+                <>
+                  <img src={url} alt="" loading="lazy" className="absolute inset-0 h-full w-full object-cover" style={{ filter: imgFilter, transition: 'filter .3s ease' }} draggable={false} />
                   <span className="pointer-events-none absolute inset-0" style={{ background: 'linear-gradient(140deg, rgba(255,255,255,0.14), transparent 42%)' }} />
-                </div>
+                </>
               ) : (
-                <div className="flex w-full items-center justify-center text-xl"
-                  style={{ aspectRatio: String(RATIOS[i % RATIOS.length]), color: '#3a3a48' }}>📷</div>
+                <div className="flex h-full w-full items-center justify-center text-xl" style={{ color: '#3a3a48' }}>📷</div>
               )}
             </button>
           ))}

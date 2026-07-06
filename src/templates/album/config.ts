@@ -16,7 +16,7 @@ export const ALBUM_STYLES: ITemplateStyle[] = [
     colors: { primary: '#f2f0ec', secondary: '#f4c542', accent: '#08080a' } },
   { id: 'album-swipe',  layout: 'swipe',  name: 'Vuốt xem',
     colors: { primary: '#f4f5f7', secondary: '#60a5fa', accent: '#080b12' } },
-  { id: 'album-photobooth', layout: 'photobooth', name: 'Photobooth',
+  { id: 'album-photobooth', layout: 'photobooth', name: 'Photobook',
     colors: { primary: '#f6f3ee', secondary: '#ff5d8f', accent: '#12080d' } },
 ];
 

@@ -10,11 +10,16 @@ import { ALBUM_KEYFRAMES, AlbumBackdrop, AlbumHeader, AlbumFooter } from './_chr
 const OUT = 480;       // quãng bay thêm ra ngoài mép (px)
 const EXIT_MS = 400;   // thời lượng lá bài bay ra
 
-// Kiểu chồng theo thứ hạng: rank 0 = trên cùng (kéo được), phía sau thu nhỏ & lùi xuống.
+// Kiểu chồng theo thứ hạng: rank 0 = trên cùng (kéo được); 2 lá kế hé ra hai bên
+// (rank 1 ló phải, rank 2 ló trái) để người xem biết còn ảnh tiếp theo.
 function stackStyle(rank: number): React.CSSProperties {
+  if (rank === 0) {
+    return { transform: 'none', opacity: 1, zIndex: 10, transition: 'transform .38s cubic-bezier(.2,.7,.2,1), opacity .38s ease' };
+  }
+  const side = rank % 2 === 1 ? 1 : -1;
   return {
-    transform: `translateY(${rank * 12}px) scale(${1 - rank * 0.06})`,
-    opacity: rank > 2 ? 0 : 1,
+    transform: `translateX(${side * 18}px) translateY(${rank * 6}px) rotate(${side * 3}deg) scale(${1 - rank * 0.05})`,
+    opacity: rank > 2 ? 0 : 0.9,
     zIndex: 10 - rank,
     transition: 'transform .38s cubic-bezier(.2,.7,.2,1), opacity .38s ease',
   };
@@ -33,6 +38,7 @@ export function AlbumSwipe({ data, c }: LayoutProps) {
   const frontRef = useRef<HTMLDivElement>(null);
   const drag = useRef({ down: false, moved: false, x0: 0, y0: 0, dx: 0, dy: 0 });
   const busy = useRef(false);
+  const wheelAt = useRef(0);
 
   // Chỉ dựng 3 lá trên cùng; lá bay ra rơi khỏi tập này nên tự biến mất.
   const visible = Math.min(n, 3);
@@ -94,7 +100,13 @@ export function AlbumSwipe({ data, c }: LayoutProps) {
       <AlbumHeader data={data} c={c} font={font} titleSize={titleSize} kicker="Album" />
 
       {/* Sân khấu chồng bài */}
-      <div ref={stageRef} className="relative z-10 flex min-h-0 flex-1 items-center justify-center px-6" style={{ touchAction: 'pan-y' }}>
+      <div ref={stageRef} className="relative z-10 flex min-h-0 flex-1 items-center justify-center px-6" style={{ touchAction: 'pan-y' }}
+        onWheel={(e) => {
+          const now = Date.now();
+          if (now - wheelAt.current < 450) return; // mỗi cú lăn 1 ảnh
+          wheelAt.current = now;
+          flingOut(e.deltaY > 0 ? 1 : -1);
+        }}>
         <div className="relative" style={{ width: '90%', maxWidth: 270, aspectRatio: '3 / 4' }}>
           {order.map((photoIdx, rank) => {
             const url = photos[photoIdx];
@@ -138,8 +150,19 @@ export function AlbumSwipe({ data, c }: LayoutProps) {
         </div>
       </div>
 
+      {/* Chấm chỉ vị trí ● ○ ○ — nhiều ảnh quá thì đã có bộ đếm góc ảnh */}
+      {!isPlaceholder && n > 1 && n <= 12 && (
+        <div className="relative z-10 mb-1 flex items-center justify-center gap-1.5">
+          {photos.map((_, i) => (
+            <button key={i} type="button" aria-label={`Ảnh ${i + 1}`} onClick={() => setOffset(i)}
+              className="h-1.5 rounded-full transition-all"
+              style={{ width: i === frontPhoto ? 16 : 6, background: i === frontPhoto ? c.secondary : `${c.primary}59` }} />
+          ))}
+        </div>
+      )}
+
       <AlbumFooter data={data} c={c} font={font}
-        hint={isPlaceholder ? 'Thêm 5–30 ảnh rồi kéo từng ảnh để lật' : 'Kéo ảnh sang trái/phải để bỏ qua · chạm để phóng to'} />
+        hint={isPlaceholder ? 'Thêm 5–30 ảnh rồi kéo từng ảnh để lật' : 'Vuốt trái/phải hoặc lăn chuột · chạm để phóng to'} />
 
       {lb !== null && (
         <Lightbox photos={photos} index={lb} onIndex={setLb} onClose={() => setLb(null)} c={c} filter={imgFilter} title={data.title} description={data.description} date={data.date} />

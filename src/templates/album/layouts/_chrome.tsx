@@ -21,7 +21,7 @@ export const ALBUM_KEYFRAMES = `
 @keyframes albFadeIn    { 0% { opacity:0; } 100% { opacity:1; } }`;
 
 /** PRNG tất định theo index — an toàn SSR (không lệch hydrate như Math.random). */
-const seeded = (i: number, salt = 0) => {
+export const seeded = (i: number, salt = 0) => {
   const x = Math.sin(i * 12.9898 + salt * 78.233 + 0.5) * 43758.5453;
   return x - Math.floor(x);
 };
@@ -61,6 +61,26 @@ export function AlbumParticles({ c, count = 16 }: { c: LayoutColors; count?: num
               boxShadow: `0 0 ${size * 2.4}px ${c.secondary}`,
               animation: `albRise ${dur}s linear ${delay}s infinite`,
             }} />
+        );
+      })}
+    </div>
+  );
+}
+
+/** Tim ♥ bay lên từ đáy — nền lãng mạn, vị trí tất định theo index (an toàn SSR). */
+export function FloatingHearts({ color, count = 9 }: { color: string; count?: number }) {
+  return (
+    <div className="pointer-events-none absolute inset-0 overflow-hidden">
+      {Array.from({ length: count }).map((_, i) => {
+        const dur = 8 + seeded(i, 21) * 7;
+        return (
+          <span key={i} className="absolute"
+            style={{
+              left: `${seeded(i, 20) * 100}%`, bottom: `${seeded(i, 24) * 30}%`,
+              fontSize: 7 + seeded(i, 22) * 9, color, opacity: 0.45,
+              textShadow: `0 0 8px ${color}`,
+              animation: `albRise ${dur}s linear ${-seeded(i, 23) * dur}s infinite`,
+            }}>♥</span>
         );
       })}
     </div>
