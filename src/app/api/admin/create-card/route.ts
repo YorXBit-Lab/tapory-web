@@ -14,6 +14,7 @@ const VALID_TEMPLATES: TemplateId[] = [
   'keepsake',
   'album',
   'redirect',
+  'stardust',
 ];
 
 function generateCardId(): string {

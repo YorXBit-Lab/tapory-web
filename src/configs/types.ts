@@ -1,4 +1,4 @@
-export type TemplateId = 'graduation' | 'wedding' | 'birthday' | 'anniversary' | 'spotify' | 'social' | 'profile' | 'redirect';
+export type TemplateId = 'graduation' | 'wedding' | 'birthday' | 'anniversary' | 'spotify' | 'social' | 'profile' | 'keepsake' | 'album' | 'redirect' | 'stardust';
 
 export type CardStatus = 'blank' | 'assigned' | 'published' | 'locked' | 'expired';
 

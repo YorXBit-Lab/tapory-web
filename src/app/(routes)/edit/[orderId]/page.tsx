@@ -21,6 +21,7 @@ const VALID_TEMPLATES: TemplateId[] = [
   'keepsake',
   'album',
   'redirect',
+  'stardust',
 ];
 
 export default async function EditPage({

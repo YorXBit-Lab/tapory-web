@@ -19,7 +19,7 @@ import { MusicPulse } from '@/features/view/components/MusicPulse';
 import { useMagneticElement } from '@/features/view/hooks/useMagneticElement';
 import { useTouchScatter } from '@/features/view/hooks/useTouchScatter';
 import '@/templates/init';
-import { env } from '@/libs/env';
+import dynamic from 'next/dynamic';
 import { FRAMES, EFFECTS } from '@/configs/constants';
 import type { IEditDraft, IMemorial } from '@/configs/types';
 
@@ -125,38 +125,20 @@ function RedirectingScreen({ url }: { url?: string }) {
   );
 }
 
-/** Stardust: bộ phim ký ức 3D chạy ở site ngoài — đưa người xem sang đó. */
-function StardustLaunchScreen({ orderId }: { orderId: string }) {
-  const url = env.stardustUrl ? `${env.stardustUrl}/${encodeURIComponent(orderId)}` : '';
-
-  useEffect(() => {
-    if (!url) return;
-    const t = setTimeout(() => { window.location.href = url; }, 700);
-    return () => clearTimeout(t);
-  }, [url]);
-
-  return (
+/** Stardust: bộ phim ký ức 3D — engine WebGL chạy ngay trong app. */
+const StardustExperience = dynamic(() => import('@/features/stardust/StardustExperience'), {
+  ssr: false,
+  loading: () => (
     <div style={{
       ...fullscreenCenter, gap: 14, padding: '0 24px', textAlign: 'center',
       background: 'radial-gradient(120% 90% at 50% 30%, #1a0f2e 0%, #0b0618 60%, #060312 100%)',
     }}>
       <span style={{ fontSize: 40, lineHeight: 1 }}>🌌</span>
-      {url ? (
-        <>
-          <Spinner color="rgba(200,140,255,0.7)" />
-          <p style={{ fontSize: 14, color: '#cdb8ff', margin: 0 }}>Đang mở bộ phim ký ức…</p>
-          <a href={url} style={{ fontSize: 11, color: '#8d7fa5', wordBreak: 'break-all', marginTop: 2 }}>
-            {url}
-          </a>
-        </>
-      ) : (
-        <p style={{ fontSize: 13, color: '#8d7fa5', margin: 0 }}>
-          Chưa cấu hình NEXT_PUBLIC_STARDUST_URL.
-        </p>
-      )}
+      <Spinner color="rgba(200,140,255,0.7)" />
+      <p style={{ fontSize: 14, color: '#cdb8ff', margin: 0 }}>Đang thắp sáng những vì sao…</p>
     </div>
-  );
-}
+  ),
+});
 
 const fullscreenCenter: React.CSSProperties = {
   position: 'fixed',
@@ -226,7 +208,9 @@ export function ViewClient({ orderId }: { orderId: string }) {
   if (isError) return <NoContentScreen cardId={orderId} />;
   if (!memorial) return <NoContentScreen cardId={orderId} />;
   if (memorial.templateId === 'redirect') return <RedirectingScreen url={memorial.website} />;
-  if (memorial.templateId === 'stardust') return <StardustLaunchScreen orderId={orderId} />;
+  if (memorial.templateId === 'stardust') {
+    return <StardustExperience data={{ ...memorial, orderId: memorial.orderId ?? orderId, isDirty: false }} />;
+  }
 
   const draft: IEditDraft = { ...memorial, orderId: memorial.orderId ?? orderId, isDirty: false };
   const screenBg = getScreenBackground(draft, activeStyle);

@@ -82,7 +82,11 @@
       "Read(//c/Program Files/Google/Chrome/Application/**)",
       "Read(//c/Program Files \\(x86\\)/Google/Chrome/Application/**)",
       "Bash(npm init *)",
-      "Bash(npm i *)"
+      "Bash(npm i *)",
+      "Bash(awk '{print $2, $3, $4}')",
+      "PowerShell(Get-ChildItem \"G:\\\\New project\\\\src\" -Recurse -File | Select-Object FullName | ForEach-Object { $_.FullName.Replace\\('G:\\\\New project\\\\src\\\\',''\\) })",
+      "PowerShell(Get-ChildItem \"G:\\\\New project\\\\src\" -Recurse -File | Select-Object @{n='File';e={$_.FullName.Replace\\('G:\\\\New project\\\\src\\\\',''\\)}}, @{n='KB';e={[math]::Round\\($_.Length/1KB,1\\)}})",
+      "PowerShell(Start-Sleep -Seconds 5; $r = Invoke-WebRequest \"http://localhost:3000/edit/demo?template=stardust\" -UseBasicParsing; \"edit: $\\($r.StatusCode\\)\"; $has = $r.Content -match 'xem phim 3D'; \"play button in HTML: $has\")"
     ]
   }
 }

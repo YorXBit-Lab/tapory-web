@@ -1,0 +1,252 @@
+/* Stardust Memory — UI của bộ phim ký ức 3D. Mọi class đều có tiền tố sd- để
+   không đụng global styles của tapory-web. Engine render vào .sd-stage. */
+
+.sd-app {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background: #030104;
+  color: #fff;
+  font-family: Inter, 'Segoe UI', system-ui, sans-serif;
+  /* trên header (z-sticky 1020) và modal antd (1050) — phim chiếm trọn màn hình */
+  z-index: 1100;
+}
+.sd-app button { font: inherit; }
+.sd-stage,
+.sd-stage canvas {
+  position: absolute;
+  inset: 0;
+  width: 100% !important;
+  height: 100% !important;
+  touch-action: none;
+}
+
+.sd-cine-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  z-index: 15;
+  pointer-events: none;
+  height: clamp(14px, 3.2vh, 40px);
+  background: #000;
+}
+.sd-cine-bar.top { top: 0; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.55); }
+.sd-cine-bar.bottom { bottom: 0; box-shadow: 0 -6px 18px rgba(0, 0, 0, 0.55); }
+
+.sd-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ---------------------------------------------------------------- intro */
+.sd-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 5vh;
+  animation: sdOverlayIn 1.4s ease both;
+}
+.sd-film-poster { display: grid; gap: 10px; justify-items: center; text-align: center; }
+.sd-film-eyebrow {
+  margin: 0;
+  color: #8d7fa5;
+  font-family: Georgia, serif;
+  font-size: 9px;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+}
+.sd-film-title {
+  margin: 0;
+  color: #f4ecff;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-weight: 400;
+  font-size: clamp(26px, 4.6vw, 44px);
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  text-shadow: 0 0 34px rgba(170, 130, 255, 0.45);
+}
+.sd-film-sub {
+  /* Times New Roman: đủ dấu tiếng Việt (Georgia vỡ một số dấu) */
+  margin: 0;
+  color: #a998bd;
+  font-family: 'Times New Roman', Georgia, serif;
+  font-style: italic;
+  font-size: clamp(12px, 1.7vw, 15px);
+  letter-spacing: 0.04em;
+}
+
+.sd-start-orb {
+  position: relative;
+  width: 216px;
+  height: 216px;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  color: #efe6f2;
+  font-size: 11px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  text-shadow: 0 0 18px rgba(190, 150, 255, 0.8);
+  transition: opacity 0.6s;
+}
+.sd-start-orb:disabled { cursor: default; color: #8d7f9d; text-shadow: none; }
+.sd-start-orb i {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 1px solid rgba(190, 165, 255, 0.28);
+  box-shadow: 0 0 42px rgba(140, 100, 255, 0.16), inset 0 0 36px rgba(140, 100, 255, 0.1);
+  animation: sdOrbPulse 4.5s ease-in-out infinite;
+}
+.sd-start-orb i.inner { inset: 26px; animation-delay: -2.2s; border-color: rgba(220, 205, 255, 0.18); }
+.sd-start-orb span { position: relative; z-index: 1; }
+.sd-start-orb:not(:disabled):hover i,
+.sd-start-orb:not(:disabled):focus-visible i {
+  border-color: rgba(220, 195, 255, 0.75);
+  box-shadow: 0 0 60px rgba(160, 110, 255, 0.3), inset 0 0 40px rgba(160, 110, 255, 0.16);
+}
+.sd-start-orb:focus-visible { outline: none; }
+.sd-start-hint {
+  margin: 0;
+  color: #9d8bb0;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+/* ------------------------------------------------------------- controls */
+.sd-ghost {
+  position: fixed;
+  z-index: 20;
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 215, 235, 0.16);
+  background: rgba(10, 4, 12, 0.35);
+  backdrop-filter: blur(6px);
+  color: rgba(235, 210, 225, 0.75);
+  cursor: pointer;
+  transition: color 0.3s, border-color 0.3s, box-shadow 0.3s;
+}
+.sd-ghost svg { width: 16px; height: 16px; }
+.sd-ghost:hover,
+.sd-ghost:focus-visible {
+  color: #fff;
+  border-color: rgba(255, 170, 215, 0.6);
+  box-shadow: 0 0 22px rgba(255, 90, 170, 0.18);
+}
+.sd-ghost.sound {
+  right: calc(14px + env(safe-area-inset-right, 0px));
+  top: calc(clamp(14px, 3.2vh, 40px) + 10px + env(safe-area-inset-top, 0px));
+}
+.sd-ghost.exit {
+  left: calc(14px + env(safe-area-inset-left, 0px));
+  top: calc(clamp(14px, 3.2vh, 40px) + 10px + env(safe-area-inset-top, 0px));
+}
+
+.sd-final-actions {
+  position: fixed;
+  z-index: 20;
+  left: 50%;
+  translate: -50% 0;
+  bottom: calc(6vh + env(safe-area-inset-bottom, 0px));
+  display: flex;
+  gap: 12px;
+  animation: sdOverlayIn 1.2s 2.6s ease both;
+}
+.sd-final-actions button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 18px;
+  border-radius: 99px;
+  border: 1px solid rgba(255, 200, 190, 0.22);
+  background: rgba(18, 8, 12, 0.55);
+  backdrop-filter: blur(10px);
+  color: #e3c4bd;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  transition: 0.3s;
+}
+.sd-final-actions svg { width: 14px; height: 14px; }
+.sd-final-actions button:hover,
+.sd-final-actions button:focus-visible {
+  color: #fff;
+  border-color: rgba(255, 170, 150, 0.6);
+  box-shadow: 0 0 28px rgba(255, 120, 100, 0.16);
+  transform: translateY(-2px);
+}
+
+.sd-copied-toast {
+  position: fixed;
+  z-index: 30;
+  top: calc(7vh + env(safe-area-inset-top, 0px));
+  left: 50%;
+  translate: -50% -16px;
+  padding: 10px 16px;
+  border: 1px solid rgba(200, 140, 170, 0.4);
+  border-radius: 99px;
+  background: rgba(19, 9, 18, 0.9);
+  color: #ffd9e9;
+  font-size: 11px;
+  opacity: 0;
+  pointer-events: none;
+  transition: 0.4s;
+}
+.sd-copied-toast.show { opacity: 1; translate: -50% 0; }
+
+/* ─── embedded: chạy trong khung preview của editor thay vì fullscreen ─── */
+.sd-app.sd-embedded {
+  position: absolute;
+  z-index: 0;
+}
+.sd-embedded .sd-cine-bar,
+.sd-embedded .sd-ghost,
+.sd-embedded .sd-final-actions,
+.sd-embedded .sd-copied-toast {
+  position: absolute;
+}
+.sd-embedded .sd-cine-bar { height: 10px; }
+.sd-embedded .sd-overlay { gap: 22px; }
+.sd-embedded .sd-film-eyebrow { font-size: 7px; }
+.sd-embedded .sd-film-title { font-size: 15px; letter-spacing: 0.22em; }
+.sd-embedded .sd-film-sub { font-size: 10px; padding: 0 14px; }
+.sd-embedded .sd-start-orb { width: 122px; height: 122px; font-size: 9px; letter-spacing: 0.2em; }
+.sd-embedded .sd-start-orb i.inner { inset: 17px; }
+.sd-embedded .sd-start-hint { font-size: 8px; padding: 0 16px; text-align: center; }
+.sd-embedded .sd-ghost { width: 32px; height: 32px; }
+.sd-embedded .sd-ghost svg { width: 13px; height: 13px; }
+.sd-embedded .sd-ghost.sound { top: 18px; right: 10px; }
+.sd-embedded .sd-ghost.exit { top: 18px; left: 10px; }
+.sd-embedded .sd-final-actions { bottom: 26px; gap: 8px; }
+.sd-embedded .sd-final-actions button { padding: 8px 12px; font-size: 9px; }
+.sd-embedded .sd-copied-toast { top: 24px; }
+
+@keyframes sdOverlayIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes sdOrbPulse { 50% { transform: scale(1.06); opacity: 0.6; } }
+
+@media (max-width: 700px) {
+  .sd-start-orb { width: 176px; height: 176px; }
+  .sd-final-actions button { padding: 10px 14px; font-size: 10px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sd-start-orb i { animation: none; }
+  .sd-overlay,
+  .sd-final-actions { animation-duration: 0.3s; animation-delay: 0s; }
+}
