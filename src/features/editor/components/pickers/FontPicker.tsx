@@ -2,16 +2,16 @@
 import { useEditorContext } from '@/features/editor/context';
 import { updateField } from '@/redux/editSlice';
 
+// Bộ font rút gọn (6) cho gọn UI — đa dạng tính cách, tránh các kiểu na ná nhau.
+// Lưu ý: getFontFamily() vẫn map đầy đủ các id cũ (raleway/josefin/lora…) nên
+// card đã lưu bằng font cũ vẫn hiển thị đúng, chỉ không chọn lại được ở đây.
 const FONTS = [
-  { id: 'sans',       label: 'Hiện đại',  sub: 'Montserrat',        fontFamily: 'var(--font-montserrat), Montserrat, sans-serif'                             },
-  { id: 'be-vietnam', label: 'Việt Nam',  sub: 'Be Vietnam Pro',    fontFamily: 'var(--font-be-vietnam), "Be Vietnam Pro", sans-serif'                       },
-  { id: 'raleway',    label: 'Mảnh mai',  sub: 'Raleway',           fontFamily: 'var(--font-raleway), Raleway, sans-serif'                                   },
-  { id: 'josefin',    label: 'Hình học',  sub: 'Josefin Sans',      fontFamily: 'var(--font-josefin), "Josefin Sans", sans-serif'                            },
-  { id: 'nunito',     label: 'Tròn trịa', sub: 'Nunito',            fontFamily: 'var(--font-nunito), Nunito, sans-serif'                                     },
-  { id: 'serif',      label: 'Sang trọng',sub: 'Playfair Display',  fontFamily: 'var(--font-playfair), "Playfair Display", Georgia, serif'                   },
-  { id: 'lora',       label: 'Tinh tế',   sub: 'Lora',              fontFamily: 'var(--font-lora), Lora, Georgia, serif'                                     },
-  { id: 'cormorant',  label: 'Cổ điển',   sub: 'Cormorant Garamond',fontFamily: 'var(--font-cormorant), "Cormorant Garamond", Georgia, serif'                },
-  { id: 'script',     label: 'Lãng mạn',  sub: 'Dancing Script',    fontFamily: 'var(--font-dancing), "Dancing Script", cursive'                             },
+  { id: 'sans',       label: 'Hiện đại',  sub: 'Montserrat',        fontFamily: 'var(--font-montserrat), Montserrat, sans-serif'             },
+  { id: 'be-vietnam', label: 'Việt Nam',  sub: 'Be Vietnam Pro',    fontFamily: 'var(--font-be-vietnam), "Be Vietnam Pro", sans-serif'       },
+  { id: 'nunito',     label: 'Tròn trịa', sub: 'Nunito',            fontFamily: 'var(--font-nunito), Nunito, sans-serif'                     },
+  { id: 'serif',      label: 'Sang trọng',sub: 'Playfair Display',  fontFamily: 'var(--font-playfair), "Playfair Display", Georgia, serif'    },
+  { id: 'cormorant',  label: 'Cổ điển',   sub: 'Cormorant Garamond',fontFamily: 'var(--font-cormorant), "Cormorant Garamond", Georgia, serif' },
+  { id: 'script',     label: 'Lãng mạn',  sub: 'Dancing Script',    fontFamily: 'var(--font-dancing), "Dancing Script", cursive'             },
 ];
 
 const SIZES = [

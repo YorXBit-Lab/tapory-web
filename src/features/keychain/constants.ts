@@ -1,10 +1,13 @@
 import type { KeychainTemplate } from './types';
+import { PRINT_PRESETS } from '@/configs/print';
 
-export const PRINT_DPI = 300;
-export const EDITOR_PX_PER_CM = 80; // 80px = 1cm on screen
+// Re-export từ nguồn sự thật chung để giữ tương thích import cũ.
+export { PRINT_DPI, EDITOR_PX_PER_CM } from '@/configs/print';
 
-export const KEYCHAIN_TEMPLATES: KeychainTemplate[] = [
-  { id: 'rectangle', label: 'Chữ nhật 3.2×5 cm', widthCm: 3.2, heightCm: 5 },
-  { id: 'square', label: 'Vuông 3.35×3.35 cm', widthCm: 3.35, heightCm: 3.35 },
-  { id: 'circle', label: 'Tròn ∅3 cm', widthCm: 3, heightCm: 3 },
-];
+/** Danh sách khung móc khóa — dẫn xuất từ PRINT_PRESETS (@/configs/print). */
+export const KEYCHAIN_TEMPLATES: KeychainTemplate[] = PRINT_PRESETS.map((p) => ({
+  id: p.shape,
+  label: p.label,
+  widthCm: p.widthCm,
+  heightCm: p.heightCm,
+}));

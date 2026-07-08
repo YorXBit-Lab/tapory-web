@@ -4,7 +4,9 @@ export default function robots(): MetadataRoute.Robots {
   return {
     rules: {
       userAgent: '*',
-      allow: '/',
+      // Allow OG-image endpoint so social crawlers (Facebook, Zalo…) can fetch
+      // preview thumbnails — more specific than the '/api/' disallow below.
+      allow: ['/', '/api/og/'],
       disallow: [
         '/api/',
         '/dashboard/',
@@ -12,6 +14,7 @@ export default function robots(): MetadataRoute.Robots {
         '/upload/',
         '/keychain',
         '/c/',
+        '/view/',
       ],
     },
     sitemap: 'https://goccham.com/sitemap.xml',

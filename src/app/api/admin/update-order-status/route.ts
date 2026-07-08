@@ -1,12 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { FieldValue } from 'firebase-admin/firestore';
 import { getAdminAuth, getAdminDb } from '@/libs/firebase-admin';
+import { stockKey, resolveProductBom } from '@/utils/bom';
 import type { StatusKey } from '@/components/dashboard';
 import type { IOrderItem } from '@/services/OrderAPI';
-
-function stockKey(productId: string, variantId?: string) {
-  return variantId ? `${productId}::${variantId}` : productId;
-}
 
 export async function POST(req: NextRequest) {
   const idToken = (req.headers.get('authorization') ?? '').replace(/^Bearer\s+/, '');
@@ -53,6 +50,25 @@ export async function POST(req: NextRequest) {
         : [];
       const productSnapMap = new Map(uniqueProductIds.map((id, i) => [id, productSnaps[i]]));
 
+      // Gom BOM → linh kiện. Target có BOM trừ/hoàn linh kiện, target khác dùng tồn thành phẩm.
+      const componentTargets = new Map<string, number>();
+      const bomKeys = new Set<string>();
+      for (const [key, target] of stockTargets) {
+        const snap = productSnapMap.get(target.productId);
+        if (!snap?.exists) continue;
+        const bom = resolveProductBom(snap.data()!, target.variantId);
+        if (bom.length === 0) continue;
+        bomKeys.add(key);
+        for (const line of bom) {
+          componentTargets.set(line.componentId, (componentTargets.get(line.componentId) ?? 0) + line.qty * target.qty);
+        }
+      }
+      const componentIds = [...componentTargets.keys()];
+      const componentSnaps = componentIds.length > 0
+        ? await Promise.all(componentIds.map(id => txn.get(adminDb.collection('components').doc(id))))
+        : [];
+      const componentSnapMap = new Map(componentIds.map((id, i) => [id, componentSnaps[i]]));
+
       txn.update(orderRef, { status: newStatus, updatedAt: new Date() });
 
       const shouldRestoreStock = newStatus === 'cancel' && prevStatus !== 'cancel';
@@ -61,9 +77,10 @@ export async function POST(req: NextRequest) {
       if (!shouldRestoreStock && !shouldDeductStock) return;
       const multiplier = shouldRestoreStock ? 1 : -1;
 
-      // Validate when deducting
+      // Validate khi trừ lại (bỏ-hủy đơn)
       if (shouldDeductStock) {
-        for (const [, { productId, variantId, qty }] of stockTargets) {
+        for (const [key, { productId, variantId, qty }] of stockTargets) {
+          if (bomKeys.has(key)) continue;
           const snap = productSnapMap.get(productId);
           if (!snap?.exists) continue;
           const d = snap.data()!;
@@ -78,11 +95,20 @@ export async function POST(req: NextRequest) {
             }
           }
         }
+        for (const [componentId, qty] of componentTargets) {
+          const snap = componentSnapMap.get(componentId);
+          if (!snap?.exists) continue;
+          const cd = snap.data()!;
+          if (((cd.stock as number) ?? 0) - qty < 0) {
+            throw new Error(`Không đủ linh kiện "${cd.name}": cần ${qty}, còn ${cd.stock ?? 0}`);
+          }
+        }
       }
 
-      // Aggregate updates per product document
+      // Áp tồn thành phẩm (target không BOM)
       const productUpdateMap = new Map<string, Record<string, unknown>>();
-      for (const [, { productId, variantId, qty }] of stockTargets) {
+      for (const [key, { productId, variantId, qty }] of stockTargets) {
+        if (bomKeys.has(key)) continue;
         const snap = productSnapMap.get(productId);
         if (!snap?.exists) continue;
         const d = snap.data()!;
@@ -99,6 +125,14 @@ export async function POST(req: NextRequest) {
       }
       for (const [pid, updates] of productUpdateMap) {
         txn.update(adminDb.collection('products').doc(pid), updates);
+      }
+
+      // Hoàn/trừ tồn linh kiện (BOM)
+      for (const [componentId, qty] of componentTargets) {
+        txn.update(adminDb.collection('components').doc(componentId), {
+          stock: FieldValue.increment(multiplier * qty),
+          updatedAt: new Date(),
+        });
       }
     });
 

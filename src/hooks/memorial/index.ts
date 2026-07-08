@@ -6,7 +6,6 @@ const MEMORIAL_KEY = ['memorials'];
 export const useMemorial = (orderId?: string) =>
   useFetchOne([...MEMORIAL_KEY, orderId], MemorialAPI, { enabled: !!orderId }, orderId);
 
-export const useCreateMemorial = () =>
-  useCreateItem(MEMORIAL_KEY, MemorialAPI, 'Đã lưu kỷ niệm!', 'Lưu thất bại!');
+export const useCreateMemorial = () => useCreateItem(MEMORIAL_KEY, MemorialAPI);
 
 export const useUpdateMemorial = () => useUpdateItem(MEMORIAL_KEY, MemorialAPI);

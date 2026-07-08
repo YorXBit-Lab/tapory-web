@@ -127,7 +127,7 @@ function EditorInner({ orderId, initialTemplate }: Props) {
 
 export function EditorContainer({ orderId, initialTemplate }: Props) {
   return (
-    <EditorProvider>
+    <EditorProvider orderId={orderId}>
       <EditorInner orderId={orderId} initialTemplate={initialTemplate} />
     </EditorProvider>
   );

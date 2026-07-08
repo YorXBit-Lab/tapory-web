@@ -1,16 +1,6 @@
-import { createHash } from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { getAdminAuth, getAdminDb } from '@/libs/firebase-admin';
-
-function normalisePhone(raw: string): string {
-  const digits = raw.replace(/\D/g, '');
-  if (digits.startsWith('84') && digits.length >= 11) return '0' + digits.slice(2);
-  return digits;
-}
-
-function hashPhone(phone: string): string {
-  return createHash('sha256').update(normalisePhone(phone)).digest('hex');
-}
+import { hashPhone } from '@/utils/phone';
 
 export async function POST(req: NextRequest) {
   try {
@@ -36,7 +26,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const phoneOk = hashPhone(phone) === data.phoneHash;
+    const phoneOk = (await hashPhone(phone)) === data.phoneHash;
 
     if (!phoneOk) {
       const attempts = (data.failedAttempts ?? 0) + 1;

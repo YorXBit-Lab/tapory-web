@@ -14,7 +14,7 @@ export interface LayoutProps {
   autoPlay?: boolean;
 }
 
-export type FieldType = 'image' | 'images' | 'text' | 'textarea' | 'date' | 'url';
+export type FieldType = 'image' | 'images' | 'gallery' | 'text' | 'textarea' | 'date' | 'url';
 
 export interface FieldMeta {
   key: keyof IEditDraft;

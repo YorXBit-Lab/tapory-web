@@ -3,7 +3,7 @@
 import { useDispatch, useSelector } from 'react-redux';
 import type { AppDispatch, RootState } from '@/redux/store';
 import type { TemplateId } from '@/configs/types';
-import { TEMPLATE_LIST } from '@/configs/constants';
+import { PUBLIC_TEMPLATE_LIST } from '@/configs/constants';
 import { setTemplate, setStyle } from '@/redux/editSlice';
 import { getTemplateStyles } from '@/templates/registry';
 
@@ -23,7 +23,7 @@ export function TemplatePicker() {
     <div>
       <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-content3">Loại template</p>
       <div className="flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        {TEMPLATE_LIST.map((tpl) => {
+        {PUBLIC_TEMPLATE_LIST.map((tpl) => {
           const active = tpl.id === activeId;
           return (
             <button

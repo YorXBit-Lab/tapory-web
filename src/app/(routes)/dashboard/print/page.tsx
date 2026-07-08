@@ -193,7 +193,7 @@ export default function PrintPage() {
         const done = uploaded >= total;
         return (
           <div className="flex items-center gap-1.5">
-            <span className={`text-sm font-semibold ${done ? 'text-green-600' : 'text-orange-500'}`}>
+            <span className={`text-sm font-semibold ${done ? 'text-success' : 'text-warning'}`}>
               {uploaded}/{total}
             </span>
             {done
@@ -218,7 +218,7 @@ export default function PrintPage() {
               icon={<RollbackOutlined />}
               loading={loading}
               onClick={() => handleTogglePrinted(record)}
-              className="text-gray-500 border-gray-300"
+              className="text-content2 border-border"
             >
               Đã in {date}
             </Button>
@@ -347,7 +347,7 @@ export default function PrintPage() {
         />
 
         {selectedIds.length > 0 && (
-          <div className="mt-3 flex items-center justify-between rounded-lg bg-blue-50 px-4 py-2.5">
+          <div className="mt-3 flex items-center justify-between rounded-lg bg-primary/10 px-4 py-2.5">
             <Text className="text-sm">
               Đã chọn <Text strong>{selectedIds.length}</Text> đơn hàng để xuất PDF
             </Text>

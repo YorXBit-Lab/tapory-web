@@ -1,4 +1,17 @@
-import type { IEffect, IFrame, IIntro, ITemplate, TemplateId } from './types';
+import type { IEffect, IFrame, IIntro, ITemplate, TemplateId, ProductType } from './types';
+
+/** Phụ phí NFC mặc định khi chưa cấu hình settings/global. */
+export const DEFAULT_NFC_EXTRA_PRICE = 0;
+
+/** Nhãn hiển thị cho từng loại sản phẩm vật lý. Thêm dòng hàng mới = thêm một entry. */
+export const PRODUCT_TYPES: Record<ProductType, string> = {
+  keychain: 'Móc khóa',
+  plush: 'Gấu bông',
+  'photo-frame': 'Khung ảnh',
+  standee: 'Standee',
+  card: 'Thẻ / Card',
+  other: 'Khác',
+};
 
 export const TEMPLATES: Record<TemplateId, ITemplate> = {
   graduation: {
@@ -78,6 +91,28 @@ export const TEMPLATES: Record<TemplateId, ITemplate> = {
       background: '#ffffff',
     },
   },
+  keepsake: {
+    id: 'keepsake',
+    name: 'Kỷ Vật',
+    icon: '🎁',
+    occasion: 'Lưu giữ kỷ niệm gắn vào vật',
+    colors: {
+      primary: '#5c4631',
+      secondary: '#c9a06b',
+      background: '#f3ead9',
+    },
+  },
+  album: {
+    id: 'album',
+    name: 'Album Ảnh',
+    icon: '📸',
+    occasion: 'Album kỷ niệm nhiều ảnh',
+    colors: {
+      primary: '#1a1a1a',
+      secondary: '#c44f6a',
+      background: '#0e0e12',
+    },
+  },
   redirect: {
     id: 'redirect',
     name: 'Chuyển Hướng',
@@ -103,6 +138,16 @@ export const TEMPLATES: Record<TemplateId, ITemplate> = {
 };
 
 export const TEMPLATE_LIST = Object.values(TEMPLATES);
+
+/**
+ * Template tạm ẩn khỏi phần chọn mẫu cho khách (gallery + editor picker).
+ * Định nghĩa vẫn giữ trong TEMPLATES để thẻ đã tạo và trang admin vẫn hoạt động.
+ * Muốn bật lại: xoá id khỏi mảng này.
+ */
+export const HIDDEN_TEMPLATE_IDS: TemplateId[] = ['spotify'];
+
+/** Danh sách template hiển thị cho khách — đã loại các mẫu tạm ẩn. */
+export const PUBLIC_TEMPLATE_LIST = TEMPLATE_LIST.filter((t) => !HIDDEN_TEMPLATE_IDS.includes(t.id));
 
 export const BG_PRESETS = [
   '#ffffff', '#f8f6f0', '#fdf5f8', '#f0fdf4',
@@ -168,6 +213,7 @@ export const FIRESTORE_COLLECTIONS = {
   ORDERS: 'orders',
   ADMINS: 'admins',
   PRODUCTS: 'products',
+  COMPONENTS: 'components',
   PURCHASE_ORDERS: 'purchase_orders',
   SERVICES: 'services',
   PRESET_PHOTOS: 'preset_photos',

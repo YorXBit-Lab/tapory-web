@@ -8,16 +8,13 @@ import {
   Button,
   Card,
   Descriptions,
-  InputNumber,
-  Modal,
   Spin,
   Table,
   Tag,
-  Tooltip,
   Typography,
   notification,
 } from 'antd';
-import { ArrowLeftOutlined, CopyOutlined, PlusOutlined, WifiOutlined } from '@ant-design/icons';
+import { ArrowLeftOutlined, CopyOutlined, WifiOutlined } from '@ant-design/icons';
 import Link from 'next/link';
 import type { ColumnsType } from 'antd/es/table';
 import { OrderAPI, type OrderSource, type IOrderItem } from '@/services/OrderAPI';
@@ -25,8 +22,9 @@ import { EditOrderModal } from '../EditOrderModal';
 import { CardAPI } from '@/services/CardAPI';
 import { STATUS_TAG } from '@/components/dashboard';
 import { TEMPLATES } from '@/configs/constants';
-import { useAdminAuth } from '@/contexts/AdminAuthContext';
 import type { ICard } from '@/configs/types';
+import { NfcWriteButton } from './NfcWriteButton';
+import { AddChipModal } from './AddChipModal';
 
 const { Text } = Typography;
 
@@ -34,136 +32,6 @@ function formatDate(iso?: string) {
   if (!iso) return '—';
   const d = new Date(iso);
   return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
-}
-
-/* ── Web NFC types (not in TS stdlib) ── */
-interface NDEFRecord {
-  recordType: string;
-  data: string;
-}
-interface NDEFWriter {
-  write(msg: { records: NDEFRecord[] }): Promise<void>;
-}
-declare const NDEFReader: new () => NDEFWriter;
-
-type NfcStatus = 'idle' | 'waiting' | 'error';
-
-function NfcWriteButton({ card, onWritten }: { card: ICard; onWritten: () => void }) {
-  const [status, setStatus] = useState<NfcStatus>('idle');
-  const [errMsg, setErrMsg] = useState('');
-
-  const nfcUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/view/${card.id}`;
-
-  const handleWrite = async () => {
-    if (typeof NDEFReader === 'undefined') {
-      notification.error({
-        message: 'Trình duyệt không hỗ trợ',
-        description: 'Dùng Chrome + bật chrome://flags/#enable-experimental-web-platform-features',
-      });
-      return;
-    }
-    setStatus('waiting');
-    setErrMsg('');
-    try {
-      await new NDEFReader().write({ records: [{ recordType: 'url', data: nfcUrl }] });
-      await CardAPI.markNfcWritten(card.id);
-      notification.success({ message: `Đã ghi NFC: ${card.id}` });
-      onWritten();
-      setStatus('idle');
-    } catch (e) {
-      setStatus('error');
-      setErrMsg(e instanceof Error ? e.message : 'Lỗi không xác định');
-    }
-  };
-
-  if (status === 'waiting') {
-    return (
-      <div className="flex items-center gap-2 text-xs text-blue-500">
-        <Spin size="small" />
-        <span>Đặt chip vào thiết bị…</span>
-      </div>
-    );
-  }
-  if (status === 'error') {
-    return (
-      <Tooltip title={errMsg}>
-        <button onClick={handleWrite} className="text-xs text-red-500 hover:underline">
-          ✗ Lỗi — thử lại
-        </button>
-      </Tooltip>
-    );
-  }
-
-  return (
-    <Tooltip title={nfcUrl}>
-      <Button
-        size="small"
-        icon={<WifiOutlined />}
-        onClick={handleWrite}
-        type={card.nfcWritten ? 'default' : 'primary'}
-      >
-        {card.nfcWritten ? 'Ghi lại' : 'Ghi NFC'}
-      </Button>
-    </Tooltip>
-  );
-}
-
-/* ── Add chip modal ── */
-function AddChipModal({ orderId, onAdded }: { orderId: string; onAdded: () => void }) {
-  const { user } = useAdminAuth();
-  const [open, setOpen] = useState(false);
-  const [count, setCount] = useState(1);
-  const [loading, setLoading] = useState(false);
-
-  const handleAdd = async () => {
-    if (!user) return;
-    setLoading(true);
-    try {
-      const token = await user.getIdToken();
-      const res = await fetch('/api/admin/add-chip', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ orderId, count }),
-      });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error ?? 'Thất bại');
-      notification.success({ message: `Đã thêm ${count} chip mới` });
-      setOpen(false);
-      onAdded();
-    } catch (e) {
-      notification.error({ message: e instanceof Error ? e.message : 'Lỗi' });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <>
-      <Button icon={<PlusOutlined />} onClick={() => setOpen(true)}>
-        Thêm chip
-      </Button>
-      <Modal
-        title="Thêm chip NFC"
-        open={open}
-        onCancel={() => setOpen(false)}
-        onOk={handleAdd}
-        okText="Thêm"
-        confirmLoading={loading}
-        width={320}
-      >
-        <div className="py-3">
-          <Text className="mb-3 block text-sm">Số lượng chip muốn thêm:</Text>
-          <InputNumber
-            min={1}
-            max={10}
-            value={count}
-            onChange={(v) => setCount(v ?? 1)}
-            style={{ width: '100%' }}
-          />
-        </div>
-      </Modal>
-    </>
-  );
 }
 
 /* ── Main page ── */
@@ -251,7 +119,7 @@ export default function OrderDetailPage() {
               Xem
             </Link>
           ) : (
-            <span className="cursor-not-allowed text-gray-300">Xem</span>
+            <span className="cursor-not-allowed text-content4">Xem</span>
           )}
           <Link
             href={`/edit/${record.id}${record.templateId ? `?template=${record.templateId}` : ''}`}
@@ -296,6 +164,7 @@ export default function OrderDetailPage() {
 
   const SOURCE_LABEL: Record<OrderSource, { label: string; color: string }> = {
     local: { label: 'Local', color: 'blue' },
+    web: { label: 'Website', color: 'green' },
     tiktok: { label: 'TikTok', color: 'purple' },
     shopee: { label: 'Shopee', color: 'orange' },
   };
@@ -412,7 +281,7 @@ export default function OrderDetailPage() {
           {hasPrintItems && (
             <Descriptions.Item label="Link upload ảnh in" span={3}>
               <div className="flex items-center gap-2">
-                <Text copyable={false} className="font-mono text-xs text-blue-600">
+                <Text copyable={false} className="font-mono text-xs text-primary">
                   {printUploadUrl}
                 </Text>
                 <Button

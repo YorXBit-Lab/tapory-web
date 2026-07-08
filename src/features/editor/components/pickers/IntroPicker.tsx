@@ -30,7 +30,9 @@ export function IntroPicker() {
         )}
       </div>
 
-      <div className="flex gap-2 overflow-x-auto pb-2">
+      {/* px/py give the active card's scale + ring + shadow room (overflow-x-auto
+          forces overflow-y:auto, which would otherwise clip them). */}
+      <div className="flex gap-2 overflow-x-auto px-1 py-2">
         {INTROS.map(intro => (
           <IntroCard
             key={intro.id}
@@ -39,7 +41,11 @@ export function IntroPicker() {
               (draft.introId === intro.id) ||
               (!draft.introId && intro.id === 'none')
             }
-            onClick={() => dispatch(setIntro(intro.id))}
+            onClick={() => {
+              dispatch(setIntro(intro.id));
+              // Chọn intro là xem thử luôn (trừ 'none'), khỏi cần bấm nút.
+              setPreviewing(intro.id === 'none' ? null : intro.id);
+            }}
           />
         ))}
       </div>

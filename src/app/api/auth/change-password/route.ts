@@ -1,16 +1,6 @@
-import { createHash } from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { getAdminDb } from '@/libs/firebase-admin';
-
-function normalisePhone(raw: string): string {
-  const digits = raw.replace(/\D/g, '');
-  if (digits.startsWith('84') && digits.length >= 11) return '0' + digits.slice(2);
-  return digits;
-}
-
-function hashPhone(phone: string): string {
-  return createHash('sha256').update(normalisePhone(phone)).digest('hex');
-}
+import { hashPhone } from '@/utils/phone';
 
 export async function POST(req: NextRequest) {
   try {
@@ -36,7 +26,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (hashPhone(currentPhone) !== data.phoneHash) {
+    if ((await hashPhone(currentPhone)) !== data.phoneHash) {
       const attempts = (data.failedAttempts ?? 0) + 1;
       const update: Record<string, unknown> = { failedAttempts: attempts };
       if (attempts >= 5) update.lockedUntil = new Date(Date.now() + 15 * 60 * 1000);
@@ -45,7 +35,7 @@ export async function POST(req: NextRequest) {
     }
 
     await adminDb.doc(`cardAuth/${cardId}`).update({
-      phoneHash: hashPhone(newPhone),
+      phoneHash: await hashPhone(newPhone),
       failedAttempts: 0,
       lockedUntil: null,
       updatedAt: new Date(),

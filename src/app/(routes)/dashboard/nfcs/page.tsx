@@ -1,15 +1,18 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { Input, notification, Segmented, Spin, Table, Tag, Tooltip, Typography } from 'antd';
+import { Input, Modal, notification, Segmented, Select, Spin, Table, Tag, Tooltip, Typography } from 'antd';
 import { Button } from 'antd';
-import { SearchOutlined, WifiOutlined } from '@ant-design/icons';
+import { CopyOutlined, PlusOutlined, SearchOutlined, WifiOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import Link from 'next/link';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { StatCard } from '@/components/dashboard';
 import { CardAPI } from '@/services/CardAPI';
 import { OrderAPI } from '@/services/OrderAPI';
+import { TEMPLATE_LIST } from '@/configs/constants';
+import { useAdminAuth } from '@/contexts/AdminAuthContext';
+import type { TemplateId } from '@/configs/types';
 import { useRouter } from 'next/navigation';
 
 const { Text } = Typography;
@@ -17,6 +20,7 @@ const { Text } = Typography;
 interface ChipRow {
   id: string;
   orderId: string;
+  standalone: boolean;
   customerName: string;
   hasContent: boolean;
   nfcWritten?: boolean;
@@ -63,7 +67,7 @@ function NfcBtn({ cardId, onWritten }: { cardId: string; onWritten?: () => void 
 
   if (status === 'waiting') {
     return (
-      <div className="flex items-center gap-1.5 text-xs text-blue-500">
+      <div className="flex items-center gap-1.5 text-xs text-primary">
         <Spin size="small" />
         <span>Đặt chip vào…</span>
       </div>
@@ -86,23 +90,87 @@ function NfcBtn({ cardId, onWritten }: { cardId: string; onWritten?: () => void 
 export default function NfcPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { user } = useAdminAuth();
   const [search, setSearch]   = useState('');
   const [contentFilter, setContentFilter] = useState('all');
   const [pageSize, setPageSize] = useState(10);
+
+  const [createOpen, setCreateOpen] = useState(false);
+  const [newTemplate, setNewTemplate] = useState<TemplateId>('graduation');
+  const [newPassword, setNewPassword] = useState('');
+  const [creating, setCreating] = useState(false);
+
+  const handleCreateLink = async () => {
+    if (!user) return;
+    setCreating(true);
+    try {
+      const token = await user.getIdToken();
+      const res = await fetch('/api/admin/create-card', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ templateId: newTemplate, password: newPassword }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error ?? 'Thất bại');
+      queryClient.invalidateQueries({ queryKey: ['cards-all'] });
+      setCreateOpen(false);
+      setNewPassword('');
+      notification.success({
+        message: 'Đã tạo link template',
+        description: json.cardId,
+        btn: (
+          <Button type="primary" size="small" onClick={() => window.open(`/edit/${json.cardId}`, '_blank')}>
+            Mở trang sửa
+          </Button>
+        ),
+        duration: 6,
+      });
+    } catch (e) {
+      notification.error({ message: 'Tạo link thất bại', description: e instanceof Error ? e.message : 'Lỗi không xác định' });
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  /** Copy đúng link sẽ ghi vào chip NFC (= URL trang xem). */
+  const copyViewLink = async (cardId: string) => {
+    const url = `${window.location.origin}/view/${cardId}`;
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(url);
+      } else {
+        const ta = document.createElement('textarea');
+        ta.value = url;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+      }
+      notification.success({ message: 'Đã copy link ghi NFC', description: url });
+    } catch {
+      notification.error({ message: 'Copy thất bại', description: url });
+    }
+  };
 
   const { data: cards = [] }  = useQuery({ queryKey: ['cards-all'], queryFn: () => CardAPI.listAll(), staleTime: 60_000 });
   const { data: orders = [] } = useQuery({ queryKey: ['orders'],    queryFn: () => OrderAPI.list(),   staleTime: 60_000 });
 
   const orderMap = useMemo(() => new Map(orders.map(o => [o.id, o])), [orders]);
 
-  const rows = useMemo<ChipRow[]>(() => cards.map(c => ({
-    id:           c.id,
-    orderId:      c.orderId ?? '—',
-    customerName: orderMap.get(c.orderId ?? '')?.customerName ?? '—',
-    hasContent:   c.hasContent,
-    nfcWritten:   c.nfcWritten,
-    createdAt:    c.createdAt,
-  })), [cards, orderMap]);
+  const rows = useMemo<ChipRow[]>(() => cards.map(c => {
+    const standalone = !c.orderId;
+    return {
+      id:           c.id,
+      orderId:      c.orderId || '—',
+      standalone,
+      customerName: standalone ? 'Link template' : (orderMap.get(c.orderId)?.customerName ?? '—'),
+      hasContent:   c.hasContent,
+      nfcWritten:   c.nfcWritten,
+      createdAt:    c.createdAt,
+    };
+  }), [cards, orderMap]);
 
   const stats = useMemo(() => ({
     total:     rows.length,
@@ -138,12 +206,15 @@ export default function NfcPage() {
     {
       title: 'Đơn hàng',
       dataIndex: 'orderId',
-      render: (id: string) => (
-        <button className="font-mono text-xs text-primary hover:underline"
-          onClick={() => router.push(`/dashboard/orders/${id}`)}>
-          {id}
-        </button>
-      ),
+      render: (id: string, r: ChipRow) =>
+        r.standalone ? (
+          <Tag color="blue">Template</Tag>
+        ) : (
+          <button className="font-mono text-xs text-primary hover:underline"
+            onClick={() => router.push(`/dashboard/orders/${id}`)}>
+            {id}
+          </button>
+        ),
     },
     { title: 'Khách hàng', dataIndex: 'customerName' },
     {
@@ -164,9 +235,17 @@ export default function NfcPage() {
     {
       title: 'Link',
       render: (_: unknown, r: ChipRow) => (
-        <span className="flex gap-2 text-xs">
+        <span className="flex items-center gap-2 text-xs">
           <Link href={`/view/${r.id}`} target="_blank" className="text-primary hover:opacity-70">Xem</Link>
           <Link href={`/edit/${r.id}`} target="_blank" className="text-primary hover:opacity-70">Sửa</Link>
+          <Tooltip title={`Copy ${typeof window !== 'undefined' ? window.location.origin : ''}/view/${r.id}`}>
+            <button
+              onClick={() => copyViewLink(r.id)}
+              className="inline-flex items-center gap-0.5 text-primary hover:opacity-70"
+            >
+              <CopyOutlined /> Copy
+            </button>
+          </Tooltip>
         </span>
       ),
     },
@@ -183,6 +262,13 @@ export default function NfcPage() {
 
   return (
     <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h1 className="text-lg font-semibold text-content1">Chip NFC</h1>
+        <Button type="primary" icon={<PlusOutlined />} onClick={() => setCreateOpen(true)}>
+          Tạo link mới
+        </Button>
+      </div>
+
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         <StatCard label="Tổng chip"      value={String(stats.total)}     />
         <StatCard label="Đã ghi NFC"     value={String(stats.written)}   deltaType="up"   />
@@ -199,7 +285,7 @@ export default function NfcPage() {
 
         <div className="flex flex-wrap items-center justify-between gap-2">
           <Input
-            prefix={<SearchOutlined className="text-gray-400" />}
+            prefix={<SearchOutlined className="text-content3" />}
             placeholder="Tìm chip ID, mã đơn, khách hàng..."
             allowClear
             onChange={e => setSearch(e.target.value)}
@@ -207,16 +293,16 @@ export default function NfcPage() {
             style={{ width: 280 }}
           />
           <div className="flex items-center gap-2">
-            <span className="text-xs text-gray-400">Hiển thị</span>
+            <span className="text-xs text-content3">Hiển thị</span>
             <input
               type="number"
               min={1}
               max={500}
               value={pageSize}
               onChange={e => setPageSize(Number(e.target.value) || 10)}
-              className="w-14 rounded border border-gray-200 px-2 py-0.5 text-center text-xs"
+              className="w-14 rounded border border-border px-2 py-0.5 text-center text-xs"
             />
-            <span className="text-xs text-gray-400">dòng</span>
+            <span className="text-xs text-content3">dòng</span>
           </div>
         </div>
 
@@ -235,6 +321,44 @@ export default function NfcPage() {
           scroll={{ x: 'max-content' }}
         />
       </div>
+
+      <Modal
+        title="Tạo link template (không cần đơn hàng)"
+        open={createOpen}
+        onCancel={() => { setCreateOpen(false); setNewPassword(''); }}
+        onOk={handleCreateLink}
+        okText="Tạo link"
+        confirmLoading={creating}
+        width={420}
+      >
+        <p className="mb-3 text-sm text-content2">
+          Tạo một link/chip NFC độc lập để test template hoặc ghi chip mẫu. Bạn có thể sửa nội dung ngay sau khi tạo.
+        </p>
+        <label className="mb-1 block text-xs font-medium text-content3">Template</label>
+        <Select
+          value={newTemplate}
+          onChange={setNewTemplate}
+          className="w-full"
+          options={TEMPLATE_LIST.map(t => ({
+            value: t.id,
+            label: `${t.icon} ${t.name}`,
+          }))}
+        />
+
+        <label className="mt-4 mb-1 block text-xs font-medium text-content3">
+          Mật khẩu (tuỳ chọn)
+        </label>
+        <Input.Password
+          value={newPassword}
+          onChange={e => setNewPassword(e.target.value)}
+          placeholder="Để trống nếu không cần khoá"
+          inputMode="numeric"
+          autoComplete="off"
+        />
+        <p className="mt-1 text-xs text-content4">
+          Dạng số (giống SĐT). Bỏ trống → khách tự đặt mật khẩu khi lưu lần đầu.
+        </p>
+      </Modal>
     </div>
   );
 }

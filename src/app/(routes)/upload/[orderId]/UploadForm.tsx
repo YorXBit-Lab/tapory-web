@@ -2,10 +2,14 @@
 
 import { useRef, useState } from 'react';
 import { Button, Typography, notification } from 'antd';
-import { UploadOutlined, CheckCircleOutlined } from '@ant-design/icons';
-import Image from 'next/image';
+import { UploadOutlined, CheckCircleOutlined, SaveOutlined } from '@ant-design/icons';
 import { uploadPrintPhoto } from '@/utils/r2-upload';
+import { bakeCropToBlob } from '@/utils/crop-bake';
+import { resolvePrintSize, cmToPx, PRINT_DPI } from '@/configs/print';
 import type { IPrintConfig, IPrintPhotoSlot } from '@/configs/types';
+import { PrintPhotoEditor, cfgToDims } from './PrintPhotoEditor';
+import type { PhotoEditorState } from './PrintPhotoEditorCanvas';
+import { Spinner } from '@/components/ui/Spinner';
 
 const { Text } = Typography;
 
@@ -24,39 +28,36 @@ interface Props {
 }
 
 function shapeLabel(cfg: IPrintConfig) {
-  if (cfg.shape === 'circle') return `Hình tròn • ⌀${cfg.diameter} cm`;
-  if (cfg.shape === 'square') return `Hình vuông • ${cfg.width} × ${cfg.width} cm`;
-  return `Chữ nhật • ${cfg.width} × ${cfg.height} cm`;
+  if (cfg.shape === 'circle') return `Hình tròn • ⌀${cfg.diameter ?? 3} cm`;
+  if (cfg.shape === 'square') return `Hình vuông • ${cfg.width ?? 3.35} × ${cfg.width ?? 3.35} cm`;
+  return `Chữ nhật • ${cfg.width ?? 3.2} × ${cfg.height ?? 5} cm`;
 }
 
-function ShapePreview({ cfg }: { cfg: IPrintConfig }) {
-  const base = 'bg-blue-50 border-2 border-dashed border-blue-300 flex items-center justify-center';
-  if (cfg.shape === 'circle') {
-    return <div className={`${base} rounded-full`} style={{ width: 80, height: 80 }} />;
-  }
-  if (cfg.shape === 'square') {
-    return <div className={`${base} rounded`} style={{ width: 80, height: 80 }} />;
-  }
-  const w = cfg.width ?? 5;
-  const h = cfg.height ?? 7;
-  const ratio = h / w;
-  const previewW = 70;
-  const previewH = Math.round(previewW * ratio);
-  return <div className={`${base} rounded`} style={{ width: previewW, height: Math.min(previewH, 100) }} />;
+function ShapePlaceholder({ cfg }: { cfg: IPrintConfig }) {
+  const { W, H, isCircle } = cfgToDims(cfg);
+  const label = cfg.shape === 'circle'
+    ? `⌀${cfg.diameter ?? 3}cm`
+    : `${cfg.width ?? (cfg.shape === 'square' ? 3.35 : 3.2)}×${cfg.shape === 'square' ? (cfg.width ?? 3.35) : (cfg.height ?? 5)}cm`;
+
+  return (
+    <div
+      className={`flex flex-shrink-0 items-center justify-center border-2 border-dashed border-warning/50 bg-warning/5 text-[10px] font-medium text-warning ${isCircle ? 'rounded-full' : 'rounded-md'}`}
+      style={{ width: W, height: H }}
+    >
+      {label}
+    </div>
+  );
 }
 
-// Key for photos map: `${itemIndex}-${slotIndex}-${side}`
-// Non-NFC items always use side 'a'
 function photoKey(itemIndex: number, slotIndex: number, side: 'a' | 'b') {
   return `${itemIndex}-${slotIndex}-${side}`;
 }
 
 function totalSlotsForItem(item: PrintItem) {
-  return item.quantity * 2; // luôn 2 mặt: A + B
+  return item.quantity * 2;
 }
 
 export default function UploadForm({ orderId, customerName, printItems, initialPhotos }: Props) {
-  // photos map: key → url
   const [photos, setPhotos] = useState<Record<string, string>>(() => {
     const init: Record<string, string> = {};
     for (const p of initialPhotos) {
@@ -66,10 +67,10 @@ export default function UploadForm({ orderId, customerName, printItems, initialP
     return init;
   });
   const [uploading, setUploading] = useState<Record<string, boolean>>({});
-  // samePhoto[`${itemIndex}-${slotIndex}`] = true → 2 mặt dùng cùng ảnh
+  const [rawFiles, setRawFiles] = useState<Record<string, File>>({});
+  const [editorStates, setEditorStates] = useState<Record<string, PhotoEditorState | null>>({});
   const [samePhoto, setSamePhoto] = useState<Record<string, boolean>>(() => {
     const init: Record<string, boolean> = {};
-    // Tự detect nếu ảnh A và B giống nhau từ initialPhotos
     for (const item of initialPhotos) {
       const keyAB = `${item.itemIndex}-${item.slotIndex}`;
       const urlA = initialPhotos.find(p => p.itemIndex === item.itemIndex && p.slotIndex === item.slotIndex && (p.side ?? 'a') === 'a')?.url;
@@ -80,145 +81,181 @@ export default function UploadForm({ orderId, customerName, printItems, initialP
   });
   const inputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
-  const handleUpload = async (file: File, itemIndex: number, slotIndex: number, side: 'a' | 'b') => {
-    const key = photoKey(itemIndex, slotIndex, side);
-    setUploading(prev => ({ ...prev, [key]: true }));
-    try {
-      const { url } = await uploadPrintPhoto(file, orderId, itemIndex, slotIndex, side);
-      setPhotos(prev => ({ ...prev, [key]: url }));
-      notification.success({ message: 'Upload thành công', duration: 2 });
-    } catch (err) {
-      notification.error({
-        message: 'Upload thất bại',
-        description: err instanceof Error ? err.message : 'Thử lại sau',
-      });
-    } finally {
-      setUploading(prev => ({ ...prev, [key]: false }));
-    }
+  // Chọn ảnh: chỉ preview cục bộ (chưa upload). Khách chỉnh crop rồi bấm "Lưu".
+  const selectPhoto = (file: File, itemIndex: number, slotIndex: number, sides: ('a' | 'b')[]) => {
+    const objectUrl = URL.createObjectURL(file);
+    const keys = sides.map(s => photoKey(itemIndex, slotIndex, s));
+    setPhotos(prev => ({ ...prev, ...Object.fromEntries(keys.map(k => [k, objectUrl])) }));
+    setRawFiles(prev => ({ ...prev, ...Object.fromEntries(keys.map(k => [k, file])) }));
+    setEditorStates(prev => ({ ...prev, ...Object.fromEntries(keys.map(k => [k, null])) }));
   };
 
-  // Upload cùng 1 file cho cả 2 mặt song song
-  const handleUploadBoth = async (file: File, itemIndex: number, slotIndex: number) => {
-    const keyA = photoKey(itemIndex, slotIndex, 'a');
-    const keyB = photoKey(itemIndex, slotIndex, 'b');
-    setUploading(prev => ({ ...prev, [keyA]: true, [keyB]: true }));
+  // Bake vùng crop hiện tại thành PNG 300 DPI rồi upload — bản in đúng như preview.
+  const savePhoto = async (itemIndex: number, slotIndex: number, cfg: IPrintConfig, sides: ('a' | 'b')[]) => {
+    const keys = sides.map(s => photoKey(itemIndex, slotIndex, s));
+    const file = rawFiles[keys[0]];
+    const transform = editorStates[keys[0]];
+    if (!file || !transform) return;
+
+    const { W, H } = cfgToDims(cfg);
+    const { widthCm, heightCm, isCircle } = resolvePrintSize(cfg);
+
+    setUploading(prev => ({ ...prev, ...Object.fromEntries(keys.map(k => [k, true])) }));
     try {
-      const [resA, resB] = await Promise.all([
-        uploadPrintPhoto(file, orderId, itemIndex, slotIndex, 'a'),
-        uploadPrintPhoto(file, orderId, itemIndex, slotIndex, 'b'),
-      ]);
-      setPhotos(prev => ({ ...prev, [keyA]: resA.url, [keyB]: resB.url }));
-      notification.success({ message: 'Upload thành công cho cả 2 mặt', duration: 2 });
+      const blob = await bakeCropToBlob(file, {
+        displayW: W, displayH: H,
+        outputW: cmToPx(widthCm, PRINT_DPI),
+        outputH: cmToPx(heightCm, PRINT_DPI),
+        isCircle, transform,
+      });
+      const baked = new File([blob], 'print.png', { type: 'image/png' });
+      const results = await Promise.all(
+        sides.map(s => uploadPrintPhoto(baked, orderId, itemIndex, slotIndex, s)),
+      );
+      setPhotos(prev => {
+        const next = { ...prev };
+        sides.forEach((s, i) => { next[photoKey(itemIndex, slotIndex, s)] = results[i].url; });
+        return next;
+      });
+      setRawFiles(prev => {
+        const next = { ...prev };
+        for (const k of keys) delete next[k];
+        return next;
+      });
+      notification.success({ message: sides.length > 1 ? 'Đã lưu cho cả 2 mặt' : 'Đã lưu ảnh', duration: 2 });
     } catch (err) {
       notification.error({
-        message: 'Upload thất bại',
+        message: 'Lưu ảnh thất bại',
         description: err instanceof Error ? err.message : 'Thử lại sau',
       });
     } finally {
-      setUploading(prev => ({ ...prev, [keyA]: false, [keyB]: false }));
+      setUploading(prev => ({ ...prev, ...Object.fromEntries(keys.map(k => [k, false])) }));
     }
   };
 
   const totalSlots = printItems.reduce((s, item) => s + totalSlotsForItem(item), 0);
-  const uploadedCount = Object.keys(photos).length;
+  const uploadedCount = Object.keys(photos).filter(k => !rawFiles[k]).length;
   const allDone = uploadedCount >= totalSlots;
 
   return (
-    <div className="mx-auto max-w-xl px-4 py-8">
-      {/* Header */}
-      <div className="mb-6 text-center">
-        <Text strong className="text-lg">Upload ảnh in ấn</Text>
-        <div className="mt-1 text-sm text-gray-500">Đơn hàng <span className="font-mono font-semibold">{orderId}</span> — {customerName}</div>
-        <div className="mt-2 text-xs text-gray-400">{uploadedCount}/{totalSlots} ảnh đã upload</div>
-      </div>
-
-      {allDone && (
-        <div className="mb-6 flex items-center gap-2 rounded-lg bg-green-50 p-4 text-green-700">
-          <CheckCircleOutlined className="text-xl" />
-          <Text className="text-sm text-green-700">Tất cả ảnh đã được gửi thành công. Cảm ơn bạn!</Text>
+    <div className="min-h-screen bg-background p-4 md:p-6">
+      <div className="mx-auto max-w-xl space-y-5">
+        <div>
+          <h1 className="text-2xl font-bold text-content1">Upload ảnh in ấn</h1>
+          <p className="text-sm text-content2">
+            Đơn <span className="font-mono font-semibold">{orderId}</span> — {customerName}
+          </p>
         </div>
-      )}
 
-      <div className="space-y-6">
-        {printItems.map((item) => (
-          <div key={item.itemIndex} className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-            <div className="mb-3 flex items-start gap-3">
-              <ShapePreview cfg={item.printConfig} />
-              <div>
-                <Text strong className="block">{item.productName}</Text>
-                <Text type="secondary" className="text-xs">{shapeLabel(item.printConfig)}</Text>
-                <Text type="secondary" className="block text-xs mt-0.5">
-                  {item.quantity > 1 ? `${item.quantity} sản phẩm · ` : ''}In 2 mặt — upload ảnh Mặt A và Mặt B, hoặc dùng cùng 1 ảnh
-                </Text>
+        {allDone && (
+          <div className="flex items-center gap-2 rounded-xl bg-success/10 p-4 text-success shadow-sm">
+            <CheckCircleOutlined className="text-xl" />
+            <Text className="text-sm text-success">Tất cả ảnh đã được gửi thành công. Cảm ơn bạn!</Text>
+          </div>
+        )}
+
+        <div className="space-y-4">
+          {printItems.map((item) => (
+            <section key={item.itemIndex} className="rounded-xl bg-elevated p-5 shadow-sm">
+              <div className="mb-4 flex items-start gap-4">
+                <ShapePlaceholder cfg={item.printConfig} />
+                <div className="min-w-0">
+                  <p className="font-semibold text-content1">{item.productName}</p>
+                  <p className="mt-0.5 text-xs text-content2">{shapeLabel(item.printConfig)}</p>
+                  <p className="mt-0.5 text-xs text-content3">
+                    {item.quantity > 1 ? `${item.quantity} sản phẩm · ` : ''}In 2 mặt — upload Mặt A và Mặt B, hoặc dùng cùng 1 ảnh
+                  </p>
+                  <div className="mt-1.5 text-xs font-medium text-warning">
+                    {uploadedCount}/{totalSlots} ảnh đã upload
+                  </div>
+                </div>
               </div>
-            </div>
 
-            <div className="space-y-4">
-              {Array.from({ length: item.quantity }, (_, slotIndex) => (
-                <div key={slotIndex}>
-                  {item.quantity > 1 && (
-                    <Text type="secondary" className="mb-2 block text-xs font-medium">
-                      Sản phẩm {slotIndex + 1}
-                    </Text>
-                  )}
+              <div className="space-y-4">
+                {Array.from({ length: item.quantity }, (_, slotIndex) => {
+                  const sk = `${item.itemIndex}-${slotIndex}`;
+                  const same = !!samePhoto[sk];
+                  const bothUploading =
+                    !!uploading[photoKey(item.itemIndex, slotIndex, 'a')] ||
+                    !!uploading[photoKey(item.itemIndex, slotIndex, 'b')];
 
-                  {(() => {
-                    const sk = `${item.itemIndex}-${slotIndex}`;
-                    const same = !!samePhoto[sk];
-                    const bothUploading = !!uploading[photoKey(item.itemIndex, slotIndex, 'a')] || !!uploading[photoKey(item.itemIndex, slotIndex, 'b')];
-                    return (
-                      <div>
-                        <label className="mb-2 flex cursor-pointer items-center gap-2 text-xs text-gray-500 select-none">
-                          <input
-                            type="checkbox"
-                            checked={same}
-                            onChange={(e) => setSamePhoto(prev => ({ ...prev, [sk]: e.target.checked }))}
-                            className="rounded"
+                  return (
+                    <div key={slotIndex}>
+                      {item.quantity > 1 && (
+                        <Text type="secondary" className="mb-2 block text-xs font-medium">
+                          Sản phẩm {slotIndex + 1}
+                        </Text>
+                      )}
+
+                      <label className="mb-2 flex cursor-pointer items-center gap-2 text-xs text-content2 select-none">
+                        <input
+                          type="checkbox"
+                          checked={same}
+                          onChange={(e) => setSamePhoto(prev => ({ ...prev, [sk]: e.target.checked }))}
+                          className="rounded"
+                        />
+                        2 mặt giống nhau
+                      </label>
+
+                      {same ? (
+                        <div className="flex justify-center">
+                          <UploadSlot
+                            label="Mặt A = B"
+                            slotKey={`${sk}-same`}
+                            url={photos[photoKey(item.itemIndex, slotIndex, 'a')]}
+                            isUploading={bothUploading}
+                            cfg={item.printConfig}
+                            editorState={editorStates[photoKey(item.itemIndex, slotIndex, 'a')] ?? null}
+                            onEditorChange={(s) =>
+                              setEditorStates(prev => ({
+                                ...prev,
+                                [photoKey(item.itemIndex, slotIndex, 'a')]: s,
+                                [photoKey(item.itemIndex, slotIndex, 'b')]: s,
+                              }))
+                            }
+                            inputRef={(el) => { inputRefs.current[`${sk}-same`] = el; }}
+                            onTrigger={() => inputRefs.current[`${sk}-same`]?.click()}
+                            onChange={(file) => selectPhoto(file, item.itemIndex, slotIndex, ['a', 'b'])}
+                            isDraft={!!rawFiles[photoKey(item.itemIndex, slotIndex, 'a')]}
+                            onSave={() => savePhoto(item.itemIndex, slotIndex, item.printConfig, ['a', 'b'])}
                           />
-                          2 mặt giống nhau
-                        </label>
-
-                        {same ? (
-                          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                            <UploadSlot
-                              label="Mặt A = B"
-                              slotKey={`${sk}-same`}
-                              url={photos[photoKey(item.itemIndex, slotIndex, 'a')]}
-                              isUploading={bothUploading}
-                              inputRef={(el) => { inputRefs.current[`${sk}-same`] = el; }}
-                              onTrigger={() => inputRefs.current[`${sk}-same`]?.click()}
-                              onChange={(file) => handleUploadBoth(file, item.itemIndex, slotIndex)}
-                            />
-                          </div>
-                        ) : (
-                          <div className="grid grid-cols-2 gap-3">
-                            {(['a', 'b'] as const).map((side) => (
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-2 gap-3">
+                          {(['a', 'b'] as const).map((side) => {
+                            const key = photoKey(item.itemIndex, slotIndex, side);
+                            return (
                               <UploadSlot
                                 key={side}
                                 label={side === 'a' ? 'Mặt A' : 'Mặt B'}
-                                slotKey={photoKey(item.itemIndex, slotIndex, side)}
-                                url={photos[photoKey(item.itemIndex, slotIndex, side)]}
-                                isUploading={!!uploading[photoKey(item.itemIndex, slotIndex, side)]}
-                                inputRef={(el) => { inputRefs.current[photoKey(item.itemIndex, slotIndex, side)] = el; }}
-                                onTrigger={() => inputRefs.current[photoKey(item.itemIndex, slotIndex, side)]?.click()}
-                                onChange={(file) => handleUpload(file, item.itemIndex, slotIndex, side)}
+                                slotKey={key}
+                                url={photos[key]}
+                                isUploading={!!uploading[key]}
+                                cfg={item.printConfig}
+                                editorState={editorStates[key] ?? null}
+                                onEditorChange={(s) => setEditorStates(prev => ({ ...prev, [key]: s }))}
+                                inputRef={(el) => { inputRefs.current[key] = el; }}
+                                onTrigger={() => inputRefs.current[key]?.click()}
+                                onChange={(file) => selectPhoto(file, item.itemIndex, slotIndex, [side])}
+                                isDraft={!!rawFiles[key]}
+                                onSave={() => savePhoto(item.itemIndex, slotIndex, item.printConfig, [side])}
                               />
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })()}
-                </div>
-              ))}
-            </div>
-          </div>
-        ))}
-      </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+          ))}
+        </div>
 
-      <p className="mt-8 text-center text-xs text-gray-400">
-        Ảnh được gửi trực tiếp cho bên in ấn. Chấp nhận JPEG · PNG · WebP · tối đa 10 MB.
-      </p>
+        <p className="text-center text-xs text-content3">
+          Ảnh gửi trực tiếp cho bên in ấn · JPEG · PNG · WebP · tối đa 10 MB
+        </p>
+      </div>
     </div>
   );
 }
@@ -228,45 +265,100 @@ interface SlotProps {
   slotKey: string;
   url?: string;
   isUploading: boolean;
+  cfg: IPrintConfig;
+  editorState: PhotoEditorState | null;
+  onEditorChange: (s: PhotoEditorState) => void;
   inputRef: (el: HTMLInputElement | null) => void;
   onTrigger: () => void;
   onChange: (file: File) => void;
+  isDraft: boolean;
+  onSave: () => void;
 }
 
-function UploadSlot({ label, slotKey, url, isUploading, inputRef, onTrigger, onChange }: SlotProps) {
+function UploadSlot({
+  label, slotKey, url, isUploading, cfg,
+  editorState, onEditorChange,
+  inputRef, onTrigger, onChange,
+  isDraft, onSave,
+}: SlotProps) {
+  const { W, H, isCircle } = cfgToDims(cfg);
+
+  const zoom = (factor: number) => {
+    if (!editorState) return;
+    const newScale = Math.max(0.1, Math.min(20, editorState.scale * factor));
+    const cx = W / 2, cy = H / 2;
+    const ratio = newScale / editorState.scale;
+    onEditorChange({ scale: newScale, x: cx - (cx - editorState.x) * ratio, y: cy - (cy - editorState.y) * ratio });
+  };
+
+  const hasImage = !!url && !isUploading;
+
   return (
     <div className="flex flex-col items-center gap-2">
       {label && <Text type="secondary" className="text-xs font-semibold">{label}</Text>}
 
-      <div
-        className="relative flex h-28 w-full cursor-pointer items-center justify-center overflow-hidden rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 transition-colors hover:border-blue-400"
-        onClick={onTrigger}
-      >
-        {url ? (
-          <Image src={url} alt={label ?? 'ảnh'} fill className="object-cover" sizes="150px" unoptimized />
-        ) : (
-          <div className="flex flex-col items-center gap-1 text-gray-400">
-            <UploadOutlined style={{ fontSize: 22 }} />
-            <span className="text-[11px]">Chọn ảnh</span>
-          </div>
-        )}
-        {isUploading && (
-          <div className="absolute inset-0 flex items-center justify-center bg-white/70">
-            <div className="h-5 w-5 animate-spin rounded-full border-2 border-gray-200 border-t-blue-500" />
-          </div>
-        )}
-        {url && !isUploading && (
-          <div className="absolute bottom-1 right-1 rounded-full bg-green-500 p-0.5 text-white">
-            <CheckCircleOutlined style={{ fontSize: 12 }} />
-          </div>
+      {/* tầng 1: canvas hoặc placeholder — luôn W×H */}
+      {hasImage ? (
+        <PrintPhotoEditor imageUrl={url} cfg={cfg} state={editorState} onChange={onEditorChange} />
+      ) : (
+        <button
+          type="button"
+          onClick={onTrigger}
+          disabled={isUploading}
+          className={`flex flex-col items-center justify-center gap-1 border-2 border-dashed border-border bg-elevated text-content3 transition-colors hover:border-primary hover:text-primary disabled:opacity-50 ${isCircle ? 'rounded-full' : 'rounded-md'}`}
+          style={{ width: W, height: H }}
+        >
+          {isUploading
+            ? <Spinner size="sm" />
+            : <><UploadOutlined className="text-lg" /><span className="text-[10px]">Chọn ảnh</span></>
+          }
+        </button>
+      )}
+
+      {/* tầng 2: controls row — luôn chiếm h-6, giữ layout cố định */}
+      <div className="flex h-6 items-center justify-center gap-2">
+        {hasImage && (
+          <>
+            <button type="button" onClick={() => zoom(1 / 1.15)}
+              className="flex h-5 w-5 items-center justify-center rounded-full border border-border bg-background text-xs text-content2 shadow-sm hover:bg-elevated">
+              −
+            </button>
+            <span className="text-[10px] text-content3">Kéo · zoom</span>
+            <button type="button" onClick={() => zoom(1.15)}
+              className="flex h-5 w-5 items-center justify-center rounded-full border border-border bg-background text-xs text-content2 shadow-sm hover:bg-elevated">
+              +
+            </button>
+          </>
         )}
       </div>
 
-      <Button size="small" icon={<UploadOutlined />} loading={isUploading} onClick={onTrigger} className="w-full">
-        {url ? 'Đổi ảnh' : 'Chọn ảnh'}
-      </Button>
+      {/* tầng 3: action buttons */}
+      {isDraft ? (
+        <div className="flex w-full flex-col gap-1">
+          <Button
+            size="small"
+            type="primary"
+            icon={<SaveOutlined />}
+            loading={isUploading}
+            disabled={!editorState}
+            onClick={onSave}
+            className="w-full"
+          >
+            Lưu ảnh in
+          </Button>
+          <Button size="small" icon={<UploadOutlined />} onClick={onTrigger} disabled={isUploading} className="w-full">
+            Đổi ảnh
+          </Button>
+          <span className="text-center text-[10px] text-warning">Chưa lưu — bấm “Lưu” sau khi căn ảnh</span>
+        </div>
+      ) : (
+        <Button size="small" icon={<UploadOutlined />} loading={isUploading} onClick={onTrigger} className="w-full">
+          {hasImage ? 'Đổi ảnh' : 'Chọn ảnh'}
+        </Button>
+      )}
 
       <input
+        key={slotKey}
         ref={inputRef}
         type="file"
         accept="image/jpeg,image/png,image/webp"

@@ -1,10 +1,10 @@
 import {
   doc,
-  deleteDoc,
   getDoc,
   getDocs,
   updateDoc,
   serverTimestamp,
+  increment,
   collection,
   addDoc,
   query,
@@ -71,33 +71,6 @@ export const CardAPI = {
     return cards.sort((a, b) => a.id.localeCompare(b.id, undefined, { numeric: true }));
   },
 
-  deleteByOrder: async (orderId: string): Promise<void> => {
-    const CARD_AUTH = FIRESTORE_COLLECTIONS.CARD_AUTH;
-    const CARD_VIEWS = FIRESTORE_COLLECTIONS.CARD_VIEWS;
-
-    const cardSnaps = await getDocs(
-      query(collection(db, CARDS), where('orderId', '==', orderId)),
-    );
-
-    await Promise.all(
-      cardSnaps.docs.map(async (cardDoc) => {
-        const cardId = cardDoc.id;
-
-        // cardAuth — doc id = cardId
-        await deleteDoc(doc(db, CARD_AUTH, cardId)).catch(() => null);
-
-        // cardViews — query by cardId
-        const viewSnaps = await getDocs(
-          query(collection(db, CARD_VIEWS), where('cardId', '==', cardId)),
-        );
-        await Promise.all(viewSnaps.docs.map(s => deleteDoc(s.ref)));
-
-        // card itself
-        await deleteDoc(cardDoc.ref);
-      }),
-    );
-  },
-
   markNfcWritten: async (cardId: string) => {
     await updateDoc(doc(db, CARDS, cardId), {
       nfcWritten: true,
@@ -131,17 +104,12 @@ export const CardAPI = {
       isOwnerView,
     });
 
-    // Best-effort increment on cards doc (may not exist yet)
+    // Atomic increment — no extra read, no race condition
     try {
-      const ref = doc(db, CARDS, cardId);
-      const snap = await getDoc(ref);
-      if (snap.exists()) {
-        const cur = snap.data().stats?.totalViews ?? 0;
-        await updateDoc(ref, {
-          'stats.totalViews': cur + 1,
-          'stats.lastViewedAt': serverTimestamp(),
-        });
-      }
+      await updateDoc(doc(db, CARDS, cardId), {
+        'stats.totalViews': increment(1),
+        'stats.lastViewedAt': serverTimestamp(),
+      });
     } catch {
       // cards doc might not exist — fine
     }

@@ -9,6 +9,9 @@ import { getTemplateStyles, getTemplateFields } from '@/templates/registry';
 import '@/templates/init';
 
 interface EditorContextValue {
+  /** Route orderId — the reliable source of truth (draft.orderId is set async
+   *  via redux-persist + useEditorInit and may be stale/empty on first render). */
+  orderId: string;
   draft: IEditDraft;
   tpl: ITemplate;
   activeStyle: ITemplateStyle | undefined;
@@ -20,7 +23,7 @@ interface EditorContextValue {
 
 const EditorContext = createContext<EditorContextValue | null>(null);
 
-export function EditorProvider({ children }: { children: ReactNode }) {
+export function EditorProvider({ orderId, children }: { orderId: string; children: ReactNode }) {
   const dispatch = useDispatch<AppDispatch>();
   const draft = useSelector((s: RootState) => s.edit);
 
@@ -32,7 +35,7 @@ export function EditorProvider({ children }: { children: ReactNode }) {
   const fields = getTemplateFields(draft.templateId);
 
   return (
-    <EditorContext.Provider value={{ draft, tpl, activeStyle, activeFrame, activeEffect, fields, dispatch }}>
+    <EditorContext.Provider value={{ orderId, draft, tpl, activeStyle, activeFrame, activeEffect, fields, dispatch }}>
       {children}
     </EditorContext.Provider>
   );

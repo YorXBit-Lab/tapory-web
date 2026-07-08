@@ -1,56 +1,33 @@
-// Native Canvas API — NOT html2canvas
 import { cmToPx } from './dpi'
 import type { KeychainTemplate, ImageEditorState } from '../types'
 import { PRINT_DPI, EDITOR_PX_PER_CM } from '../constants'
+import { bakeCropToBlob } from '@/utils/crop-bake'
 
 /**
- * Renders the editor state to a high-resolution PNG (300 DPI).
- * Scales up from display coordinates to print coordinates.
+ * Render editorState thành PNG 300 DPI (dataURL) để nhúng vào PDF.
+ * Uỷ thác toàn bộ toán vẽ/clip cho util chung crop-bake.
  */
 export async function exportImageToPng(
   imageUrl: string,
   template: KeychainTemplate,
   state: ImageEditorState,
 ): Promise<string> {
-  const displayW = Math.round(template.widthCm * EDITOR_PX_PER_CM)
-  const printW   = cmToPx(template.widthCm,  PRINT_DPI)
-  const printH   = cmToPx(template.heightCm, PRINT_DPI)
-  const upscale  = printW / displayW
-
-  const canvas = document.createElement('canvas')
-  canvas.width  = printW
-  canvas.height = printH
-  const ctx = canvas.getContext('2d')!
-
-  ctx.save()
-  ctx.beginPath()
-  if (template.id === 'circle') {
-    ctx.arc(printW / 2, printH / 2, printW / 2, 0, Math.PI * 2)
-  } else {
-    ctx.rect(0, 0, printW, printH)
-  }
-  ctx.clip()
-
-  const img = await loadImage(imageUrl)
-  const scaleY = state.scaleY ?? state.scale
-  ctx.drawImage(
-    img,
-    state.x * upscale,
-    state.y * upscale,
-    img.naturalWidth  * state.scale * upscale,
-    img.naturalHeight * scaleY       * upscale,
-  )
-  ctx.restore()
-
-  return canvas.toDataURL('image/png')
+  const blob = await bakeCropToBlob(imageUrl, {
+    displayW: Math.round(template.widthCm * EDITOR_PX_PER_CM),
+    displayH: Math.round(template.heightCm * EDITOR_PX_PER_CM),
+    outputW: cmToPx(template.widthCm, PRINT_DPI),
+    outputH: cmToPx(template.heightCm, PRINT_DPI),
+    isCircle: template.id === 'circle',
+    transform: state,
+  })
+  return blobToDataUrl(blob)
 }
 
-function loadImage(src: string): Promise<HTMLImageElement> {
+function blobToDataUrl(blob: Blob): Promise<string> {
   return new Promise((resolve, reject) => {
-    const img = new Image()
-    img.crossOrigin = 'anonymous'
-    img.onload  = () => resolve(img)
-    img.onerror = reject
-    img.src = src
+    const reader = new FileReader()
+    reader.onload = () => resolve(reader.result as string)
+    reader.onerror = reject
+    reader.readAsDataURL(blob)
   })
 }

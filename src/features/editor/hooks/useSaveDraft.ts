@@ -9,7 +9,7 @@ import { auth } from '@/libs/firebase';
 import { clearSession } from '@/features/auth/utils';
 import { useCardAuthCtx } from '@/features/auth/CardAuthContext';
 
-export function useSaveDraft(callbacks?: { onSaved?: (imageUrl: string) => void }) {
+export function useSaveDraft(orderId: string, callbacks?: { onSaved?: (imageUrl: string) => void }) {
   const dispatch = useDispatch<AppDispatch>();
   const draft = useSelector((s: RootState) => s.edit);
   const { requireAuth, isReady } = useCardAuthCtx();
@@ -20,11 +20,15 @@ export function useSaveDraft(callbacks?: { onSaved?: (imageUrl: string) => void 
       return;
     }
 
-    const { isDirty, ...memorial } = draft;
+    // Use the route orderId as the document id, not draft.orderId — the latter
+    // is restored async (redux-persist) and may briefly be stale/empty, which
+    // would write to the wrong memorial document.
+    const { isDirty, orderId: _draftOrderId, ...rest } = draft;
+    const memorial = { ...rest, orderId };
     requireAuth(async () => {
       try {
         await MemorialAPI.upsert(memorial);
-        CardAPI.markPublished(draft.orderId, draft.templateId).catch(() => {});
+        CardAPI.markPublished(orderId, draft.templateId).catch(() => {});
         dispatch(markSaved());
         callbacks?.onSaved?.(draft.imageUrl ?? '');
         toast.success('Đã lưu thành công');
@@ -34,7 +38,7 @@ export function useSaveDraft(callbacks?: { onSaved?: (imageUrl: string) => void 
       } finally {
         // Sign out after each save so next save always requires password
         signOut(auth).catch(() => {});
-        clearSession(draft.orderId);
+        clearSession(orderId);
       }
     });
   };

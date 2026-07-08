@@ -26,6 +26,7 @@ const NAV_ITEMS = [
     children: [
       { key: '/dashboard/orders', icon: <OrderIcon />, label: 'Đơn hàng' },
       { key: '/dashboard/products', icon: <ProductIcon />, label: 'Sản phẩm' },
+      { key: '/dashboard/components', icon: <ComponentIcon />, label: 'Kho linh kiện' },
       { key: '/dashboard/inventory', icon: <InventoryIcon />, label: 'Nhập hàng' },
       { key: '/dashboard/print', icon: <PrintIcon />, label: 'In ảnh' },
       { key: '/dashboard/users', icon: <UserIcon />, label: 'Khách hàng' },
@@ -42,7 +43,10 @@ const NAV_ITEMS = [
   {
     type: 'group' as const,
     label: 'Hệ thống',
-    children: [{ key: '/dashboard/settings', icon: <SettingIcon />, label: 'Cài đặt' }],
+    children: [
+      { key: '/dashboard/settings/site', icon: <GlobeIcon />, label: 'Thông tin website' },
+      { key: '/dashboard/settings', icon: <SettingIcon />, label: 'Cài đặt' },
+    ],
   },
 ];
 
@@ -50,11 +54,13 @@ const PAGE_TITLES: Record<string, string> = {
   '/dashboard': 'Tổng quan',
   '/dashboard/orders': 'Đơn hàng',
   '/dashboard/products': 'Sản phẩm',
+  '/dashboard/components': 'Kho linh kiện',
   '/dashboard/inventory': 'Nhập hàng',
   '/dashboard/print': 'In ảnh',
   '/dashboard/users': 'Khách hàng',
   '/dashboard/memories': 'Kỷ niệm khách hàng',
   '/dashboard/nfcs': 'Chip NFC',
+  '/dashboard/settings/site': 'Thông tin website',
   '/dashboard/settings': 'Cài đặt',
 };
 
@@ -86,8 +92,8 @@ function DashboardInner({ children }: { children: React.ReactNode }) {
 
   if (isLoading) {
     return (
-      <div className="flex h-screen items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-100 border-t-indigo-500" />
+      <div className="flex h-screen items-center justify-center bg-background">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-border border-t-primary" />
       </div>
     );
   }
@@ -208,7 +214,7 @@ function DashboardInner({ children }: { children: React.ReactNode }) {
             <button
               onClick={() => logout().then(() => router.replace('/dashboard/login'))}
               title="Đăng xuất"
-              className="text-gray-400 hover:text-gray-600"
+              className="text-content3 hover:text-content1"
             >
               <svg
                 width="14"
@@ -318,6 +324,15 @@ function SettingIcon() {
     </svg>
   );
 }
+function GlobeIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.3">
+      <circle cx="8" cy="8" r="6.5" />
+      <ellipse cx="8" cy="8" rx="3" ry="6.5" />
+      <line x1="1.5" y1="8" x2="14.5" y2="8" />
+    </svg>
+  );
+}
 function ProductIcon() {
   return (
     <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
@@ -329,6 +344,13 @@ function InventoryIcon() {
   return (
     <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
       <path d="M8 1L1 4v1h14V4L8 1zM2 6v7h3V9h6v4h3V6H2zm4 3h4v4H6V9z" />
+    </svg>
+  );
+}
+function ComponentIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+      <path d="M6 1a1 1 0 00-1 1v1H3a1 1 0 00-1 1v2h1.5a1.5 1.5 0 010 3H2v2a1 1 0 001 1h2v-1.5a1.5 1.5 0 013 0V13h2a1 1 0 001-1v-2h1a1 1 0 001-1V7a1 1 0 00-1-1h-1V4a1 1 0 00-1-1H9V2a1 1 0 00-1-1H6z" />
     </svg>
   );
 }

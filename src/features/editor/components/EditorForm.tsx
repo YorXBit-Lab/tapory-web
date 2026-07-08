@@ -4,6 +4,7 @@ import { useEditorContext } from '@/features/editor/context';
 import { updateField } from '@/redux/editSlice';
 import { useImageUpload } from '../hooks/useImageUpload';
 import { useImagesUpload } from '../hooks/useImagesUpload';
+import { useGalleryUpload } from '../hooks/useGalleryUpload';
 import { useSaveDraft } from '../hooks/useSaveDraft';
 import { StylePicker } from './pickers/StylePicker';
 import { FontPicker } from './pickers/FontPicker';
@@ -16,19 +17,22 @@ import { TemplatePicker } from './pickers/TemplatePicker';
 import { SmartSuggestBanner } from './SmartSuggestBanner';
 import { ImageField } from './fields/ImageField';
 import { ImagesField } from './fields/ImagesField';
+import { GalleryField } from './fields/GalleryField';
 import { TextField } from './fields/TextField';
 import { TextareaField } from './fields/TextareaField';
 
 export function EditorForm() {
-  const { draft, fields, dispatch } = useEditorContext();
-  const { uploading, handlePhoto, onSaved } = useImageUpload(draft.orderId);
-  const { uploading: uploadingMany, upload: uploadOne, trackRemoved, cleanupRemoved } = useImagesUpload(draft.orderId);
-  const { handleSave } = useSaveDraft({
+  const { orderId, draft, fields, dispatch } = useEditorContext();
+  const { uploading, handlePhoto, onSaved } = useImageUpload(orderId);
+  const { uploading: uploadingMany, upload: uploadOne, trackRemoved, cleanupRemoved } = useImagesUpload(orderId);
+  const gallery = useGalleryUpload(orderId);
+  const { handleSave } = useSaveDraft(orderId, {
     onSaved: url => { onSaved(url); void cleanupRemoved(); },
   });
   const isSpotify   = draft.templateId === 'spotify';
   const isRedirect  = draft.templateId === 'redirect';
-  const isStardust  = draft.templateId === 'stardust';
+  // const isStardust  = draft.templateId === 'stardust';
+  const isStardust  = true; 
 
   return (
     <section className="flex-1 space-y-5">
@@ -137,6 +141,17 @@ export function EditorForm() {
               />
             );
           }
+          if (field.type === 'gallery') return (
+            <GalleryField
+              key={String(field.key)}
+              field={field}
+              urls={draft.galleryUrls ?? []}
+              uploading={gallery.uploading}
+              onAdd={gallery.addPhotos}
+              onRemove={gallery.removePhoto}
+              onMove={gallery.movePhoto}
+            />
+          );
           const value = (draft[field.key] as string) || '';
           if (field.type === 'image') return (
             <ImageField key={String(field.key)} field={field} value={value} uploading={uploading} onFile={handlePhoto} />
@@ -152,7 +167,7 @@ export function EditorForm() {
 
       {/* Sticky on mobile, normal on desktop */}
       <div className="sticky bottom-0 z-10 -mx-4 bg-white/95 px-4 pb-8 pt-3 backdrop-blur-sm lg:static lg:mx-0 lg:bg-transparent lg:p-0 lg:backdrop-blur-none" style={{ paddingBottom: 'max(32px, env(safe-area-inset-bottom, 32px))' }}>
-        {draft.orderId === 'demo' ? (
+        {orderId === 'demo' ? (
           <div className="w-full rounded-xl border border-dashed border-content4 py-3.5 text-center text-sm text-content3">
             Đây là bản xem thử — không thể lưu
           </div>

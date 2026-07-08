@@ -41,8 +41,8 @@ function LoginForm() {
               priority
             />
           </div>
-          <h1 className="text-xl font-bold text-gray-900">Góc Chạm Admin</h1>
-          <p className="mt-1 text-sm text-gray-400">Đăng nhập để quản lý hệ thống</p>
+          <h1 className="text-xl font-bold text-content1">Góc Chạm Admin</h1>
+          <p className="mt-1 text-sm text-content3">Đăng nhập để quản lý hệ thống</p>
         </div>
 
         <Form onFinish={handleFinish} layout="vertical" requiredMark={false}>

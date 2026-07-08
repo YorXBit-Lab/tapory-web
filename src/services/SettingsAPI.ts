@@ -1,10 +1,51 @@
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '@/libs/firebase';
 
+/** Nhận diện thương hiệu */
+export interface ISiteBrand {
+  name?: string;
+  tagline?: string;
+  logoUrl?: string;
+  faviconUrl?: string;
+}
+
+/** Thông tin liên hệ / pháp lý */
+export interface ISiteContact {
+  email?: string;
+  hotline?: string;
+  address?: string;
+  businessHours?: string;
+  taxCode?: string;
+}
+
+/** Liên kết mạng xã hội */
+export interface ISiteSocial {
+  facebook?: string;
+  instagram?: string;
+  tiktok?: string;
+  zalo?: string;
+  youtube?: string;
+}
+
+/** Cấu hình SEO mặc định */
+export interface ISiteSeo {
+  metaTitle?: string;
+  metaDescription?: string;
+  ogImageUrl?: string;
+}
+
 export interface IGlobalSettings {
-  // Placeholder — các cài đặt toàn hệ thống (mở rộng sau)
+  brand?: ISiteBrand;
+  contact?: ISiteContact;
+  social?: ISiteSocial;
+  seo?: ISiteSeo;
+  /** Phụ phí gắn chip NFC (đ) */
+  nfcExtraPrice?: number;
   [key: string]: unknown;
 }
+
+/** Alias rõ nghĩa cho phần cài đặt thông tin website */
+export type ISiteSettings = IGlobalSettings;
 
 export const SettingsAPI = {
   get: async (): Promise<IGlobalSettings> => {

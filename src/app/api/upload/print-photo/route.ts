@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { PutObjectCommand } from '@aws-sdk/client-s3';
-import { FieldValue } from 'firebase-admin/firestore';
 import { getAdminDb } from '@/libs/firebase-admin';
 import { getR2Client, R2_BUCKET } from '@/libs/r2';
 
@@ -31,7 +30,8 @@ export async function POST(req: NextRequest) {
 
   // Validate order exists
   const db = getAdminDb();
-  const orderSnap = await db.collection('orders').doc(orderId).get();
+  const orderRef = db.collection('orders').doc(orderId);
+  const orderSnap = await orderRef.get();
   if (!orderSnap.exists) return NextResponse.json({ error: 'Không tìm thấy đơn hàng' }, { status: 404 });
 
   const ext = file.type.split('/')[1].replace('jpeg', 'jpg');
@@ -58,7 +58,8 @@ export async function POST(req: NextRequest) {
 
   const url = `${publicUrl.replace(/\/$/, '')}/${key}`;
 
-  // Save to order document
+  // Save to order document — THAY THẾ slot cũ (cùng itemIndex/slotIndex/side)
+  // thay vì arrayUnion cộng dồn (tránh export lấy nhầm ảnh cũ).
   const slotDoc: Record<string, unknown> = {
     itemIndex,
     slotIndex,
@@ -67,9 +68,19 @@ export async function POST(req: NextRequest) {
   };
   if (side) slotDoc.side = side;
 
-  await db.collection('orders').doc(orderId).update({
-    printPhotos: FieldValue.arrayUnion(slotDoc),
-    updatedAt: new Date(),
+  const sameSlot = (p: Record<string, unknown>) =>
+    p.itemIndex === itemIndex && p.slotIndex === slotIndex && (p.side ?? undefined) === side;
+
+  // Transaction: đọc-sửa-ghi để 2 mặt upload song song không ghi đè nhau.
+  await db.runTransaction(async (txn) => {
+    const snap = await txn.get(orderRef);
+    const existing = Array.isArray(snap.data()?.printPhotos)
+      ? (snap.data()!.printPhotos as Array<Record<string, unknown>>)
+      : [];
+    txn.update(orderRef, {
+      printPhotos: [...existing.filter((p) => !sameSlot(p)), slotDoc],
+      updatedAt: new Date(),
+    });
   });
 
   return NextResponse.json({ url, key });
