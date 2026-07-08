@@ -39,10 +39,15 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
       setUser(firebaseUser);
 
       if (firebaseUser) {
-        const snap = await getDoc(
-          doc(db, FIRESTORE_COLLECTIONS.ADMINS, firebaseUser.uid),
-        );
-        setAdminData(snap.exists() ? (snap.data() as AdminData) : null);
+        // User thẻ (custom token) không có quyền đọc `admins` — rules sẽ chặn
+        try {
+          const snap = await getDoc(
+            doc(db, FIRESTORE_COLLECTIONS.ADMINS, firebaseUser.uid),
+          );
+          setAdminData(snap.exists() ? (snap.data() as AdminData) : null);
+        } catch {
+          setAdminData(null);
+        }
       } else {
         setAdminData(null);
       }

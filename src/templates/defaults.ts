@@ -7,6 +7,11 @@ type ContentFields = {
   imageUrl: string;
   spotifyUrl: string;
   date: string;
+  // Stardust extras
+  mainGreeting?: string;
+  bigWish?: string;
+  finalMessage?: string;
+  photoUrls?: string[];
 };
 
 export const TEMPLATE_DEFAULTS: Record<TemplateId, ContentFields> = {
@@ -73,5 +78,17 @@ export const TEMPLATE_DEFAULTS: Record<TemplateId, ContentFields> = {
     date:        '',
     imageUrl:    '',
     spotifyUrl:  '',
+  },
+  stardust: {
+    title:        'Bảo An',
+    subtitle:     '',
+    description:  'Hôm nay là một ngày thật đặc biệt.\nChúc bạn luôn xinh đẹp, vui vẻ\nvà gặp thật nhiều may mắn.',
+    date:         '',
+    imageUrl:     '',
+    spotifyUrl:   '',
+    mainGreeting: 'Chúc Mừng',
+    bigWish:      'Happy Birthday',
+    finalMessage: 'Cảm ơn vì đã xuất hiện\ntrong cuộc đời tôi',
+    photoUrls:    [],
   },
 };

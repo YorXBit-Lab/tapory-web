@@ -89,6 +89,17 @@ export const TEMPLATES: Record<TemplateId, ITemplate> = {
       background: '#f8fafc',
     },
   },
+  stardust: {
+    id: 'stardust',
+    name: 'Phim Ký Ức',
+    icon: '🌌',
+    occasion: 'Memory film 3D',
+    colors: {
+      primary: '#c86adf',
+      secondary: '#ff9ecb',
+      background: '#0b0618',
+    },
+  },
 };
 
 export const TEMPLATE_LIST = Object.values(TEMPLATES);

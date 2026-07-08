@@ -3,6 +3,7 @@ import { Tabs } from 'antd';
 import { useEditorContext } from '@/features/editor/context';
 import { updateField } from '@/redux/editSlice';
 import { useImageUpload } from '../hooks/useImageUpload';
+import { useImagesUpload } from '../hooks/useImagesUpload';
 import { useSaveDraft } from '../hooks/useSaveDraft';
 import { StylePicker } from './pickers/StylePicker';
 import { FontPicker } from './pickers/FontPicker';
@@ -14,15 +15,20 @@ import { IntroPicker } from './pickers/IntroPicker';
 import { TemplatePicker } from './pickers/TemplatePicker';
 import { SmartSuggestBanner } from './SmartSuggestBanner';
 import { ImageField } from './fields/ImageField';
+import { ImagesField } from './fields/ImagesField';
 import { TextField } from './fields/TextField';
 import { TextareaField } from './fields/TextareaField';
 
 export function EditorForm() {
   const { draft, fields, dispatch } = useEditorContext();
   const { uploading, handlePhoto, onSaved } = useImageUpload(draft.orderId);
-  const { handleSave } = useSaveDraft({ onSaved });
+  const { uploading: uploadingMany, upload: uploadOne, trackRemoved, cleanupRemoved } = useImagesUpload(draft.orderId);
+  const { handleSave } = useSaveDraft({
+    onSaved: url => { onSaved(url); void cleanupRemoved(); },
+  });
   const isSpotify   = draft.templateId === 'spotify';
   const isRedirect  = draft.templateId === 'redirect';
+  const isStardust  = draft.templateId === 'stardust';
 
   return (
     <section className="flex-1 space-y-5">
@@ -33,7 +39,14 @@ export function EditorForm() {
       )}
       <StylePicker />
 
-      <Tabs
+      {/* Stardust: phim dựng ở site ngoài — các picker chữ/ảnh/trang trí không áp dụng */}
+      {isStardust && (
+        <div className="rounded-xl border border-dashed border-purple-200 bg-purple-50/60 px-4 py-3 text-[11px] leading-relaxed text-purple-700">
+          🌌 Phim Ký Ức 3D — nội dung và ảnh bên dưới sẽ được dựng thành một bộ phim vũ trụ
+          tương tác. Quét thẻ (hoặc mở trang xem) để trải nghiệm đầy đủ.
+        </div>
+      )}
+      {!isStardust && <Tabs
         size="small"
         items={
           isRedirect
@@ -97,11 +110,33 @@ export function EditorForm() {
                   },
                 ]
         }
-      />
+      />}
 
       <div className="space-y-4">
         <p className="text-xs font-semibold uppercase tracking-wider text-content3">Nội dung</p>
         {fields.map(field => {
+          if (field.type === 'images') {
+            const urls = (draft[field.key] as unknown as string[] | undefined) ?? [];
+            return (
+              <ImagesField
+                key={String(field.key)}
+                field={field}
+                value={urls}
+                uploading={uploadingMany}
+                onAdd={async files => {
+                  const next = [...urls];
+                  for (const file of files) {
+                    const url = await uploadOne(file);
+                    if (url) { next.push(url); dispatch(updateField({ [field.key]: [...next] })); }
+                  }
+                }}
+                onRemove={i => {
+                  trackRemoved(urls[i]);
+                  dispatch(updateField({ [field.key]: urls.filter((_, j) => j !== i) }));
+                }}
+              />
+            );
+          }
           const value = (draft[field.key] as string) || '';
           if (field.type === 'image') return (
             <ImageField key={String(field.key)} field={field} value={value} uploading={uploading} onFile={handlePhoto} />

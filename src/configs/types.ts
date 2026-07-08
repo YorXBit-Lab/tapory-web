@@ -1,4 +1,4 @@
-export type TemplateId = 'graduation' | 'wedding' | 'birthday' | 'anniversary' | 'spotify' | 'social' | 'profile' | 'redirect';
+export type TemplateId = 'graduation' | 'wedding' | 'birthday' | 'anniversary' | 'spotify' | 'social' | 'profile' | 'redirect' | 'stardust';
 
 export type CardStatus = 'blank' | 'assigned' | 'published' | 'locked' | 'expired';
 
@@ -169,6 +169,11 @@ export interface IMemorial {
   email?: string;
   phone?: string;
   website?: string;
+  // Stardust (phim ký ức 3D) — hiển thị ở site ngoài theo /{cardId}
+  photoUrls?: string[];
+  mainGreeting?: string;
+  bigWish?: string;
+  finalMessage?: string;
 }
 
 export interface IMemorialDoc extends IMemorial {

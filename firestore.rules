@@ -1,0 +1,81 @@
+rules_version = '2';
+
+// Tapory / Gốc Chạm — Firestore security rules
+//
+// Hai loại người dùng client-side:
+//   • Admin: đăng nhập email/password, có document trong `admins/{uid}`
+//   • Chủ thẻ: custom token uid `card_{cardId}`, claims { cardId, role: 'card_owner' }
+// Khách xem thẻ (không đăng nhập) chỉ cần đọc memorial + card.
+// Các API route dùng firebase-admin nên KHÔNG bị rules này ảnh hưởng.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
+    function isCardOwner(cardId) {
+      return signedIn() && request.auth.token.cardId == cardId;
+    }
+
+    // AdminAuthContext đọc doc của chính mình để xác định quyền dashboard.
+    // Tạo/sửa admin làm qua Console hoặc admin SDK.
+    match /admins/{uid} {
+      allow get: if signedIn() && request.auth.uid == uid;
+      allow list, write: if false;
+    }
+
+    // Trang /view công khai (quét thẻ NFC) — ai cũng đọc được.
+    // Chủ thẻ chỉnh sửa memorial của chính mình (doc id == cardId trong token).
+    match /memorials/{cardId} {
+      allow read: if true;
+      allow create, update: if isAdmin() || isCardOwner(cardId);
+      allow delete: if isAdmin();
+    }
+
+    match /cards/{cardId} {
+      // Editor cần đọc card để lấy templateId trước khi xác thực
+      allow get: if true;
+      allow list: if isAdmin();
+      allow create, delete: if isAdmin();
+      allow update: if isAdmin()
+        // Chủ thẻ: chỉ các field markPublished động tới
+        || (isCardOwner(cardId)
+            && request.resource.data.diff(resource.data).affectedKeys()
+                 .hasOnly(['status', 'hasContent', 'templateId', 'publishedAt', 'updatedAt']))
+        // Khách xem: chỉ được cộng số liệu lượt xem
+        || request.resource.data.diff(resource.data).affectedKeys().hasOnly(['stats']);
+    }
+
+    // Thống kê lượt xem — khách vãng lai ghi, chỉ admin đọc/xoá
+    match /cardViews/{viewId} {
+      allow create: if true;
+      allow read, delete: if isAdmin();
+      allow update: if false;
+    }
+
+    // phoneHash xác thực thẻ — client chỉ đụng tới khi admin dọn dẹp đơn
+    match /cardAuth/{cardId} {
+      allow read, write: if isAdmin();
+    }
+
+    // Cài đặt toàn hệ thống — client đọc, ghi qua API route (admin SDK)
+    match /settings/{id} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // Nghiệp vụ nội bộ — chỉ dashboard admin
+    match /orders/{id}          { allow read, write: if isAdmin(); }
+    match /purchase_orders/{id} { allow read, write: if isAdmin(); }
+    match /products/{id}        { allow read, write: if isAdmin(); }
+    match /services/{id}        { allow read, write: if isAdmin(); }
+    match /preset_photos/{id}   { allow read, write: if isAdmin(); }
+    match /shipping_rates/{id}  { allow read, write: if isAdmin(); }
+  }
+}

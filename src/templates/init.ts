@@ -6,3 +6,4 @@ import './spotify';
 import './social';
 import './profile';
 import './redirect';
+import './stardust';

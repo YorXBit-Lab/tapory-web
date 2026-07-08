@@ -9,4 +9,6 @@ export const env = {
     appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID ?? '',
   },
   r2PublicUrl: process.env.NEXT_PUBLIC_R2_PUBLIC_URL ?? '',
+  /** Domain của site Stardust Memory (phim ký ức 3D), không có dấu / cuối */
+  stardustUrl: (process.env.NEXT_PUBLIC_STARDUST_URL ?? '').replace(/\/$/, ''),
 } as const;
