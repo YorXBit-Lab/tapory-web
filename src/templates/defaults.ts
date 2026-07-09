@@ -15,79 +15,80 @@ type ContentFields = {
 };
 
 /**
- * Giá trị khởi tạo CHUNG CHUNG cho mỗi template — dùng cho cả bản xem thử (demo)
- * lẫn card thật khi chưa có dữ liệu. Field chữ điền nhãn gợi ý để người dùng biết
- * cần thay; field ảnh/ngày/link để trống (trạng thái "chưa thêm").
+ * Nội dung mẫu cho mỗi template — dùng cho cả bản xem thử (demo) lẫn card thật
+ * khi chưa có dữ liệu. Field chữ điền NỘI DUNG MẪU thật (tên, lời chúc…) để bản
+ * xem thử sống động, người dùng thấy ngay card hoàn thiện sẽ trông thế nào;
+ * field ảnh/ngày/link để trống (trạng thái "chưa thêm").
  */
 export const TEMPLATE_DEFAULTS: Record<TemplateId, ContentFields> = {
   graduation: {
-    title:       'Tên người nhận',
-    subtitle:    'Tên trường – Ngành học',
-    description: 'Lời chúc mừng tốt nghiệp dành cho bạn ấy…',
+    title:       'Minh Anh',
+    subtitle:    'ĐH Kinh tế Quốc dân · Marketing',
+    description: 'Chúc mừng tân cử nhân! Bốn năm nỗ lực hôm nay đã nở hoa. Chúc cậu vững bước trên chặng đường mới, thành công và luôn rực rỡ như chính cậu.',
     date:        '',
     imageUrl:    '',
     spotifyUrl:  '',
   },
   anniversary: {
-    title:       'Tên hai bạn',
+    title:       'Minh & An',
     subtitle:    '',
-    description: 'Lời chúc kỷ niệm dành cho hai bạn…',
+    description: 'Cảm ơn vì đã cùng nhau đi qua từng ấy năm — qua những ngày nắng đẹp lẫn những hôm mưa dầm. Mong mình cứ nắm tay nhau như thế, thật lâu thật lâu nữa.',
     date:        '',
     imageUrl:    '',
     spotifyUrl:  '',
   },
   wedding: {
-    title:       'Tên cô dâu & chú rể',
+    title:       'Tuấn & Ngọc',
     subtitle:    '',
-    description: 'Lời chúc mừng hạnh phúc dành cho đôi uyên ương…',
+    description: 'Chúc hai bạn trăm năm hạnh phúc, mãi yêu nhau như ngày đầu. Chặng đường phía trước xin được cùng nhau viết tiếp bằng thật nhiều yêu thương.',
     date:        '',
     imageUrl:    '',
     spotifyUrl:  '',
   },
   birthday: {
-    title:       'Tên người nhận',
+    title:       'Bảo An',
     subtitle:    '',
-    description: 'Lời chúc sinh nhật dành cho bạn…',
+    description: 'Chúc cậu tuổi mới thật rực rỡ — cười nhiều hơn, lo ít đi, và mọi điều dịu dàng nhất đều tìm đến cậu. Happy birthday!',
     date:        '',
     imageUrl:    '',
     spotifyUrl:  '',
   },
   spotify: {
-    title:       'Tên bài hát',
-    subtitle:    'Tên nghệ sĩ',
-    description: 'Lời nhắn của bạn…',
+    title:       'Nơi Này Có Anh',
+    subtitle:    'Sơn Tùng M-TP',
+    description: 'Mỗi lần bài này vang lên là lại nhớ đến cậu. Nghe cùng mình nhé?',
     date:        '',
     imageUrl:    '',
     spotifyUrl:  '',
   },
   social: {
-    title:       'Tên hiển thị',
-    subtitle:    'Bio / Giới thiệu ngắn',
-    description: 'Giới thiệu thêm về bạn…',
+    title:       'Minh Thư',
+    subtitle:    '☕ Cà phê · 📷 Chụp ảnh · ✈️ Xê dịch',
+    description: 'Chào cậu, mình là Thư! Kết nối với mình qua các kênh bên dưới nha.',
     date:        '',
     imageUrl:    '',
     spotifyUrl:  '',
   },
   profile: {
-    title:       'Họ và tên',
-    subtitle:    'Chức danh / Nghề nghiệp',
-    description: 'Vài dòng giới thiệu về bản thân…',
+    title:       'Nguyễn Minh Khang',
+    subtitle:    'Product Designer · Freelancer',
+    description: 'Thiết kế trải nghiệm số cho thương hiệu của bạn. Hơn 5 năm làm sản phẩm — tối giản, chỉn chu, đúng hẹn.',
     date:        '',
     imageUrl:    '',
     spotifyUrl:  '',
   },
   keepsake: {
-    title:       'Tên kỷ vật',
-    subtitle:    'Dịp · Người tặng',
-    description: 'Kể lại kỷ niệm gắn với món quà này…',
+    title:       'Chiếc vòng tay bạc',
+    subtitle:    'Sinh nhật 20 · Mẹ tặng',
+    description: 'Món quà mẹ đặt vào tay mình năm 20 tuổi, kèm lời dặn: "Đi đâu cũng nhớ đường về nhà." Mình vẫn đeo nó mỗi ngày.',
     date:        '',
     imageUrl:    '',
     spotifyUrl:  '',
   },
   album: {
-    title:       'Album kỷ niệm',
+    title:       'Kỷ niệm của chúng mình',
     subtitle:    '',
-    description: 'Đôi dòng kể về những khoảnh khắc này…',
+    description: 'Mỗi tấm ảnh là một ngày mình muốn giữ mãi — cảm ơn vì đã ở đó, trong từng khoảnh khắc.',
     date:        '',
     imageUrl:    '',
     spotifyUrl:  '',
