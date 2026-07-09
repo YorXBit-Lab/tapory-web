@@ -6,6 +6,7 @@ import type { TemplateId } from '@/configs/types';
 import { PUBLIC_TEMPLATE_LIST } from '@/configs/constants';
 import { setTemplate, setStyle } from '@/redux/editSlice';
 import { getTemplateStyles } from '@/templates/registry';
+import { HScrollRow } from './HScrollRow';
 
 export function TemplatePicker() {
   const dispatch = useDispatch<AppDispatch>();
@@ -22,7 +23,7 @@ export function TemplatePicker() {
   return (
     <div>
       <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-content3">Loại template</p>
-      <div className="flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <HScrollRow className="flex gap-2 pb-1">
         {PUBLIC_TEMPLATE_LIST.map((tpl) => {
           const active = tpl.id === activeId;
           return (
@@ -41,7 +42,7 @@ export function TemplatePicker() {
             </button>
           );
         })}
-      </div>
+      </HScrollRow>
     </div>
   );
 }

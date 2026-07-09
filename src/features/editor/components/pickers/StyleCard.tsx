@@ -395,7 +395,7 @@ export function StyleCard({ s, active, onClick }: Props) {
   return (
     <button
       onClick={onClick}
-      className={`flex w-full flex-col items-center gap-1.5 rounded-xl border-2 p-2 transition-all sm:w-[78px] sm:flex-shrink-0 ${
+      className={`flex w-[78px] flex-shrink-0 flex-col items-center gap-1.5 rounded-xl border-2 p-2 transition-all ${
         active
           ? 'border-primary bg-primary/[0.04] scale-[1.04] shadow-md shadow-primary/20 ring-2 ring-primary/15'
           : 'border-border hover:border-primary/40'

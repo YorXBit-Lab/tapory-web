@@ -16,8 +16,20 @@ export const ALBUM_STYLES: ITemplateStyle[] = [
     colors: { primary: '#f2f0ec', secondary: '#f4c542', accent: '#08080a' } },
   { id: 'album-swipe',  layout: 'swipe',  name: 'Vuốt xem',
     colors: { primary: '#f4f5f7', secondary: '#60a5fa', accent: '#080b12' } },
-  { id: 'album-photobooth', layout: 'photobooth', name: 'Photobook',
+  { id: 'album-photobooth', layout: 'photobooth', name: 'Photobooth',
     colors: { primary: '#f6f3ee', secondary: '#ff5d8f', accent: '#12080d' } },
+  { id: 'album-rain',    layout: 'rain',    name: 'Mưa ảnh',
+    colors: { primary: '#eef4fa', secondary: '#7dd3fc', accent: '#070b12' } },
+  { id: 'album-tunnel',  layout: 'tunnel',  name: 'Xuyên không',
+    colors: { primary: '#eef0ff', secondary: '#818cf8', accent: '#08081a' } },
+  { id: 'album-drift',   layout: 'drift',   name: 'Đèn trời',
+    colors: { primary: '#fdf6ea', secondary: '#fbbf24', accent: '#100a04' } },
+  { id: 'album-cascade', layout: 'cascade', name: 'Thác ảnh',
+    colors: { primary: '#eefaf4', secondary: '#34d399', accent: '#06100c' } },
+  { id: 'album-helix',   layout: 'helix',   name: 'Vòng xoắn',
+    colors: { primary: '#fdf0f6', secondary: '#f472b6', accent: '#12070e' } },
+  { id: 'album-wave',    layout: 'wave',    name: 'Sóng ảnh',
+    colors: { primary: '#ecf6fd', secondary: '#38bdf8', accent: '#060d14' } },
 ];
 
 export const ALBUM_FIELDS: FieldMeta[] = [

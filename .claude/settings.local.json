@@ -86,7 +86,17 @@
       "Bash(awk '{print $2, $3, $4}')",
       "PowerShell(Get-ChildItem \"G:\\\\New project\\\\src\" -Recurse -File | Select-Object FullName | ForEach-Object { $_.FullName.Replace\\('G:\\\\New project\\\\src\\\\',''\\) })",
       "PowerShell(Get-ChildItem \"G:\\\\New project\\\\src\" -Recurse -File | Select-Object @{n='File';e={$_.FullName.Replace\\('G:\\\\New project\\\\src\\\\',''\\)}}, @{n='KB';e={[math]::Round\\($_.Length/1KB,1\\)}})",
-      "PowerShell(Start-Sleep -Seconds 5; $r = Invoke-WebRequest \"http://localhost:3000/edit/demo?template=stardust\" -UseBasicParsing; \"edit: $\\($r.StatusCode\\)\"; $has = $r.Content -match 'xem phim 3D'; \"play button in HTML: $has\")"
+      "PowerShell(Start-Sleep -Seconds 5; $r = Invoke-WebRequest \"http://localhost:3000/edit/demo?template=stardust\" -UseBasicParsing; \"edit: $\\($r.StatusCode\\)\"; $has = $r.Content -match 'xem phim 3D'; \"play button in HTML: $has\")",
+      "Bash(xargs grep -l -i \"dynamic\")",
+      "Bash(taskkill //F //PID 431812)",
+      "Bash(rm -rf .next)",
+      "Bash(taskkill //F //PID 430396)",
+      "Bash(taskkill //F //IM node.exe)",
+      "Bash(netstat -ano)",
+      "PowerShell(npx tsc --noEmit; echo \"exit=$LASTEXITCODE\")",
+      "PowerShell(try { $r = Invoke-WebRequest -Uri \"http://localhost:3000/edit/demo?template=album\" -UseBasicParsing -TimeoutSec 60; \"status=$\\($r.StatusCode\\)\" } catch { \"error: $\\($_.Exception.Message\\)\" })",
+      "PowerShell(Remove-Item *)",
+      "PowerShell(npx tsc --noEmit; echo \"exit=$LASTEXITCODE\"; try { $r = Invoke-WebRequest -Uri \"http://localhost:3000/edit/demo?template=album\" -UseBasicParsing -TimeoutSec 60; \"status=$\\($r.StatusCode\\)\" } catch { \"error: $\\($_.Exception.Message\\)\" })"
     ]
   }
 }

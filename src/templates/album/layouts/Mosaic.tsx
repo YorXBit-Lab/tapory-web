@@ -4,7 +4,7 @@ import { getFontFamily, getImageFilter, getTitleFontSize } from '@/shared/utils/
 import type { LayoutProps } from '@/templates/types';
 import { getPhotos } from './_shared';
 import { Lightbox } from './Lightbox';
-import { ALBUM_KEYFRAMES, AlbumBackdrop, AlbumHeader, AlbumFooter } from './_chrome';
+import { ALBUM_KEYFRAMES, AlbumBackdrop, AlbumHeader, AlbumFooter, seeded } from './_chrome';
 
 export function AlbumMosaic({ data, c }: LayoutProps) {
   const font      = getFontFamily(data.fontStyle);
@@ -26,16 +26,17 @@ export function AlbumMosaic({ data, c }: LayoutProps) {
 
       <AlbumHeader data={data} c={c} font={font} titleSize={titleSize} kicker="Album" />
 
-      {/* Lưới đều tăm tắp như mockup: ô vuông, bo góc, khe nhỏ */}
+      {/* Lưới masonry: ảnh giữ đúng tỉ lệ gốc, xếp gạch theo cột như Pinterest */}
       <div className="relative z-10 min-h-0 flex-1 overflow-y-auto px-4 py-3" style={{ scrollbarWidth: 'none' }}>
-        <div className="grid grid-cols-3 gap-2">
+        <div style={{ columns: 3, columnGap: 8 }}>
           {photos.map((url, i) => (
             <button
               key={i}
               type="button"
               onClick={() => url && setLb(i)}
-              className="albm-card relative block aspect-square w-full overflow-hidden rounded-xl"
+              className="albm-card relative mb-2 block w-full overflow-hidden rounded-xl"
               style={{
+                breakInside: 'avoid',
                 border: `1px solid ${c.secondary}33`,
                 boxShadow: '0 6px 16px rgba(0,0,0,0.42)',
                 background: '#14141c',
@@ -45,11 +46,12 @@ export function AlbumMosaic({ data, c }: LayoutProps) {
             >
               {url ? (
                 <>
-                  <img src={url} alt="" loading="lazy" className="absolute inset-0 h-full w-full object-cover" style={{ filter: imgFilter, transition: 'filter .3s ease' }} draggable={false} />
+                  <img src={url} alt="" loading="lazy" className="block h-auto w-full" style={{ filter: imgFilter, transition: 'filter .3s ease' }} draggable={false} />
                   <span className="pointer-events-none absolute inset-0" style={{ background: 'linear-gradient(140deg, rgba(255,255,255,0.14), transparent 42%)' }} />
                 </>
               ) : (
-                <div className="flex h-full w-full items-center justify-center text-xl" style={{ color: '#3a3a48' }}>📷</div>
+                // ô chờ cao thấp so le cho có dáng masonry
+                <div className="flex w-full items-center justify-center text-xl" style={{ aspectRatio: String(0.72 + seeded(i, 71) * 0.6), color: '#3a3a48' }}>📷</div>
               )}
             </button>
           ))}

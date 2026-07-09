@@ -8,6 +8,12 @@ import { AlbumCarousel } from './layouts/Carousel';
 import { AlbumReel }   from './layouts/Reel';
 import { AlbumSwipe }  from './layouts/Swipe';
 import { AlbumPhotobooth } from './layouts/Photobooth';
+import { AlbumRain }    from './layouts/Rain';
+import { AlbumTunnel }  from './layouts/Tunnel';
+import { AlbumDrift }   from './layouts/Drift';
+import { AlbumCascade } from './layouts/Cascade';
+import { AlbumHelix }   from './layouts/Helix';
+import { AlbumWave }    from './layouts/Wave';
 
 registerTemplate({
   id: 'album',
@@ -22,6 +28,12 @@ registerTemplate({
     reel:     AlbumReel,
     swipe:    AlbumSwipe,
     photobooth: AlbumPhotobooth,
+    rain:     AlbumRain,
+    tunnel:   AlbumTunnel,
+    drift:    AlbumDrift,
+    cascade:  AlbumCascade,
+    helix:    AlbumHelix,
+    wave:     AlbumWave,
   },
   // Album tự bố cục ảnh — không dùng khung ảnh đơn / kiểu ảnh.
   frameIds: ['none', 'minimal'],
